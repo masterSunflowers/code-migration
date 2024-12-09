@@ -1,0 +1,146 @@
+id,fromLib,toLib,repoName,fileName,startCommit,endCommit,startCommitChanges,endCommitChanges,startCommitMessage,endCommitMessage,startCommitTime,endCommitTime,Category,repoOwner,repoSplitName
+3878,javax.servlet:jstl,javax.servlet.jsp.jstl:jstl-api,richfaces4_components,parent/pom.xml,82b5c6d243ac4b566ec9cfbf5cbe3a306481000d,82b5c6d243ac4b566ec9cfbf5cbe3a306481000d,"+javax.servlet.jsp.jstl:jstl-api
+-javax.servlet:jstl","+javax.servlet.jsp.jstl:jstl-api
+-javax.servlet:jstl","Updated jstl artifact in pom (RF-11077)
+","Updated jstl artifact in pom (RF-11077)
+",2011-06-19,2011-06-19,66,richfaces4,components
+729,com.github.sgroschupf:zkclient,com.101tec:zkclient,killme2008_Metamorphosis,pom.xml,f6254da1916ec87ac12fd5da1469408e91aa320a,f6254da1916ec87ac12fd5da1469408e91aa320a,"+com.101tec:zkclient
+-com.github.sgroschupf:zkclient","+com.101tec:zkclient
+-com.github.sgroschupf:zkclient","Upgrade zkclient to 0.3
+","Upgrade zkclient to 0.3
+",2013-07-14,2013-07-14,15,killme2008,Metamorphosis
+469,com.alibaba:dubbo,org.apache.dubbo:dubbo,apache_dubbo-admin,pom.xml,995e06b547cb7554c99deb3129fca19b2c35aa8b,995e06b547cb7554c99deb3129fca19b2c35aa8b,"+org.apache.dubbo:dubbo
++org.apache.dubbo:dubbo-metadata-report-api
+-com.alibaba:dubbo","+org.apache.dubbo:dubbo
++org.apache.dubbo:dubbo-metadata-report-api
+-com.alibaba:dubbo","change dubbo dependency to 2.7-SNAPSHOT
+","change dubbo dependency to 2.7-SNAPSHOT
+",2018-11-14,2018-11-14,16,apache,dubbo-admin
+11215,org.postgresql:postgresql,org.mariadb.jdbc:mariadb-java-client,FundRequest_platform,core/pom.xml,101f86c7e7786dcfd0accdf4083f904224329fa5,101f86c7e7786dcfd0accdf4083f904224329fa5,"+org.mariadb.jdbc:mariadb-java-client
+-org.postgresql:postgresql","+org.mariadb.jdbc:mariadb-java-client
+-org.postgresql:postgresql","switch to mariadb
+","switch to mariadb
+",2017-04-07,2017-04-07,31,FundRequest,platform
+1013,com.h2database:h2,mysql:mysql-connector-java,JoeCao_qbike,uc/pom.xml,ba1ba24af6b9a69ea6ed4d76ae61faf9191e4c0f,ba1ba24af6b9a69ea6ed4d76ae61faf9191e4c0f,"+mysql:mysql-connector-java
+-com.h2database:h2","+mysql:mysql-connector-java
+-com.h2database:h2","move to mysql and add trip service
+","move to mysql and add trip service
+",2017-11-20,2017-11-20,31,JoeCao,qbike
+6683,org.apache.derby:derby,com.h2database:h2,wso2_ballerina-message-broker,modules/launcher/pom.xml,01a74c93a09157b00179bb2bb10acb8a2771bb9d,01a74c93a09157b00179bb2bb10acb8a2771bb9d,"+com.h2database:h2
+-org.wso2.messaging:broker-cli-client
+-org.apache.derby:derby","+com.h2database:h2
+-org.wso2.messaging:broker-cli-client
+-org.apache.derby:derby","Change db to H2 and exclude unwanted dependencies
+","Change db to H2 and exclude unwanted dependencies
+",2018-02-16,2018-02-16,31,wso2,ballerina-message-broker
+1412,com.sun.jersey:jersey-core,org.glassfish.jersey.core:jersey-client,urbanairship_java-library,pom.xml,3389fb4a4b1cc5c130ac9fa1f948bb2488156cdf,3389fb4a4b1cc5c130ac9fa1f948bb2488156cdf,"+org.glassfish.jersey.core:jersey-client
+-com.sun.jersey:jersey-server
+-com.sun.jersey:jersey-core","+org.glassfish.jersey.core:jersey-client
+-com.sun.jersey:jersey-server
+-com.sun.jersey:jersey-core","Merge pull request #48 from urbanairship/update-guava
+
+update guava and jersey versions","Merge pull request #48 from urbanairship/update-guava
+
+update guava and jersey versions",2016-04-12,2016-04-12,21,urbanairship,java-library
+2243,commons-lang:commons-lang,org.apache.commons:commons-lang3,JULIELab_jcore-base,jcore-lingpipegazetteer-ae/pom.xml,73b0517f2cfcc20b5468722804e19591310ce401,73b0517f2cfcc20b5468722804e19591310ce401,"+org.apache.commons:commons-lang3
+-commons-lang:commons-lang
+-de.julielab:jcore-types","+org.apache.commons:commons-lang3
+-commons-lang:commons-lang
+-de.julielab:jcore-types","removed junit from individual poms;
+removed jcore-types from individual poms and added it to jcore-base pom;
+updated and unified other dependencies (guava, commons-lang3, etc.)","removed junit from individual poms;
+removed jcore-types from individual poms and added it to jcore-base pom;
+updated and unified other dependencies (guava, commons-lang3, etc.)",2015-11-03,2015-11-03,13,JULIELab,jcore-base
+3618,javax.mail:javax.mail-api,com.sun.mail:javax.mail,HubSpot_Singularity,pom.xml,67741baebf24971105d4a7db57a3387badad2c35,67741baebf24971105d4a7db57a3387badad2c35,"+com.sun.mail:javax.mail
+-javax.mail:javax.mail-api","+com.sun.mail:javax.mail
+-javax.mail:javax.mail-api","use com.sun.mail
+","use com.sun.mail
+",2014-09-19,2014-09-19,62,HubSpot,Singularity
+2418,commons-lang:commons-lang,org.apache.commons:commons-lang3,estatio_estatio,pom.xml,df5ad79e3f5d9b8b63411ea91e44f72d2e86b0e0,df5ad79e3f5d9b8b63411ea91e44f72d2e86b0e0,"+org.apache.commons:commons-lang3
+-commons-lang:commons-lang","+org.apache.commons:commons-lang3
+-commons-lang:commons-lang","EST-284, EST280: Add derived attribute to determine if indexation can be applied
+
+* upgraded from common-lang to common-lang3
+* added derived number to display to first non-null invoice number, collection number or invoice id
+","EST-284, EST280: Add derived attribute to determine if indexation can be applied
+
+* upgraded from common-lang to common-lang3
+* added derived number to display to first non-null invoice number, collection number or invoice id
+",2013-11-20,2013-11-20,13,estatio,estatio
+7095,org.apache.tomcat:tomcat-servlet-api,javax.servlet:javax.servlet-api,cegeka_batchers,taxcalculator/taxcalculator-presentation/pom.xml,11a1aca69df0adf5172cb18263ba20ed4806817b,11a1aca69df0adf5172cb18263ba20ed4806817b,"+javax.servlet:javax.servlet-api
+-org.apache.tomcat:tomcat-servlet-api","+javax.servlet:javax.servlet-api
+-org.apache.tomcat:tomcat-servlet-api","[tom] changed the dependency to the servlet api to reference the
+standard one.","[tom] changed the dependency to the servlet api to reference the
+standard one.",2014-05-26,2014-05-26,64,cegeka,batchers
+884,com.google.code.gson:gson,com.alibaba:fastjson,hippo-band_hippo,hippo-common/pom.xml,227ca6473aac1893d14cacf9cd9e4aea7c4709e0,227ca6473aac1893d14cacf9cd9e4aea7c4709e0,"+com.alibaba:fastjson
+-com.google.code.gson:gson","+com.alibaba:fastjson
+-com.google.code.gson:gson","json序列化方式由gson改为fastjson.
+","json序列化方式由gson改为fastjson.
+",2017-08-19,2017-08-19,12,hippo-band,hippo
+3616,javax.json:javax.json-api,org.glassfish:javax.json,stanfordnlp_CoreNLP,pom.xml,62e431ed1be7fe316351fa64947d172a98207768,62e431ed1be7fe316351fa64947d172a98207768,"+org.glassfish:javax.json
+-javax.json:javax.json-api","+org.glassfish:javax.json
+-javax.json:javax.json-api","update javax
+","update javax
+",2017-01-13,2017-01-13,3,stanfordnlp,CoreNLP
+1009,com.h2database:h2,mysql:mysql-connector-java,nilzao_soapbox-race,pom.xml,46050057add54b397e4dac6ea42dab202edefebf,46050057add54b397e4dac6ea42dab202edefebf,"+org.eclipse.persistence:org.eclipse.persistence.moxy
++mysql:mysql-connector-java
+-com.h2database:h2","+org.eclipse.persistence:org.eclipse.persistence.moxy
++mysql:mysql-connector-java
+-com.h2database:h2",Switch to MySQL,Switch to MySQL,2016-05-11,2016-05-11,31,nilzao,soapbox-race
+3175,io.dropwizard.metrics:metrics-graphite,io.micrometer:micrometer-registry-prometheus,HotelsDotCom_data-highway,monitoring/kafka-offset-metrics/pom.xml,d79ebc0c4b87d08e45489bdb0a49a1d2124b8439,d79ebc0c4b87d08e45489bdb0a49a1d2124b8439,"+org.springframework.boot:spring-boot-starter-web
++org.springframework.boot:spring-boot-starter-actuator
++io.micrometer:micrometer-registry-prometheus
+-io.dropwizard.metrics:metrics-core
+-javax.xml.bind:jaxb-api
+-io.dropwizard.metrics:metrics-graphite",,"ROAD-1116: Micrometer all metrics (except truck park)
+","ROAD-1116: Micrometer all metrics (except truck park)
+",2019-01-18,2019-01-18,18,HotelsDotCom,data-highway
+6562,org.apache.commons:commons-dbcp2,com.zaxxer:HikariCP,plan-player-analytics_Plan,Plan/pom.xml,349c556db44a52953aedb83fe7093e4d7e79aab6,349c556db44a52953aedb83fe7093e4d7e79aab6,"+com.zaxxer:HikariCP
+-commons-logging:commons-logging
+-org.apache.commons:commons-pool2
+-org.apache.commons:commons-dbcp2","+com.zaxxer:HikariCP
+-commons-logging:commons-logging
+-org.apache.commons:commons-pool2
+-org.apache.commons:commons-dbcp2","Replaced DHCP2 with HikariCP #660 (Possibly fixes #648)
+","Replaced DHCP2 with HikariCP #660 (Possibly fixes #648)
+",2018-07-27,2018-07-27,8,plan-player-analytics,Plan
+84,asm:asm,org.ow2.asm:asm,eclipse_sisu.inject,org.eclipse.sisu.inject/pom.xml,01ca345463fdaee4d5d72293bb7679fb5bc815ec,01ca345463fdaee4d5d72293bb7679fb5bc815ec,"+org.ow2.asm:asm
+-asm:asm","+org.ow2.asm:asm
+-asm:asm","Bug 406177: Upgrade to ASM4
+","Bug 406177: Upgrade to ASM4
+",2013-04-21,2013-04-21,5,eclipse,sisu.inject
+6782,org.apache.kafka:kafka_2.11,org.springframework.kafka:spring-kafka,daydreamdev_seconds-kill,pom.xml,897cdc8a63731ca1403e6b186c767a4ee909fa2f,897cdc8a63731ca1403e6b186c767a4ee909fa2f,"+com.google.code.gson:gson
++com.alibaba:fastjson
++org.springframework.kafka:spring-kafka
++com.alibaba:druid-spring-boot-starter
+-org.apache.kafka:kafka_2.11
+-com.alibaba:druid","+com.google.code.gson:gson
++com.alibaba:fastjson
++org.springframework.kafka:spring-kafka
++com.alibaba:druid-spring-boot-starter
+-org.apache.kafka:kafka_2.11
+-com.alibaba:druid","Kafka 异步下单
+
+1. 替换 Springboot 版本为 1.5，之前的 2.1 版本整合 spring-kafka 失败
+2. 秒杀请求到来时，先校验库存，校验库存通过后，将下单请求发送给 kafka，然后通过 kafka 监听异步处理创建订单请求
+","Kafka 异步下单
+
+1. 替换 Springboot 版本为 1.5，之前的 2.1 版本整合 spring-kafka 失败
+2. 秒杀请求到来时，先校验库存，校验库存通过后，将下单请求发送给 kafka，然后通过 kafka 监听异步处理创建订单请求
+",2019-06-12,2019-06-12,83,daydreamdev,seconds-kill
+13859,org.springframework.security.oauth:spring-security-oauth2,io.jsonwebtoken:jjwt,gravitee-io_graviteeio-access-management,gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-management/pom.xml,0b18ada3207991cdfd70a551c56af125d2a0efe1,0b18ada3207991cdfd70a551c56af125d2a0efe1,"+io.jsonwebtoken:jjwt
++org.springframework.security:spring-security-config
++org.springframework.security:spring-security-web
+-org.springframework.security.oauth:spring-security-oauth2","+io.jsonwebtoken:jjwt
++org.springframework.security:spring-security-config
++org.springframework.security:spring-security-web
+-org.springframework.security.oauth:spring-security-oauth2","feat(rest-api): replace spring security oauth2 with JWT cookie security mechanism
+","feat(rest-api): replace spring security oauth2 with JWT cookie security mechanism
+",2018-03-19,2018-03-19,111,gravitee-io,graviteeio-access-management
+1925,commons-httpclient:commons-httpclient,org.apache.httpcomponents:httpclient,EmiteGWT_emite,pom.xml,6bce09ae519ce35bf592b75b110323292b01deef,6bce09ae519ce35bf592b75b110323292b01deef,"+org.apache.httpcomponents:httpclient
+-commons-httpclient:commons-httpclient","+org.apache.httpcomponents:httpclient
+-commons-httpclient:commons-httpclient","- New Eclipse project, based on m2eclipse.
+- Replaced commons-httpclient with the new Apache HttpCore.
+- Moved all tests to src/test (some tests are still failing)","- New Eclipse project, based on m2eclipse.
+- Replaced commons-httpclient with the new Apache HttpCore.
+- Moved all tests to src/test (some tests are still failing)",2011-03-20,2011-03-20,27,EmiteGWT,emite
