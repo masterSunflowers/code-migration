@@ -1,0 +1,99 @@
+[
+    {
+        "rev_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-management/src/main/java/io/gravitee/am/management/handlers/management/api/spring/security/SecurityConfiguration.java",
+        "definition": "@Configuration\n@EnableWebSecurity\n@EnableResourceServer\npublic class SecurityConfiguration extends ResourceServerConfigurerAdapter {\n\n    @Autowired\n    private Environment environment;\n\n    @Autowired\n    private ApplicationEventPublisher applicationEventPublisher;\n\n    @Override\n    public void configure(ResourceServerSecurityConfigurer resources) throws Exception {\n        resources\n                .tokenServices(remoteTokenServices())\n                .resourceId(null)\n                .eventPublisher(new DefaultAuthenticationEventPublisher(applicationEventPublisher));\n    }\n\n    @Override\n    public void configure(HttpSecurity http) throws Exception {\n        http\n            .sessionManagement()\n                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)\n            .and()\n                .authorizeRequests()\n                    .antMatchers(HttpMethod.OPTIONS, \"**\").permitAll()\n                    .anyRequest().authenticated()\n            .and()\n                .httpBasic()\n                    .disable()\n                .csrf()\n                .disable()\n            .addFilterBefore(corsFilter(), ChannelProcessingFilter.class);\n    }\n\n    @Bean\n    public Filter corsFilter() {\n        return new CORSFilter();\n    }\n\n    @Bean\n    public RemoteTokenServices remoteTokenServices() {\n        RemoteTokenServices s = new RemoteTokenServices();\n        s.setCheckTokenEndpointUrl(environment.getProperty(\"authentication.oauth2.url\"));\n        s.setClientId(environment.getProperty(\"authentication.oauth2.clientId\"));\n        s.setClientSecret(environment.getProperty(\"authentication.oauth2.clientSecret\"));\n        return s;\n    }\n}",
+        "package": "package io.gravitee.am.management.handlers.management.api.spring.security;",
+        "tree_path": "SecurityConfiguration",
+        "name": "SecurityConfiguration",
+        "modifiers": "@Configuration\n@EnableWebSecurity\n@EnableResourceServer\npublic",
+        "superclass": "extends ResourceServerConfigurerAdapter",
+        "super_interfaces": null,
+        "body": "{\n\n    @Autowired\n    private Environment environment;\n\n    @Autowired\n    private ApplicationEventPublisher applicationEventPublisher;\n\n    @Override\n    public void configure(ResourceServerSecurityConfigurer resources) throws Exception {\n        resources\n                .tokenServices(remoteTokenServices())\n                .resourceId(null)\n                .eventPublisher(new DefaultAuthenticationEventPublisher(applicationEventPublisher));\n    }\n\n    @Override\n    public void configure(HttpSecurity http) throws Exception {\n        http\n            .sessionManagement()\n                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)\n            .and()\n                .authorizeRequests()\n                    .antMatchers(HttpMethod.OPTIONS, \"**\").permitAll()\n                    .anyRequest().authenticated()\n            .and()\n                .httpBasic()\n                    .disable()\n                .csrf()\n                .disable()\n            .addFilterBefore(corsFilter(), ChannelProcessingFilter.class);\n    }\n\n    @Bean\n    public Filter corsFilter() {\n        return new CORSFilter();\n    }\n\n    @Bean\n    public RemoteTokenServices remoteTokenServices() {\n        RemoteTokenServices s = new RemoteTokenServices();\n        s.setCheckTokenEndpointUrl(environment.getProperty(\"authentication.oauth2.url\"));\n        s.setClientId(environment.getProperty(\"authentication.oauth2.clientId\"));\n        s.setClientSecret(environment.getProperty(\"authentication.oauth2.clientSecret\"));\n        return s;\n    }\n}",
+        "start_point": {
+            "row": 40,
+            "column": 0
+        },
+        "end_point": {
+            "row": 89,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "@Override\npublic void configure(ResourceServerSecurityConfigurer resources) throws Exception {\n    resources\n            .tokenServices(remoteTokenServices())\n            .resourceId(null)\n            .eventPublisher(new DefaultAuthenticationEventPublisher(applicationEventPublisher));\n}",
+                "name": "configure",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "ResourceServerSecurityConfigurer",
+                        "name": "resources"
+                    }
+                ],
+                "body": "{\n    resources\n            .tokenServices(remoteTokenServices())\n            .resourceId(null)\n            .eventPublisher(new DefaultAuthenticationEventPublisher(applicationEventPublisher));\n}",
+                "start_point": {
+                    "row": 51,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 57,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic void configure(HttpSecurity http) throws Exception {\n    http\n        .sessionManagement()\n            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)\n        .and()\n            .authorizeRequests()\n                .antMatchers(HttpMethod.OPTIONS, \"**\").permitAll()\n                .anyRequest().authenticated()\n        .and()\n            .httpBasic()\n                .disable()\n            .csrf()\n            .disable()\n        .addFilterBefore(corsFilter(), ChannelProcessingFilter.class);\n}",
+                "name": "configure",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "HttpSecurity",
+                        "name": "http"
+                    }
+                ],
+                "body": "{\n    http\n        .sessionManagement()\n            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)\n        .and()\n            .authorizeRequests()\n                .antMatchers(HttpMethod.OPTIONS, \"**\").permitAll()\n                .anyRequest().authenticated()\n        .and()\n            .httpBasic()\n                .disable()\n            .csrf()\n            .disable()\n        .addFilterBefore(corsFilter(), ChannelProcessingFilter.class);\n}",
+                "start_point": {
+                    "row": 59,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 74,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Bean\npublic Filter corsFilter() {\n    return new CORSFilter();\n}",
+                "name": "corsFilter",
+                "modifiers": "@Bean\n    public",
+                "return_type": "Filter",
+                "parameters": [],
+                "body": "{\n    return new CORSFilter();\n}",
+                "start_point": {
+                    "row": 76,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 79,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Bean\npublic RemoteTokenServices remoteTokenServices() {\n    RemoteTokenServices s = new RemoteTokenServices();\n    s.setCheckTokenEndpointUrl(environment.getProperty(\"authentication.oauth2.url\"));\n    s.setClientId(environment.getProperty(\"authentication.oauth2.clientId\"));\n    s.setClientSecret(environment.getProperty(\"authentication.oauth2.clientSecret\"));\n    return s;\n}",
+                "name": "remoteTokenServices",
+                "modifiers": "@Bean\n    public",
+                "return_type": "RemoteTokenServices",
+                "parameters": [],
+                "body": "{\n    RemoteTokenServices s = new RemoteTokenServices();\n    s.setCheckTokenEndpointUrl(environment.getProperty(\"authentication.oauth2.url\"));\n    s.setClientId(environment.getProperty(\"authentication.oauth2.clientId\"));\n    s.setClientSecret(environment.getProperty(\"authentication.oauth2.clientSecret\"));\n    return s;\n}",
+                "start_point": {
+                    "row": 81,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 88,
+                    "column": 5
+                }
+            }
+        ]
+    }
+]

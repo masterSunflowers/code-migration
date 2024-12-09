@@ -1,0 +1,892 @@
+[
+    {
+        "rev_path": "dom/src/main/java/org/estatio/dom/lease/LeaseItem.java",
+        "definition": "@javax.jdo.annotations.PersistenceCapable(identityType = IdentityType.DATASTORE)\n@javax.jdo.annotations.DatastoreIdentity(\n        strategy = IdGeneratorStrategy.NATIVE,\n        column = \"id\")\n@javax.jdo.annotations.Version(\n        strategy = VersionStrategy.VERSION_NUMBER,\n        column = \"version\")\n@javax.jdo.annotations.Indices({\n        @javax.jdo.annotations.Index(\n                name = \"LeaseItem_lease_type_sequence_IDX\",\n                members = { \"lease\", \"type\", \"sequence\" }),\n        @javax.jdo.annotations.Index(\n                name = \"LeaseItem_lease_type_startDate_IDX\",\n                members = { \"lease\", \"type\", \"startDate\" })\n})\n@javax.jdo.annotations.Queries({\n        @javax.jdo.annotations.Query(\n                name = \"findByLeaseAndTypeAndStartDate\",\n                language = \"JDOQL\",\n                value = \"SELECT \"\n                        + \"FROM org.estatio.dom.lease.LeaseItem \"\n                        + \"WHERE lease == :lease \"\n                        + \"   && type == :type \"\n                        + \"   && startDate == :startDate\"),\n        @javax.jdo.annotations.Query(\n                name = \"findByLeaseAndTypeAndStartDateAndSequence\",\n                language = \"JDOQL\",\n                value = \"SELECT \"\n                        + \"FROM org.estatio.dom.lease.LeaseItem \"\n                        + \"WHERE lease == :lease \"\n                        + \"&& type == :type \"\n                        + \"&& startDate == :startDate \"\n                        + \"&& sequence == :sequence\"),\n        @javax.jdo.annotations.Query(\n                name = \"findByLeaseAndTypeAndEndDate\",\n                language = \"JDOQL\",\n                value = \"SELECT \"\n                        + \"FROM org.estatio.dom.lease.LeaseItem \"\n                        + \"WHERE lease == :lease \"\n                        + \"   && endDate == :endDate\")\n})\n@Bookmarkable(BookmarkPolicy.AS_CHILD)\npublic class LeaseItem\n        extends EstatioMutableObject<LeaseItem>\n        implements WithIntervalMutable<LeaseItem>, WithSequence {\n\n    private static final int PAGE_SIZE = 15;\n\n    public LeaseItem() {\n        super(\"lease, type, sequence desc\");\n    }\n\n    // //////////////////////////////////////\n\n    private LeaseItemStatus status;\n\n    @javax.jdo.annotations.Column(allowsNull = \"false\", length = JdoColumnLength.STATUS_ENUM)\n    @Hidden(where = Where.PARENTED_TABLES)\n    @Disabled\n    public LeaseItemStatus getStatus() {\n        return status;\n    }\n\n    public void setStatus(final LeaseItemStatus status) {\n        this.status = status;\n    }\n\n    // //////////////////////////////////////\n\n    private Lease lease;\n\n    @javax.jdo.annotations.Column(name = \"leaseId\", allowsNull = \"false\")\n    @Hidden(where = Where.PARENTED_TABLES)\n    @Title(sequence = \"1\", append = \":\")\n    public Lease getLease() {\n        return lease;\n    }\n\n    public void setLease(final Lease lease) {\n        this.lease = lease;\n    }\n\n    // //////////////////////////////////////\n\n    private BigInteger sequence;\n\n    @javax.jdo.annotations.Column(allowsNull = \"false\")\n    @Hidden\n    @Override\n    public BigInteger getSequence() {\n        return sequence;\n    }\n\n    @Override\n    public void setSequence(final BigInteger sequence) {\n        this.sequence = sequence;\n    }\n\n    @Programmatic\n    public LeaseTerm findTermWithSequence(final BigInteger sequence) {\n        // for (LeaseTerm term : getTerms()) {\n        // if (sequence.equals(term.getSequence())) {\n        // return term;\n        // }\n        // }\n        // return null;\n        // TODO: the code above proved to be very unreliable when using the api.\n        // Have to investigate further\n        return leaseTerms.findLeaseTermByLeaseItemAndSequence(this, sequence);\n    }\n\n    // //////////////////////////////////////\n\n    private LeaseItemType type;\n\n    @javax.jdo.annotations.Persistent(defaultFetchGroup = \"true\")\n    @javax.jdo.annotations.Column(allowsNull = \"false\", length = JdoColumnLength.TYPE_ENUM)\n    @Title(sequence = \"2\")\n    public LeaseItemType getType() {\n        return type;\n    }\n\n    public void setType(final LeaseItemType type) {\n        this.type = type;\n    }\n\n    // //////////////////////////////////////\n\n    @javax.jdo.annotations.Persistent\n    private LocalDate startDate;\n\n    @Optional\n    @Disabled\n    @Override\n    public LocalDate getStartDate() {\n        return startDate;\n    }\n\n    @Override\n    public void setStartDate(final LocalDate startDate) {\n        this.startDate = startDate;\n    }\n\n    @javax.jdo.annotations.Persistent\n    private LocalDate endDate;\n\n    @Hidden(where = Where.PARENTED_TABLES)\n    @Optional\n    @Disabled\n    public LocalDate getEndDate() {\n        return endDate;\n    }\n\n    public void setEndDate(final LocalDate endDate) {\n        this.endDate = endDate;\n    }\n\n    // //////////////////////////////////////\n\n    private WithIntervalMutable.Helper<LeaseItem> changeDates = new WithIntervalMutable.Helper<LeaseItem>(this);\n\n    WithIntervalMutable.Helper<LeaseItem> getChangeDates() {\n        return changeDates;\n    }\n\n    @ActionSemantics(Of.IDEMPOTENT)\n    @Override\n    public LeaseItem changeDates(\n            final @Named(\"Start Date\") @Optional LocalDate startDate,\n            final @Named(\"End Date\") @Optional LocalDate endDate) {\n        return getChangeDates().changeDates(startDate, endDate);\n    }\n\n    public String disableChangeDates(\n            final LocalDate startDate,\n            final LocalDate endDate) {\n        return null;\n    }\n\n    @Override\n    public LocalDate default0ChangeDates() {\n        return getChangeDates().default0ChangeDates();\n    }\n\n    @Override\n    public LocalDate default1ChangeDates() {\n        return getChangeDates().default1ChangeDates();\n    }\n\n    @Override\n    public String validateChangeDates(\n            final LocalDate startDate,\n            final LocalDate endDate) {\n        return getChangeDates().validateChangeDates(startDate, endDate);\n    }\n\n    // //////////////////////////////////////\n\n    @Programmatic\n    @Override\n    public LocalDateInterval getInterval() {\n        return LocalDateInterval.including(getStartDate(), getEndDate());\n    }\n\n    @Programmatic\n    @Override\n    public LocalDateInterval getEffectiveInterval() {\n        return getInterval().overlap(getLease().getEffectiveInterval());\n    }\n\n    // //////////////////////////////////////\n\n    public boolean isCurrent() {\n        return isActiveOn(getClockService().now());\n    }\n\n    private boolean isActiveOn(final LocalDate localDate) {\n        return getEffectiveInterval().contains(localDate);\n    }\n\n    // //////////////////////////////////////\n\n    private InvoicingFrequency invoicingFrequency;\n\n    @javax.jdo.annotations.Column(allowsNull = \"false\", length = JdoColumnLength.INVOICING_FREQUENCY_ENUM)\n    @Hidden(where = Where.PARENTED_TABLES)\n    public InvoicingFrequency getInvoicingFrequency() {\n        return invoicingFrequency;\n    }\n\n    public void setInvoicingFrequency(final InvoicingFrequency invoicingFrequency) {\n        this.invoicingFrequency = invoicingFrequency;\n    }\n\n    // //////////////////////////////////////\n\n    private PaymentMethod paymentMethod;\n\n    @javax.jdo.annotations.Column(allowsNull = \"false\", length = JdoColumnLength.PAYMENT_METHOD_ENUM)\n    @Hidden(where = Where.PARENTED_TABLES)\n    public PaymentMethod getPaymentMethod() {\n        return paymentMethod;\n    }\n\n    public void setPaymentMethod(final PaymentMethod paymentMethod) {\n        this.paymentMethod = paymentMethod;\n    }\n\n    // //////////////////////////////////////\n\n    private Charge charge;\n\n    @javax.jdo.annotations.Column(name = \"chargeId\", allowsNull = \"false\")\n    public Charge getCharge() {\n        return charge;\n    }\n\n    public void setCharge(final Charge charge) {\n        this.charge = charge;\n    }\n\n    public List<Charge> choicesCharge() {\n        return charges.allCharges();\n    }\n\n    // //////////////////////////////////////\n\n    @Disabled\n    @Optional\n    public BigDecimal getTrialValue() {\n        final LeaseTerm currentTerm = currentTerm(getClockService().now());\n        return currentTerm != null ? currentTerm.getTrialValue() : null;\n    }\n\n    // //////////////////////////////////////\n\n    @Disabled\n    @Optional\n    public BigDecimal getApprovedValue() {\n        LeaseTerm currentTerm = currentTerm(getClockService().now());\n        return currentTerm != null ? currentTerm.getApprovedValue() : null;\n    }\n\n    // //////////////////////////////////////\n\n    @Programmatic\n    public LeaseTerm currentTerm(final LocalDate date) {\n        for (LeaseTerm term : getTerms()) {\n            if (term.isActiveOn(date)) {\n                return term;\n            }\n        }\n        return null;\n    }\n\n    // //////////////////////////////////////\n\n    @javax.jdo.annotations.Persistent(mappedBy = \"leaseItem\")\n    private SortedSet<LeaseTerm> terms = new TreeSet<LeaseTerm>();\n\n    @Render(Type.EAGERLY)\n    @Paged(PAGE_SIZE)\n    public SortedSet<LeaseTerm> getTerms() {\n        return terms;\n    }\n\n    public void setTerms(final SortedSet<LeaseTerm> terms) {\n        this.terms = terms;\n    }\n\n    @Programmatic\n    public LeaseTerm findTerm(final LocalDate startDate) {\n        for (LeaseTerm term : getTerms()) {\n            if (startDate.equals(term.getStartDate())) {\n                return term;\n            }\n        }\n        return null;\n    }\n\n    // //////////////////////////////////////\n\n    public LeaseTerm newTerm(\n            final @Named(\"Start date\") LocalDate startDate) {\n        LeaseTerm lastTerm = null;\n        try {\n            lastTerm = getTerms().last();\n        } catch (NoSuchElementException e) {\n            // TODO: is this ok?  if so then let's have a comment here at least.\n        }\n        LeaseTerm term = leaseTerms.newLeaseTerm(this, lastTerm, startDate);\n        term.initialize();\n        return term;\n    }\n\n    public LocalDate default0NewTerm() {\n        LeaseTerm last = null;\n        try {\n            last = getTerms().last();\n        } catch (NoSuchElementException e) {\n            return getStartDate();\n        }\n        if (last.getEndDate() != null) {\n            return last.getInterval().endDateExcluding();\n        }\n        return last.getStartDate().plusYears(1).withMonthOfYear(1).withDayOfMonth(1);\n    }\n\n    // //////////////////////////////////////\n\n    public LeaseItem verify() {\n        verifyUntil(getClockService().now());\n        return this;\n    }\n\n    @Programmatic\n    public void verifyUntil(final LocalDate date) {\n        for (LeaseTerm term : getTerms()) {\n            if (term.getPrevious() == null) {\n                // since verify is recursive on terms only start on the main\n                // term\n                term.verifyUntil(date);\n            }\n        }\n    }\n\n    // //////////////////////////////////////\n\n    public LeaseItem calculate(\n            final @Named(\"Period start Date\") LocalDate startDate,\n            final @Named(\"Period end date\") @Optional LocalDate endDate,\n            final @Named(\"Due date\") LocalDate dueDate,\n            final @Named(\"Run Type\") InvoiceRunType runType) {\n        for (LeaseTerm term : getTerms()) {\n            term.calculate(startDate, endDate, dueDate, runType);\n        }\n        return this;\n    }\n\n    // //////////////////////////////////////\n\n    BigDecimal valueForPeriod(\n            final InvoicingFrequency frequency,\n            final LocalDate periodStartDate,\n            final LocalDate dueDate) {\n        BigDecimal total = new BigDecimal(0);\n        for (LeaseTerm term : getTerms()) {\n            total = total.add(term.valueForPeriod(periodStartDate, dueDate, frequency));\n        }\n        return total;\n    }\n\n    // //////////////////////////////////////\n\n    private Charges charges;\n\n    public final void injectCharges(final Charges charges) {\n        this.charges = charges;\n    }\n\n    private LeaseTerms leaseTerms;\n\n    public final void injectLeaseTerms(final LeaseTerms leaseTerms) {\n        this.leaseTerms = leaseTerms;\n    }\n\n}",
+        "package": "package org.estatio.dom.lease;",
+        "tree_path": "LeaseItem",
+        "name": "LeaseItem",
+        "modifiers": "@javax.jdo.annotations.PersistenceCapable(identityType = IdentityType.DATASTORE)\n@javax.jdo.annotations.DatastoreIdentity(\n        strategy = IdGeneratorStrategy.NATIVE,\n        column = \"id\")\n@javax.jdo.annotations.Version(\n        strategy = VersionStrategy.VERSION_NUMBER,\n        column = \"version\")\n@javax.jdo.annotations.Indices({\n        @javax.jdo.annotations.Index(\n                name = \"LeaseItem_lease_type_sequence_IDX\",\n                members = { \"lease\", \"type\", \"sequence\" }),\n        @javax.jdo.annotations.Index(\n                name = \"LeaseItem_lease_type_startDate_IDX\",\n                members = { \"lease\", \"type\", \"startDate\" })\n})\n@javax.jdo.annotations.Queries({\n        @javax.jdo.annotations.Query(\n                name = \"findByLeaseAndTypeAndStartDate\",\n                language = \"JDOQL\",\n                value = \"SELECT \"\n                        + \"FROM org.estatio.dom.lease.LeaseItem \"\n                        + \"WHERE lease == :lease \"\n                        + \"   && type == :type \"\n                        + \"   && startDate == :startDate\"),\n        @javax.jdo.annotations.Query(\n                name = \"findByLeaseAndTypeAndStartDateAndSequence\",\n                language = \"JDOQL\",\n                value = \"SELECT \"\n                        + \"FROM org.estatio.dom.lease.LeaseItem \"\n                        + \"WHERE lease == :lease \"\n                        + \"&& type == :type \"\n                        + \"&& startDate == :startDate \"\n                        + \"&& sequence == :sequence\"),\n        @javax.jdo.annotations.Query(\n                name = \"findByLeaseAndTypeAndEndDate\",\n                language = \"JDOQL\",\n                value = \"SELECT \"\n                        + \"FROM org.estatio.dom.lease.LeaseItem \"\n                        + \"WHERE lease == :lease \"\n                        + \"   && endDate == :endDate\")\n})\n@Bookmarkable(BookmarkPolicy.AS_CHILD)\npublic",
+        "superclass": "extends EstatioMutableObject<LeaseItem>",
+        "super_interfaces": "implements WithIntervalMutable<LeaseItem>, WithSequence",
+        "body": "{\n\n    private static final int PAGE_SIZE = 15;\n\n    public LeaseItem() {\n        super(\"lease, type, sequence desc\");\n    }\n\n    // //////////////////////////////////////\n\n    private LeaseItemStatus status;\n\n    @javax.jdo.annotations.Column(allowsNull = \"false\", length = JdoColumnLength.STATUS_ENUM)\n    @Hidden(where = Where.PARENTED_TABLES)\n    @Disabled\n    public LeaseItemStatus getStatus() {\n        return status;\n    }\n\n    public void setStatus(final LeaseItemStatus status) {\n        this.status = status;\n    }\n\n    // //////////////////////////////////////\n\n    private Lease lease;\n\n    @javax.jdo.annotations.Column(name = \"leaseId\", allowsNull = \"false\")\n    @Hidden(where = Where.PARENTED_TABLES)\n    @Title(sequence = \"1\", append = \":\")\n    public Lease getLease() {\n        return lease;\n    }\n\n    public void setLease(final Lease lease) {\n        this.lease = lease;\n    }\n\n    // //////////////////////////////////////\n\n    private BigInteger sequence;\n\n    @javax.jdo.annotations.Column(allowsNull = \"false\")\n    @Hidden\n    @Override\n    public BigInteger getSequence() {\n        return sequence;\n    }\n\n    @Override\n    public void setSequence(final BigInteger sequence) {\n        this.sequence = sequence;\n    }\n\n    @Programmatic\n    public LeaseTerm findTermWithSequence(final BigInteger sequence) {\n        // for (LeaseTerm term : getTerms()) {\n        // if (sequence.equals(term.getSequence())) {\n        // return term;\n        // }\n        // }\n        // return null;\n        // TODO: the code above proved to be very unreliable when using the api.\n        // Have to investigate further\n        return leaseTerms.findLeaseTermByLeaseItemAndSequence(this, sequence);\n    }\n\n    // //////////////////////////////////////\n\n    private LeaseItemType type;\n\n    @javax.jdo.annotations.Persistent(defaultFetchGroup = \"true\")\n    @javax.jdo.annotations.Column(allowsNull = \"false\", length = JdoColumnLength.TYPE_ENUM)\n    @Title(sequence = \"2\")\n    public LeaseItemType getType() {\n        return type;\n    }\n\n    public void setType(final LeaseItemType type) {\n        this.type = type;\n    }\n\n    // //////////////////////////////////////\n\n    @javax.jdo.annotations.Persistent\n    private LocalDate startDate;\n\n    @Optional\n    @Disabled\n    @Override\n    public LocalDate getStartDate() {\n        return startDate;\n    }\n\n    @Override\n    public void setStartDate(final LocalDate startDate) {\n        this.startDate = startDate;\n    }\n\n    @javax.jdo.annotations.Persistent\n    private LocalDate endDate;\n\n    @Hidden(where = Where.PARENTED_TABLES)\n    @Optional\n    @Disabled\n    public LocalDate getEndDate() {\n        return endDate;\n    }\n\n    public void setEndDate(final LocalDate endDate) {\n        this.endDate = endDate;\n    }\n\n    // //////////////////////////////////////\n\n    private WithIntervalMutable.Helper<LeaseItem> changeDates = new WithIntervalMutable.Helper<LeaseItem>(this);\n\n    WithIntervalMutable.Helper<LeaseItem> getChangeDates() {\n        return changeDates;\n    }\n\n    @ActionSemantics(Of.IDEMPOTENT)\n    @Override\n    public LeaseItem changeDates(\n            final @Named(\"Start Date\") @Optional LocalDate startDate,\n            final @Named(\"End Date\") @Optional LocalDate endDate) {\n        return getChangeDates().changeDates(startDate, endDate);\n    }\n\n    public String disableChangeDates(\n            final LocalDate startDate,\n            final LocalDate endDate) {\n        return null;\n    }\n\n    @Override\n    public LocalDate default0ChangeDates() {\n        return getChangeDates().default0ChangeDates();\n    }\n\n    @Override\n    public LocalDate default1ChangeDates() {\n        return getChangeDates().default1ChangeDates();\n    }\n\n    @Override\n    public String validateChangeDates(\n            final LocalDate startDate,\n            final LocalDate endDate) {\n        return getChangeDates().validateChangeDates(startDate, endDate);\n    }\n\n    // //////////////////////////////////////\n\n    @Programmatic\n    @Override\n    public LocalDateInterval getInterval() {\n        return LocalDateInterval.including(getStartDate(), getEndDate());\n    }\n\n    @Programmatic\n    @Override\n    public LocalDateInterval getEffectiveInterval() {\n        return getInterval().overlap(getLease().getEffectiveInterval());\n    }\n\n    // //////////////////////////////////////\n\n    public boolean isCurrent() {\n        return isActiveOn(getClockService().now());\n    }\n\n    private boolean isActiveOn(final LocalDate localDate) {\n        return getEffectiveInterval().contains(localDate);\n    }\n\n    // //////////////////////////////////////\n\n    private InvoicingFrequency invoicingFrequency;\n\n    @javax.jdo.annotations.Column(allowsNull = \"false\", length = JdoColumnLength.INVOICING_FREQUENCY_ENUM)\n    @Hidden(where = Where.PARENTED_TABLES)\n    public InvoicingFrequency getInvoicingFrequency() {\n        return invoicingFrequency;\n    }\n\n    public void setInvoicingFrequency(final InvoicingFrequency invoicingFrequency) {\n        this.invoicingFrequency = invoicingFrequency;\n    }\n\n    // //////////////////////////////////////\n\n    private PaymentMethod paymentMethod;\n\n    @javax.jdo.annotations.Column(allowsNull = \"false\", length = JdoColumnLength.PAYMENT_METHOD_ENUM)\n    @Hidden(where = Where.PARENTED_TABLES)\n    public PaymentMethod getPaymentMethod() {\n        return paymentMethod;\n    }\n\n    public void setPaymentMethod(final PaymentMethod paymentMethod) {\n        this.paymentMethod = paymentMethod;\n    }\n\n    // //////////////////////////////////////\n\n    private Charge charge;\n\n    @javax.jdo.annotations.Column(name = \"chargeId\", allowsNull = \"false\")\n    public Charge getCharge() {\n        return charge;\n    }\n\n    public void setCharge(final Charge charge) {\n        this.charge = charge;\n    }\n\n    public List<Charge> choicesCharge() {\n        return charges.allCharges();\n    }\n\n    // //////////////////////////////////////\n\n    @Disabled\n    @Optional\n    public BigDecimal getTrialValue() {\n        final LeaseTerm currentTerm = currentTerm(getClockService().now());\n        return currentTerm != null ? currentTerm.getTrialValue() : null;\n    }\n\n    // //////////////////////////////////////\n\n    @Disabled\n    @Optional\n    public BigDecimal getApprovedValue() {\n        LeaseTerm currentTerm = currentTerm(getClockService().now());\n        return currentTerm != null ? currentTerm.getApprovedValue() : null;\n    }\n\n    // //////////////////////////////////////\n\n    @Programmatic\n    public LeaseTerm currentTerm(final LocalDate date) {\n        for (LeaseTerm term : getTerms()) {\n            if (term.isActiveOn(date)) {\n                return term;\n            }\n        }\n        return null;\n    }\n\n    // //////////////////////////////////////\n\n    @javax.jdo.annotations.Persistent(mappedBy = \"leaseItem\")\n    private SortedSet<LeaseTerm> terms = new TreeSet<LeaseTerm>();\n\n    @Render(Type.EAGERLY)\n    @Paged(PAGE_SIZE)\n    public SortedSet<LeaseTerm> getTerms() {\n        return terms;\n    }\n\n    public void setTerms(final SortedSet<LeaseTerm> terms) {\n        this.terms = terms;\n    }\n\n    @Programmatic\n    public LeaseTerm findTerm(final LocalDate startDate) {\n        for (LeaseTerm term : getTerms()) {\n            if (startDate.equals(term.getStartDate())) {\n                return term;\n            }\n        }\n        return null;\n    }\n\n    // //////////////////////////////////////\n\n    public LeaseTerm newTerm(\n            final @Named(\"Start date\") LocalDate startDate) {\n        LeaseTerm lastTerm = null;\n        try {\n            lastTerm = getTerms().last();\n        } catch (NoSuchElementException e) {\n            // TODO: is this ok?  if so then let's have a comment here at least.\n        }\n        LeaseTerm term = leaseTerms.newLeaseTerm(this, lastTerm, startDate);\n        term.initialize();\n        return term;\n    }\n\n    public LocalDate default0NewTerm() {\n        LeaseTerm last = null;\n        try {\n            last = getTerms().last();\n        } catch (NoSuchElementException e) {\n            return getStartDate();\n        }\n        if (last.getEndDate() != null) {\n            return last.getInterval().endDateExcluding();\n        }\n        return last.getStartDate().plusYears(1).withMonthOfYear(1).withDayOfMonth(1);\n    }\n\n    // //////////////////////////////////////\n\n    public LeaseItem verify() {\n        verifyUntil(getClockService().now());\n        return this;\n    }\n\n    @Programmatic\n    public void verifyUntil(final LocalDate date) {\n        for (LeaseTerm term : getTerms()) {\n            if (term.getPrevious() == null) {\n                // since verify is recursive on terms only start on the main\n                // term\n                term.verifyUntil(date);\n            }\n        }\n    }\n\n    // //////////////////////////////////////\n\n    public LeaseItem calculate(\n            final @Named(\"Period start Date\") LocalDate startDate,\n            final @Named(\"Period end date\") @Optional LocalDate endDate,\n            final @Named(\"Due date\") LocalDate dueDate,\n            final @Named(\"Run Type\") InvoiceRunType runType) {\n        for (LeaseTerm term : getTerms()) {\n            term.calculate(startDate, endDate, dueDate, runType);\n        }\n        return this;\n    }\n\n    // //////////////////////////////////////\n\n    BigDecimal valueForPeriod(\n            final InvoicingFrequency frequency,\n            final LocalDate periodStartDate,\n            final LocalDate dueDate) {\n        BigDecimal total = new BigDecimal(0);\n        for (LeaseTerm term : getTerms()) {\n            total = total.add(term.valueForPeriod(periodStartDate, dueDate, frequency));\n        }\n        return total;\n    }\n\n    // //////////////////////////////////////\n\n    private Charges charges;\n\n    public final void injectCharges(final Charges charges) {\n        this.charges = charges;\n    }\n\n    private LeaseTerms leaseTerms;\n\n    public final void injectLeaseTerms(final LeaseTerms leaseTerms) {\n        this.leaseTerms = leaseTerms;\n    }\n\n}",
+        "start_point": {
+            "row": 70,
+            "column": 0
+        },
+        "end_point": {
+            "row": 476,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "public LeaseItem() {\n    super(\"lease, type, sequence desc\");\n}",
+                "name": "LeaseItem",
+                "modifiers": "public",
+                "parameters": [],
+                "body": "{\n    super(\"lease, type, sequence desc\");\n}",
+                "constructor": true,
+                "start_point": {
+                    "row": 118,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 120,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@javax.jdo.annotations.Column(allowsNull = \"false\", length = JdoColumnLength.STATUS_ENUM)\n@Hidden(where = Where.PARENTED_TABLES)\n@Disabled\npublic LeaseItemStatus getStatus() {\n    return status;\n}",
+                "name": "getStatus",
+                "modifiers": "@javax.jdo.annotations.Column(allowsNull = \"false\", length = JdoColumnLength.STATUS_ENUM)\n    @Hidden(where = Where.PARENTED_TABLES)\n    @Disabled\n    public",
+                "return_type": "LeaseItemStatus",
+                "parameters": [],
+                "body": "{\n    return status;\n}",
+                "start_point": {
+                    "row": 126,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 131,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void setStatus(final LeaseItemStatus status) {\n    this.status = status;\n}",
+                "name": "setStatus",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LeaseItemStatus"
+                    }
+                ],
+                "body": "{\n    this.status = status;\n}",
+                "start_point": {
+                    "row": 133,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 135,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@javax.jdo.annotations.Column(name = \"leaseId\", allowsNull = \"false\")\n@Hidden(where = Where.PARENTED_TABLES)\n@Title(sequence = \"1\", append = \":\")\npublic Lease getLease() {\n    return lease;\n}",
+                "name": "getLease",
+                "modifiers": "@javax.jdo.annotations.Column(name = \"leaseId\", allowsNull = \"false\")\n    @Hidden(where = Where.PARENTED_TABLES)\n    @Title(sequence = \"1\", append = \":\")\n    public",
+                "return_type": "Lease",
+                "parameters": [],
+                "body": "{\n    return lease;\n}",
+                "start_point": {
+                    "row": 141,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 146,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void setLease(final Lease lease) {\n    this.lease = lease;\n}",
+                "name": "setLease",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "Lease"
+                    }
+                ],
+                "body": "{\n    this.lease = lease;\n}",
+                "start_point": {
+                    "row": 148,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 150,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@javax.jdo.annotations.Column(allowsNull = \"false\")\n@Hidden\n@Override\npublic BigInteger getSequence() {\n    return sequence;\n}",
+                "name": "getSequence",
+                "modifiers": "@javax.jdo.annotations.Column(allowsNull = \"false\")\n    @Hidden\n    @Override\n    public",
+                "return_type": "BigInteger",
+                "parameters": [],
+                "body": "{\n    return sequence;\n}",
+                "start_point": {
+                    "row": 156,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 161,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic void setSequence(final BigInteger sequence) {\n    this.sequence = sequence;\n}",
+                "name": "setSequence",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "BigInteger"
+                    }
+                ],
+                "body": "{\n    this.sequence = sequence;\n}",
+                "start_point": {
+                    "row": 163,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 166,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Programmatic\npublic LeaseTerm findTermWithSequence(final BigInteger sequence) {\n    // for (LeaseTerm term : getTerms()) {\n    // if (sequence.equals(term.getSequence())) {\n    // return term;\n    // }\n    // }\n    // return null;\n    // TODO: the code above proved to be very unreliable when using the api.\n    // Have to investigate further\n    return leaseTerms.findLeaseTermByLeaseItemAndSequence(this, sequence);\n}",
+                "name": "findTermWithSequence",
+                "modifiers": "@Programmatic\n    public",
+                "return_type": "LeaseTerm",
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "BigInteger"
+                    }
+                ],
+                "body": "{\n    // for (LeaseTerm term : getTerms()) {\n    // if (sequence.equals(term.getSequence())) {\n    // return term;\n    // }\n    // }\n    // return null;\n    // TODO: the code above proved to be very unreliable when using the api.\n    // Have to investigate further\n    return leaseTerms.findLeaseTermByLeaseItemAndSequence(this, sequence);\n}",
+                "start_point": {
+                    "row": 168,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 179,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@javax.jdo.annotations.Persistent(defaultFetchGroup = \"true\")\n@javax.jdo.annotations.Column(allowsNull = \"false\", length = JdoColumnLength.TYPE_ENUM)\n@Title(sequence = \"2\")\npublic LeaseItemType getType() {\n    return type;\n}",
+                "name": "getType",
+                "modifiers": "@javax.jdo.annotations.Persistent(defaultFetchGroup = \"true\")\n    @javax.jdo.annotations.Column(allowsNull = \"false\", length = JdoColumnLength.TYPE_ENUM)\n    @Title(sequence = \"2\")\n    public",
+                "return_type": "LeaseItemType",
+                "parameters": [],
+                "body": "{\n    return type;\n}",
+                "start_point": {
+                    "row": 185,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 190,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void setType(final LeaseItemType type) {\n    this.type = type;\n}",
+                "name": "setType",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LeaseItemType"
+                    }
+                ],
+                "body": "{\n    this.type = type;\n}",
+                "start_point": {
+                    "row": 192,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 194,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Optional\n@Disabled\n@Override\npublic LocalDate getStartDate() {\n    return startDate;\n}",
+                "name": "getStartDate",
+                "modifiers": "@Optional\n    @Disabled\n    @Override\n    public",
+                "return_type": "LocalDate",
+                "parameters": [],
+                "body": "{\n    return startDate;\n}",
+                "start_point": {
+                    "row": 201,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 206,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic void setStartDate(final LocalDate startDate) {\n    this.startDate = startDate;\n}",
+                "name": "setStartDate",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    this.startDate = startDate;\n}",
+                "start_point": {
+                    "row": 208,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 211,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Hidden(where = Where.PARENTED_TABLES)\n@Optional\n@Disabled\npublic LocalDate getEndDate() {\n    return endDate;\n}",
+                "name": "getEndDate",
+                "modifiers": "@Hidden(where = Where.PARENTED_TABLES)\n    @Optional\n    @Disabled\n    public",
+                "return_type": "LocalDate",
+                "parameters": [],
+                "body": "{\n    return endDate;\n}",
+                "start_point": {
+                    "row": 216,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 221,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void setEndDate(final LocalDate endDate) {\n    this.endDate = endDate;\n}",
+                "name": "setEndDate",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    this.endDate = endDate;\n}",
+                "start_point": {
+                    "row": 223,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 225,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "WithIntervalMutable.Helper<LeaseItem> getChangeDates() {\n    return changeDates;\n}",
+                "name": "getChangeDates",
+                "modifiers": null,
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return changeDates;\n}",
+                "start_point": {
+                    "row": 231,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 233,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@ActionSemantics(Of.IDEMPOTENT)\n@Override\npublic LeaseItem changeDates(\n        final @Named(\"Start Date\") @Optional LocalDate startDate,\n        final @Named(\"End Date\") @Optional LocalDate endDate) {\n    return getChangeDates().changeDates(startDate, endDate);\n}",
+                "name": "changeDates",
+                "modifiers": "@ActionSemantics(Of.IDEMPOTENT)\n    @Override\n    public",
+                "return_type": "LeaseItem",
+                "parameters": [
+                    {
+                        "type": "final @Named(\"Start Date\") @Optional",
+                        "name": "LocalDate"
+                    },
+                    {
+                        "type": "final @Named(\"End Date\") @Optional",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    return getChangeDates().changeDates(startDate, endDate);\n}",
+                "start_point": {
+                    "row": 235,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 241,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public String disableChangeDates(\n        final LocalDate startDate,\n        final LocalDate endDate) {\n    return null;\n}",
+                "name": "disableChangeDates",
+                "modifiers": "public",
+                "return_type": "String",
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    },
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    return null;\n}",
+                "start_point": {
+                    "row": 243,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 247,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic LocalDate default0ChangeDates() {\n    return getChangeDates().default0ChangeDates();\n}",
+                "name": "default0ChangeDates",
+                "modifiers": "@Override\n    public",
+                "return_type": "LocalDate",
+                "parameters": [],
+                "body": "{\n    return getChangeDates().default0ChangeDates();\n}",
+                "start_point": {
+                    "row": 249,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 252,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic LocalDate default1ChangeDates() {\n    return getChangeDates().default1ChangeDates();\n}",
+                "name": "default1ChangeDates",
+                "modifiers": "@Override\n    public",
+                "return_type": "LocalDate",
+                "parameters": [],
+                "body": "{\n    return getChangeDates().default1ChangeDates();\n}",
+                "start_point": {
+                    "row": 254,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 257,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic String validateChangeDates(\n        final LocalDate startDate,\n        final LocalDate endDate) {\n    return getChangeDates().validateChangeDates(startDate, endDate);\n}",
+                "name": "validateChangeDates",
+                "modifiers": "@Override\n    public",
+                "return_type": "String",
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    },
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    return getChangeDates().validateChangeDates(startDate, endDate);\n}",
+                "start_point": {
+                    "row": 259,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 264,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Programmatic\n@Override\npublic LocalDateInterval getInterval() {\n    return LocalDateInterval.including(getStartDate(), getEndDate());\n}",
+                "name": "getInterval",
+                "modifiers": "@Programmatic\n    @Override\n    public",
+                "return_type": "LocalDateInterval",
+                "parameters": [],
+                "body": "{\n    return LocalDateInterval.including(getStartDate(), getEndDate());\n}",
+                "start_point": {
+                    "row": 268,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 272,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Programmatic\n@Override\npublic LocalDateInterval getEffectiveInterval() {\n    return getInterval().overlap(getLease().getEffectiveInterval());\n}",
+                "name": "getEffectiveInterval",
+                "modifiers": "@Programmatic\n    @Override\n    public",
+                "return_type": "LocalDateInterval",
+                "parameters": [],
+                "body": "{\n    return getInterval().overlap(getLease().getEffectiveInterval());\n}",
+                "start_point": {
+                    "row": 274,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 278,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public boolean isCurrent() {\n    return isActiveOn(getClockService().now());\n}",
+                "name": "isCurrent",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return isActiveOn(getClockService().now());\n}",
+                "start_point": {
+                    "row": 282,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 284,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "private boolean isActiveOn(final LocalDate localDate) {\n    return getEffectiveInterval().contains(localDate);\n}",
+                "name": "isActiveOn",
+                "modifiers": "private",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    return getEffectiveInterval().contains(localDate);\n}",
+                "start_point": {
+                    "row": 286,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 288,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@javax.jdo.annotations.Column(allowsNull = \"false\", length = JdoColumnLength.INVOICING_FREQUENCY_ENUM)\n@Hidden(where = Where.PARENTED_TABLES)\npublic InvoicingFrequency getInvoicingFrequency() {\n    return invoicingFrequency;\n}",
+                "name": "getInvoicingFrequency",
+                "modifiers": "@javax.jdo.annotations.Column(allowsNull = \"false\", length = JdoColumnLength.INVOICING_FREQUENCY_ENUM)\n    @Hidden(where = Where.PARENTED_TABLES)\n    public",
+                "return_type": "InvoicingFrequency",
+                "parameters": [],
+                "body": "{\n    return invoicingFrequency;\n}",
+                "start_point": {
+                    "row": 294,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 298,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void setInvoicingFrequency(final InvoicingFrequency invoicingFrequency) {\n    this.invoicingFrequency = invoicingFrequency;\n}",
+                "name": "setInvoicingFrequency",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "InvoicingFrequency"
+                    }
+                ],
+                "body": "{\n    this.invoicingFrequency = invoicingFrequency;\n}",
+                "start_point": {
+                    "row": 300,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 302,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@javax.jdo.annotations.Column(allowsNull = \"false\", length = JdoColumnLength.PAYMENT_METHOD_ENUM)\n@Hidden(where = Where.PARENTED_TABLES)\npublic PaymentMethod getPaymentMethod() {\n    return paymentMethod;\n}",
+                "name": "getPaymentMethod",
+                "modifiers": "@javax.jdo.annotations.Column(allowsNull = \"false\", length = JdoColumnLength.PAYMENT_METHOD_ENUM)\n    @Hidden(where = Where.PARENTED_TABLES)\n    public",
+                "return_type": "PaymentMethod",
+                "parameters": [],
+                "body": "{\n    return paymentMethod;\n}",
+                "start_point": {
+                    "row": 308,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 312,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void setPaymentMethod(final PaymentMethod paymentMethod) {\n    this.paymentMethod = paymentMethod;\n}",
+                "name": "setPaymentMethod",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "PaymentMethod"
+                    }
+                ],
+                "body": "{\n    this.paymentMethod = paymentMethod;\n}",
+                "start_point": {
+                    "row": 314,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 316,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@javax.jdo.annotations.Column(name = \"chargeId\", allowsNull = \"false\")\npublic Charge getCharge() {\n    return charge;\n}",
+                "name": "getCharge",
+                "modifiers": "@javax.jdo.annotations.Column(name = \"chargeId\", allowsNull = \"false\")\n    public",
+                "return_type": "Charge",
+                "parameters": [],
+                "body": "{\n    return charge;\n}",
+                "start_point": {
+                    "row": 322,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 325,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void setCharge(final Charge charge) {\n    this.charge = charge;\n}",
+                "name": "setCharge",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "Charge"
+                    }
+                ],
+                "body": "{\n    this.charge = charge;\n}",
+                "start_point": {
+                    "row": 327,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 329,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public List<Charge> choicesCharge() {\n    return charges.allCharges();\n}",
+                "name": "choicesCharge",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return charges.allCharges();\n}",
+                "start_point": {
+                    "row": 331,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 333,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Disabled\n@Optional\npublic BigDecimal getTrialValue() {\n    final LeaseTerm currentTerm = currentTerm(getClockService().now());\n    return currentTerm != null ? currentTerm.getTrialValue() : null;\n}",
+                "name": "getTrialValue",
+                "modifiers": "@Disabled\n    @Optional\n    public",
+                "return_type": "BigDecimal",
+                "parameters": [],
+                "body": "{\n    final LeaseTerm currentTerm = currentTerm(getClockService().now());\n    return currentTerm != null ? currentTerm.getTrialValue() : null;\n}",
+                "start_point": {
+                    "row": 337,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 342,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Disabled\n@Optional\npublic BigDecimal getApprovedValue() {\n    LeaseTerm currentTerm = currentTerm(getClockService().now());\n    return currentTerm != null ? currentTerm.getApprovedValue() : null;\n}",
+                "name": "getApprovedValue",
+                "modifiers": "@Disabled\n    @Optional\n    public",
+                "return_type": "BigDecimal",
+                "parameters": [],
+                "body": "{\n    LeaseTerm currentTerm = currentTerm(getClockService().now());\n    return currentTerm != null ? currentTerm.getApprovedValue() : null;\n}",
+                "start_point": {
+                    "row": 346,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 351,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Programmatic\npublic LeaseTerm currentTerm(final LocalDate date) {\n    for (LeaseTerm term : getTerms()) {\n        if (term.isActiveOn(date)) {\n            return term;\n        }\n    }\n    return null;\n}",
+                "name": "currentTerm",
+                "modifiers": "@Programmatic\n    public",
+                "return_type": "LeaseTerm",
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    for (LeaseTerm term : getTerms()) {\n        if (term.isActiveOn(date)) {\n            return term;\n        }\n    }\n    return null;\n}",
+                "start_point": {
+                    "row": 355,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 363,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Render(Type.EAGERLY)\n@Paged(PAGE_SIZE)\npublic SortedSet<LeaseTerm> getTerms() {\n    return terms;\n}",
+                "name": "getTerms",
+                "modifiers": "@Render(Type.EAGERLY)\n    @Paged(PAGE_SIZE)\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return terms;\n}",
+                "start_point": {
+                    "row": 370,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 374,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void setTerms(final SortedSet<LeaseTerm> terms) {\n    this.terms = terms;\n}",
+                "name": "setTerms",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "SortedSet<LeaseTerm>"
+                    }
+                ],
+                "body": "{\n    this.terms = terms;\n}",
+                "start_point": {
+                    "row": 376,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 378,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Programmatic\npublic LeaseTerm findTerm(final LocalDate startDate) {\n    for (LeaseTerm term : getTerms()) {\n        if (startDate.equals(term.getStartDate())) {\n            return term;\n        }\n    }\n    return null;\n}",
+                "name": "findTerm",
+                "modifiers": "@Programmatic\n    public",
+                "return_type": "LeaseTerm",
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    for (LeaseTerm term : getTerms()) {\n        if (startDate.equals(term.getStartDate())) {\n            return term;\n        }\n    }\n    return null;\n}",
+                "start_point": {
+                    "row": 380,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 388,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public LeaseTerm newTerm(\n        final @Named(\"Start date\") LocalDate startDate) {\n    LeaseTerm lastTerm = null;\n    try {\n        lastTerm = getTerms().last();\n    } catch (NoSuchElementException e) {\n        // TODO: is this ok?  if so then let's have a comment here at least.\n    }\n    LeaseTerm term = leaseTerms.newLeaseTerm(this, lastTerm, startDate);\n    term.initialize();\n    return term;\n}",
+                "name": "newTerm",
+                "modifiers": "public",
+                "return_type": "LeaseTerm",
+                "parameters": [
+                    {
+                        "type": "final @Named(\"Start date\")",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    LeaseTerm lastTerm = null;\n    try {\n        lastTerm = getTerms().last();\n    } catch (NoSuchElementException e) {\n        // TODO: is this ok?  if so then let's have a comment here at least.\n    }\n    LeaseTerm term = leaseTerms.newLeaseTerm(this, lastTerm, startDate);\n    term.initialize();\n    return term;\n}",
+                "start_point": {
+                    "row": 392,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 403,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public LocalDate default0NewTerm() {\n    LeaseTerm last = null;\n    try {\n        last = getTerms().last();\n    } catch (NoSuchElementException e) {\n        return getStartDate();\n    }\n    if (last.getEndDate() != null) {\n        return last.getInterval().endDateExcluding();\n    }\n    return last.getStartDate().plusYears(1).withMonthOfYear(1).withDayOfMonth(1);\n}",
+                "name": "default0NewTerm",
+                "modifiers": "public",
+                "return_type": "LocalDate",
+                "parameters": [],
+                "body": "{\n    LeaseTerm last = null;\n    try {\n        last = getTerms().last();\n    } catch (NoSuchElementException e) {\n        return getStartDate();\n    }\n    if (last.getEndDate() != null) {\n        return last.getInterval().endDateExcluding();\n    }\n    return last.getStartDate().plusYears(1).withMonthOfYear(1).withDayOfMonth(1);\n}",
+                "start_point": {
+                    "row": 405,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 416,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public LeaseItem verify() {\n    verifyUntil(getClockService().now());\n    return this;\n}",
+                "name": "verify",
+                "modifiers": "public",
+                "return_type": "LeaseItem",
+                "parameters": [],
+                "body": "{\n    verifyUntil(getClockService().now());\n    return this;\n}",
+                "start_point": {
+                    "row": 420,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 423,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Programmatic\npublic void verifyUntil(final LocalDate date) {\n    for (LeaseTerm term : getTerms()) {\n        if (term.getPrevious() == null) {\n            // since verify is recursive on terms only start on the main\n            // term\n            term.verifyUntil(date);\n        }\n    }\n}",
+                "name": "verifyUntil",
+                "modifiers": "@Programmatic\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    for (LeaseTerm term : getTerms()) {\n        if (term.getPrevious() == null) {\n            // since verify is recursive on terms only start on the main\n            // term\n            term.verifyUntil(date);\n        }\n    }\n}",
+                "start_point": {
+                    "row": 425,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 434,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public LeaseItem calculate(\n        final @Named(\"Period start Date\") LocalDate startDate,\n        final @Named(\"Period end date\") @Optional LocalDate endDate,\n        final @Named(\"Due date\") LocalDate dueDate,\n        final @Named(\"Run Type\") InvoiceRunType runType) {\n    for (LeaseTerm term : getTerms()) {\n        term.calculate(startDate, endDate, dueDate, runType);\n    }\n    return this;\n}",
+                "name": "calculate",
+                "modifiers": "public",
+                "return_type": "LeaseItem",
+                "parameters": [
+                    {
+                        "type": "final @Named(\"Period start Date\")",
+                        "name": "LocalDate"
+                    },
+                    {
+                        "type": "final @Named(\"Period end date\") @Optional",
+                        "name": "LocalDate"
+                    },
+                    {
+                        "type": "final @Named(\"Due date\")",
+                        "name": "LocalDate"
+                    },
+                    {
+                        "type": "final @Named(\"Run Type\")",
+                        "name": "InvoiceRunType"
+                    }
+                ],
+                "body": "{\n    for (LeaseTerm term : getTerms()) {\n        term.calculate(startDate, endDate, dueDate, runType);\n    }\n    return this;\n}",
+                "start_point": {
+                    "row": 438,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 447,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "BigDecimal valueForPeriod(\n        final InvoicingFrequency frequency,\n        final LocalDate periodStartDate,\n        final LocalDate dueDate) {\n    BigDecimal total = new BigDecimal(0);\n    for (LeaseTerm term : getTerms()) {\n        total = total.add(term.valueForPeriod(periodStartDate, dueDate, frequency));\n    }\n    return total;\n}",
+                "name": "valueForPeriod",
+                "modifiers": null,
+                "return_type": "BigDecimal",
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "InvoicingFrequency"
+                    },
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    },
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    BigDecimal total = new BigDecimal(0);\n    for (LeaseTerm term : getTerms()) {\n        total = total.add(term.valueForPeriod(periodStartDate, dueDate, frequency));\n    }\n    return total;\n}",
+                "start_point": {
+                    "row": 451,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 460,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public final void injectCharges(final Charges charges) {\n    this.charges = charges;\n}",
+                "name": "injectCharges",
+                "modifiers": "public final",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "Charges"
+                    }
+                ],
+                "body": "{\n    this.charges = charges;\n}",
+                "start_point": {
+                    "row": 466,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 468,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public final void injectLeaseTerms(final LeaseTerms leaseTerms) {\n    this.leaseTerms = leaseTerms;\n}",
+                "name": "injectLeaseTerms",
+                "modifiers": "public final",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LeaseTerms"
+                    }
+                ],
+                "body": "{\n    this.leaseTerms = leaseTerms;\n}",
+                "start_point": {
+                    "row": 472,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 474,
+                    "column": 5
+                }
+            }
+        ]
+    }
+]

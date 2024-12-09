@@ -1,0 +1,425 @@
+[
+    {
+        "rev_path": "dubbo-admin-backend/src/main/java/org/apache/dubbo/admin/service/impl/RouteServiceImpl.java",
+        "definition": "@Component\npublic class RouteServiceImpl extends AbstractService implements RouteService {\n\n    public void createRoute(Route route) {\n        registryService.register(route.toUrl());\n    }\n\n    public void updateRoute(Route route) {\n        String hash = route.getHash();\n        if (hash == null) {\n            throw new IllegalStateException(\"no route hash\");\n        }\n        URL oldRoute = findRouteUrl(hash);\n        if (oldRoute == null) {\n            throw new IllegalStateException(\"Route was changed!\");\n        }\n\n        registryService.unregister(oldRoute);\n        registryService.register(route.toUrl());\n    }\n\n    public void deleteRoute(String id) {\n        URL oldRoute = findRouteUrl(id);\n        if (oldRoute == null) {\n            throw new IllegalStateException(\"Route was changed!\");\n        }\n        registryService.unregister(oldRoute);\n    }\n\n    public void enableRoute(String id) {\n        if (id == null) {\n            throw new IllegalStateException(\"no route id\");\n        }\n\n        URL oldRoute = findRouteUrl(id);\n        if (oldRoute == null) {\n            throw new IllegalStateException(\"Route was changed!\");\n        }\n        if (oldRoute.getParameter(\"enabled\", true)) {\n            return;\n        }\n\n        registryService.unregister(oldRoute);\n        URL newRoute = oldRoute.addParameter(\"enabled\", true);\n        registryService.register(newRoute);\n\n    }\n\n    public void disableRoute(String id) {\n        if (id == null) {\n            throw new IllegalStateException(\"no route id\");\n        }\n\n        URL oldRoute = findRouteUrl(id);\n        if (oldRoute == null) {\n            throw new IllegalStateException(\"Route was changed!\");\n        }\n        if (!oldRoute.getParameter(\"enabled\", true)) {\n            return;\n        }\n\n        URL newRoute = oldRoute.addParameter(\"enabled\", false);\n        registryService.unregister(oldRoute);\n        registryService.register(newRoute);\n\n    }\n\n    public List<Route> findAll() {\n        return SyncUtils.url2RouteList(findAllUrl());\n    }\n\n    private Map<String, URL> findAllUrl() {\n        Map<String, String> filter = new HashMap<String, String>();\n        filter.put(Constants.CATEGORY_KEY, Constants.ROUTERS_CATEGORY);\n\n        return SyncUtils.filterFromCategory(getRegistryCache(), filter);\n    }\n\n    public Route findRoute(String id) {\n        return SyncUtils.url2Route(findRouteUrlPair(id));\n    }\n\n    public Pair<String, URL> findRouteUrlPair(String id) {\n        return SyncUtils.filterFromCategory(getRegistryCache(), Constants.ROUTERS_CATEGORY, id);\n    }\n\n    private URL findRouteUrl(String id) {\n        return findRoute(id).toUrl();\n    }\n\n    private Map<String, URL> findRouteUrl(String service, String address, boolean force) {\n        Map<String, String> filter = new HashMap<String, String>();\n        filter.put(Constants.CATEGORY_KEY, Constants.ROUTERS_CATEGORY);\n        if (service != null && service.length() > 0) {\n            filter.put(SyncUtils.SERVICE_FILTER_KEY, service);\n        }\n        if (address != null && address.length() > 0) {\n            filter.put(SyncUtils.ADDRESS_FILTER_KEY, address);\n        }\n        if (force) {\n            filter.put(\"force\", \"true\");\n        }\n        return SyncUtils.filterFromCategory(getRegistryCache(), filter);\n    }\n\n    public List<Route> findByService(String serviceName) {\n        return SyncUtils.url2RouteList(findRouteUrl(serviceName, null, false));\n    }\n\n    public List<Route> findByAddress(String address) {\n        return SyncUtils.url2RouteList(findRouteUrl(null, address, false));\n    }\n\n    public List<Route> findByServiceAndAddress(String service, String address) {\n        return SyncUtils.url2RouteList(findRouteUrl(service, address, false));\n    }\n\n    public List<Route> findForceRouteByService(String service) {\n        return SyncUtils.url2RouteList(findRouteUrl(service, null, true));\n    }\n\n    public List<Route> findForceRouteByAddress(String address) {\n        return SyncUtils.url2RouteList(findRouteUrl(null, address, true));\n    }\n\n    public List<Route> findForceRouteByServiceAndAddress(String service, String address) {\n        return SyncUtils.url2RouteList(findRouteUrl(service, address, true));\n    }\n\n    public List<Route> findAllForceRoute() {\n        return SyncUtils.url2RouteList(findRouteUrl(null, null, true));\n    }\n\n    public Route getBlackwhitelistRouteByService(String service) {\n        List<Route> routes = SyncUtils.url2RouteList(findRouteUrl(service, null, true));\n        for (Route route : routes) {\n            if (route.getName().endsWith(AccessDTO.KEY_BLACK_WHITE_LIST)) {\n                return route;\n            }\n        }\n        return null;\n    }\n\n}",
+        "package": "package org.apache.dubbo.admin.service.impl;",
+        "tree_path": "RouteServiceImpl",
+        "name": "RouteServiceImpl",
+        "modifiers": "@Component\npublic",
+        "superclass": "extends AbstractService",
+        "super_interfaces": "implements RouteService",
+        "body": "{\n\n    public void createRoute(Route route) {\n        registryService.register(route.toUrl());\n    }\n\n    public void updateRoute(Route route) {\n        String hash = route.getHash();\n        if (hash == null) {\n            throw new IllegalStateException(\"no route hash\");\n        }\n        URL oldRoute = findRouteUrl(hash);\n        if (oldRoute == null) {\n            throw new IllegalStateException(\"Route was changed!\");\n        }\n\n        registryService.unregister(oldRoute);\n        registryService.register(route.toUrl());\n    }\n\n    public void deleteRoute(String id) {\n        URL oldRoute = findRouteUrl(id);\n        if (oldRoute == null) {\n            throw new IllegalStateException(\"Route was changed!\");\n        }\n        registryService.unregister(oldRoute);\n    }\n\n    public void enableRoute(String id) {\n        if (id == null) {\n            throw new IllegalStateException(\"no route id\");\n        }\n\n        URL oldRoute = findRouteUrl(id);\n        if (oldRoute == null) {\n            throw new IllegalStateException(\"Route was changed!\");\n        }\n        if (oldRoute.getParameter(\"enabled\", true)) {\n            return;\n        }\n\n        registryService.unregister(oldRoute);\n        URL newRoute = oldRoute.addParameter(\"enabled\", true);\n        registryService.register(newRoute);\n\n    }\n\n    public void disableRoute(String id) {\n        if (id == null) {\n            throw new IllegalStateException(\"no route id\");\n        }\n\n        URL oldRoute = findRouteUrl(id);\n        if (oldRoute == null) {\n            throw new IllegalStateException(\"Route was changed!\");\n        }\n        if (!oldRoute.getParameter(\"enabled\", true)) {\n            return;\n        }\n\n        URL newRoute = oldRoute.addParameter(\"enabled\", false);\n        registryService.unregister(oldRoute);\n        registryService.register(newRoute);\n\n    }\n\n    public List<Route> findAll() {\n        return SyncUtils.url2RouteList(findAllUrl());\n    }\n\n    private Map<String, URL> findAllUrl() {\n        Map<String, String> filter = new HashMap<String, String>();\n        filter.put(Constants.CATEGORY_KEY, Constants.ROUTERS_CATEGORY);\n\n        return SyncUtils.filterFromCategory(getRegistryCache(), filter);\n    }\n\n    public Route findRoute(String id) {\n        return SyncUtils.url2Route(findRouteUrlPair(id));\n    }\n\n    public Pair<String, URL> findRouteUrlPair(String id) {\n        return SyncUtils.filterFromCategory(getRegistryCache(), Constants.ROUTERS_CATEGORY, id);\n    }\n\n    private URL findRouteUrl(String id) {\n        return findRoute(id).toUrl();\n    }\n\n    private Map<String, URL> findRouteUrl(String service, String address, boolean force) {\n        Map<String, String> filter = new HashMap<String, String>();\n        filter.put(Constants.CATEGORY_KEY, Constants.ROUTERS_CATEGORY);\n        if (service != null && service.length() > 0) {\n            filter.put(SyncUtils.SERVICE_FILTER_KEY, service);\n        }\n        if (address != null && address.length() > 0) {\n            filter.put(SyncUtils.ADDRESS_FILTER_KEY, address);\n        }\n        if (force) {\n            filter.put(\"force\", \"true\");\n        }\n        return SyncUtils.filterFromCategory(getRegistryCache(), filter);\n    }\n\n    public List<Route> findByService(String serviceName) {\n        return SyncUtils.url2RouteList(findRouteUrl(serviceName, null, false));\n    }\n\n    public List<Route> findByAddress(String address) {\n        return SyncUtils.url2RouteList(findRouteUrl(null, address, false));\n    }\n\n    public List<Route> findByServiceAndAddress(String service, String address) {\n        return SyncUtils.url2RouteList(findRouteUrl(service, address, false));\n    }\n\n    public List<Route> findForceRouteByService(String service) {\n        return SyncUtils.url2RouteList(findRouteUrl(service, null, true));\n    }\n\n    public List<Route> findForceRouteByAddress(String address) {\n        return SyncUtils.url2RouteList(findRouteUrl(null, address, true));\n    }\n\n    public List<Route> findForceRouteByServiceAndAddress(String service, String address) {\n        return SyncUtils.url2RouteList(findRouteUrl(service, address, true));\n    }\n\n    public List<Route> findAllForceRoute() {\n        return SyncUtils.url2RouteList(findRouteUrl(null, null, true));\n    }\n\n    public Route getBlackwhitelistRouteByService(String service) {\n        List<Route> routes = SyncUtils.url2RouteList(findRouteUrl(service, null, true));\n        for (Route route : routes) {\n            if (route.getName().endsWith(AccessDTO.KEY_BLACK_WHITE_LIST)) {\n                return route;\n            }\n        }\n        return null;\n    }\n\n}",
+        "start_point": {
+            "row": 35,
+            "column": 0
+        },
+        "end_point": {
+            "row": 178,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "public void createRoute(Route route) {\n    registryService.register(route.toUrl());\n}",
+                "name": "createRoute",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Route",
+                        "name": "route"
+                    }
+                ],
+                "body": "{\n    registryService.register(route.toUrl());\n}",
+                "start_point": {
+                    "row": 38,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 40,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void updateRoute(Route route) {\n    String hash = route.getHash();\n    if (hash == null) {\n        throw new IllegalStateException(\"no route hash\");\n    }\n    URL oldRoute = findRouteUrl(hash);\n    if (oldRoute == null) {\n        throw new IllegalStateException(\"Route was changed!\");\n    }\n\n    registryService.unregister(oldRoute);\n    registryService.register(route.toUrl());\n}",
+                "name": "updateRoute",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Route",
+                        "name": "route"
+                    }
+                ],
+                "body": "{\n    String hash = route.getHash();\n    if (hash == null) {\n        throw new IllegalStateException(\"no route hash\");\n    }\n    URL oldRoute = findRouteUrl(hash);\n    if (oldRoute == null) {\n        throw new IllegalStateException(\"Route was changed!\");\n    }\n\n    registryService.unregister(oldRoute);\n    registryService.register(route.toUrl());\n}",
+                "start_point": {
+                    "row": 42,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 54,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void deleteRoute(String id) {\n    URL oldRoute = findRouteUrl(id);\n    if (oldRoute == null) {\n        throw new IllegalStateException(\"Route was changed!\");\n    }\n    registryService.unregister(oldRoute);\n}",
+                "name": "deleteRoute",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "id"
+                    }
+                ],
+                "body": "{\n    URL oldRoute = findRouteUrl(id);\n    if (oldRoute == null) {\n        throw new IllegalStateException(\"Route was changed!\");\n    }\n    registryService.unregister(oldRoute);\n}",
+                "start_point": {
+                    "row": 56,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 62,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void enableRoute(String id) {\n    if (id == null) {\n        throw new IllegalStateException(\"no route id\");\n    }\n\n    URL oldRoute = findRouteUrl(id);\n    if (oldRoute == null) {\n        throw new IllegalStateException(\"Route was changed!\");\n    }\n    if (oldRoute.getParameter(\"enabled\", true)) {\n        return;\n    }\n\n    registryService.unregister(oldRoute);\n    URL newRoute = oldRoute.addParameter(\"enabled\", true);\n    registryService.register(newRoute);\n\n}",
+                "name": "enableRoute",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "id"
+                    }
+                ],
+                "body": "{\n    if (id == null) {\n        throw new IllegalStateException(\"no route id\");\n    }\n\n    URL oldRoute = findRouteUrl(id);\n    if (oldRoute == null) {\n        throw new IllegalStateException(\"Route was changed!\");\n    }\n    if (oldRoute.getParameter(\"enabled\", true)) {\n        return;\n    }\n\n    registryService.unregister(oldRoute);\n    URL newRoute = oldRoute.addParameter(\"enabled\", true);\n    registryService.register(newRoute);\n\n}",
+                "start_point": {
+                    "row": 64,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 81,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void disableRoute(String id) {\n    if (id == null) {\n        throw new IllegalStateException(\"no route id\");\n    }\n\n    URL oldRoute = findRouteUrl(id);\n    if (oldRoute == null) {\n        throw new IllegalStateException(\"Route was changed!\");\n    }\n    if (!oldRoute.getParameter(\"enabled\", true)) {\n        return;\n    }\n\n    URL newRoute = oldRoute.addParameter(\"enabled\", false);\n    registryService.unregister(oldRoute);\n    registryService.register(newRoute);\n\n}",
+                "name": "disableRoute",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "id"
+                    }
+                ],
+                "body": "{\n    if (id == null) {\n        throw new IllegalStateException(\"no route id\");\n    }\n\n    URL oldRoute = findRouteUrl(id);\n    if (oldRoute == null) {\n        throw new IllegalStateException(\"Route was changed!\");\n    }\n    if (!oldRoute.getParameter(\"enabled\", true)) {\n        return;\n    }\n\n    URL newRoute = oldRoute.addParameter(\"enabled\", false);\n    registryService.unregister(oldRoute);\n    registryService.register(newRoute);\n\n}",
+                "start_point": {
+                    "row": 83,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 100,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public List<Route> findAll() {\n    return SyncUtils.url2RouteList(findAllUrl());\n}",
+                "name": "findAll",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return SyncUtils.url2RouteList(findAllUrl());\n}",
+                "start_point": {
+                    "row": 102,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 104,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "private Map<String, URL> findAllUrl() {\n    Map<String, String> filter = new HashMap<String, String>();\n    filter.put(Constants.CATEGORY_KEY, Constants.ROUTERS_CATEGORY);\n\n    return SyncUtils.filterFromCategory(getRegistryCache(), filter);\n}",
+                "name": "findAllUrl",
+                "modifiers": "private",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    Map<String, String> filter = new HashMap<String, String>();\n    filter.put(Constants.CATEGORY_KEY, Constants.ROUTERS_CATEGORY);\n\n    return SyncUtils.filterFromCategory(getRegistryCache(), filter);\n}",
+                "start_point": {
+                    "row": 106,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 111,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public Route findRoute(String id) {\n    return SyncUtils.url2Route(findRouteUrlPair(id));\n}",
+                "name": "findRoute",
+                "modifiers": "public",
+                "return_type": "Route",
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "id"
+                    }
+                ],
+                "body": "{\n    return SyncUtils.url2Route(findRouteUrlPair(id));\n}",
+                "start_point": {
+                    "row": 113,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 115,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public Pair<String, URL> findRouteUrlPair(String id) {\n    return SyncUtils.filterFromCategory(getRegistryCache(), Constants.ROUTERS_CATEGORY, id);\n}",
+                "name": "findRouteUrlPair",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "id"
+                    }
+                ],
+                "body": "{\n    return SyncUtils.filterFromCategory(getRegistryCache(), Constants.ROUTERS_CATEGORY, id);\n}",
+                "start_point": {
+                    "row": 117,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 119,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "private URL findRouteUrl(String id) {\n    return findRoute(id).toUrl();\n}",
+                "name": "findRouteUrl",
+                "modifiers": "private",
+                "return_type": "URL",
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "id"
+                    }
+                ],
+                "body": "{\n    return findRoute(id).toUrl();\n}",
+                "start_point": {
+                    "row": 121,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 123,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "private Map<String, URL> findRouteUrl(String service, String address, boolean force) {\n    Map<String, String> filter = new HashMap<String, String>();\n    filter.put(Constants.CATEGORY_KEY, Constants.ROUTERS_CATEGORY);\n    if (service != null && service.length() > 0) {\n        filter.put(SyncUtils.SERVICE_FILTER_KEY, service);\n    }\n    if (address != null && address.length() > 0) {\n        filter.put(SyncUtils.ADDRESS_FILTER_KEY, address);\n    }\n    if (force) {\n        filter.put(\"force\", \"true\");\n    }\n    return SyncUtils.filterFromCategory(getRegistryCache(), filter);\n}",
+                "name": "findRouteUrl",
+                "modifiers": "private",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "service"
+                    },
+                    {
+                        "type": "String",
+                        "name": "address"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "force"
+                    }
+                ],
+                "body": "{\n    Map<String, String> filter = new HashMap<String, String>();\n    filter.put(Constants.CATEGORY_KEY, Constants.ROUTERS_CATEGORY);\n    if (service != null && service.length() > 0) {\n        filter.put(SyncUtils.SERVICE_FILTER_KEY, service);\n    }\n    if (address != null && address.length() > 0) {\n        filter.put(SyncUtils.ADDRESS_FILTER_KEY, address);\n    }\n    if (force) {\n        filter.put(\"force\", \"true\");\n    }\n    return SyncUtils.filterFromCategory(getRegistryCache(), filter);\n}",
+                "start_point": {
+                    "row": 125,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 138,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public List<Route> findByService(String serviceName) {\n    return SyncUtils.url2RouteList(findRouteUrl(serviceName, null, false));\n}",
+                "name": "findByService",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "serviceName"
+                    }
+                ],
+                "body": "{\n    return SyncUtils.url2RouteList(findRouteUrl(serviceName, null, false));\n}",
+                "start_point": {
+                    "row": 140,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 142,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public List<Route> findByAddress(String address) {\n    return SyncUtils.url2RouteList(findRouteUrl(null, address, false));\n}",
+                "name": "findByAddress",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "address"
+                    }
+                ],
+                "body": "{\n    return SyncUtils.url2RouteList(findRouteUrl(null, address, false));\n}",
+                "start_point": {
+                    "row": 144,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 146,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public List<Route> findByServiceAndAddress(String service, String address) {\n    return SyncUtils.url2RouteList(findRouteUrl(service, address, false));\n}",
+                "name": "findByServiceAndAddress",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "service"
+                    },
+                    {
+                        "type": "String",
+                        "name": "address"
+                    }
+                ],
+                "body": "{\n    return SyncUtils.url2RouteList(findRouteUrl(service, address, false));\n}",
+                "start_point": {
+                    "row": 148,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 150,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public List<Route> findForceRouteByService(String service) {\n    return SyncUtils.url2RouteList(findRouteUrl(service, null, true));\n}",
+                "name": "findForceRouteByService",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "service"
+                    }
+                ],
+                "body": "{\n    return SyncUtils.url2RouteList(findRouteUrl(service, null, true));\n}",
+                "start_point": {
+                    "row": 152,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 154,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public List<Route> findForceRouteByAddress(String address) {\n    return SyncUtils.url2RouteList(findRouteUrl(null, address, true));\n}",
+                "name": "findForceRouteByAddress",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "address"
+                    }
+                ],
+                "body": "{\n    return SyncUtils.url2RouteList(findRouteUrl(null, address, true));\n}",
+                "start_point": {
+                    "row": 156,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 158,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public List<Route> findForceRouteByServiceAndAddress(String service, String address) {\n    return SyncUtils.url2RouteList(findRouteUrl(service, address, true));\n}",
+                "name": "findForceRouteByServiceAndAddress",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "service"
+                    },
+                    {
+                        "type": "String",
+                        "name": "address"
+                    }
+                ],
+                "body": "{\n    return SyncUtils.url2RouteList(findRouteUrl(service, address, true));\n}",
+                "start_point": {
+                    "row": 160,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 162,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public List<Route> findAllForceRoute() {\n    return SyncUtils.url2RouteList(findRouteUrl(null, null, true));\n}",
+                "name": "findAllForceRoute",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return SyncUtils.url2RouteList(findRouteUrl(null, null, true));\n}",
+                "start_point": {
+                    "row": 164,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 166,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public Route getBlackwhitelistRouteByService(String service) {\n    List<Route> routes = SyncUtils.url2RouteList(findRouteUrl(service, null, true));\n    for (Route route : routes) {\n        if (route.getName().endsWith(AccessDTO.KEY_BLACK_WHITE_LIST)) {\n            return route;\n        }\n    }\n    return null;\n}",
+                "name": "getBlackwhitelistRouteByService",
+                "modifiers": "public",
+                "return_type": "Route",
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "service"
+                    }
+                ],
+                "body": "{\n    List<Route> routes = SyncUtils.url2RouteList(findRouteUrl(service, null, true));\n    for (Route route : routes) {\n        if (route.getName().endsWith(AccessDTO.KEY_BLACK_WHITE_LIST)) {\n            return route;\n        }\n    }\n    return null;\n}",
+                "start_point": {
+                    "row": 168,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 176,
+                    "column": 5
+                }
+            }
+        ]
+    }
+]

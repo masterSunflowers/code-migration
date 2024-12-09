@@ -1,0 +1,67 @@
+[
+    {
+        "rev_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-admin/src/main/java/io/gravitee/am/management/handlers/admin/context/AdminDomainBeanFactoryPostProcessor.java",
+        "definition": "class AdminDomainBeanFactoryPostProcessor implements BeanFactoryPostProcessor {\n\n    private final Domain domain;\n\n    AdminDomainBeanFactoryPostProcessor(Domain domain) {\n        this.domain = domain;\n    }\n\n    @Override\n    public void postProcessBeanFactory(ConfigurableListableBeanFactory configurableListableBeanFactory) throws BeansException {\n        DefaultListableBeanFactory beanFactory = (DefaultListableBeanFactory) configurableListableBeanFactory;\n        beanFactory.registerSingleton(\"domain\", domain);\n    }\n}",
+        "package": "package io.gravitee.am.management.handlers.admin.context;",
+        "tree_path": "AdminDomainBeanFactoryPostProcessor",
+        "name": "AdminDomainBeanFactoryPostProcessor",
+        "modifiers": null,
+        "superclass": null,
+        "super_interfaces": "implements BeanFactoryPostProcessor",
+        "body": "{\n\n    private final Domain domain;\n\n    AdminDomainBeanFactoryPostProcessor(Domain domain) {\n        this.domain = domain;\n    }\n\n    @Override\n    public void postProcessBeanFactory(ConfigurableListableBeanFactory configurableListableBeanFactory) throws BeansException {\n        DefaultListableBeanFactory beanFactory = (DefaultListableBeanFactory) configurableListableBeanFactory;\n        beanFactory.registerSingleton(\"domain\", domain);\n    }\n}",
+        "start_point": {
+            "row": 27,
+            "column": 0
+        },
+        "end_point": {
+            "row": 40,
+            "column": 1
+        },
+        "file_mode": "Renamed-Modified",
+        "map_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-oauth2/src/main/java/io/gravitee/am/management/handlers/oauth2/context/OAuth2DomainBeanFactoryPostProcessor.java",
+        "methods": [
+            {
+                "definition": "AdminDomainBeanFactoryPostProcessor(Domain domain) {\n    this.domain = domain;\n}",
+                "name": "AdminDomainBeanFactoryPostProcessor",
+                "modifiers": null,
+                "parameters": [
+                    {
+                        "type": "Domain",
+                        "name": "domain"
+                    }
+                ],
+                "body": "{\n    this.domain = domain;\n}",
+                "constructor": true,
+                "start_point": {
+                    "row": 31,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 33,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic void postProcessBeanFactory(ConfigurableListableBeanFactory configurableListableBeanFactory) throws BeansException {\n    DefaultListableBeanFactory beanFactory = (DefaultListableBeanFactory) configurableListableBeanFactory;\n    beanFactory.registerSingleton(\"domain\", domain);\n}",
+                "name": "postProcessBeanFactory",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "ConfigurableListableBeanFactory",
+                        "name": "configurableListableBeanFactory"
+                    }
+                ],
+                "body": "{\n    DefaultListableBeanFactory beanFactory = (DefaultListableBeanFactory) configurableListableBeanFactory;\n    beanFactory.registerSingleton(\"domain\", domain);\n}",
+                "start_point": {
+                    "row": 35,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 39,
+                    "column": 5
+                }
+            }
+        ]
+    }
+]

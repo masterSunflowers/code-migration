@@ -1,0 +1,104 @@
+[
+    {
+        "rev_path": "dom/src/main/java/org/estatio/dom/financial/utils/IBANValidator.java",
+        "definition": "public final class IBANValidator {\n    \n    private IBANValidator(){}\n\n    private static final int IBAN_LENGTH_MAX = 32;\n\n    private static final int IBAN_LENGTH_MIN = 15;\n\n    private static final int SUFFIX_OFFSET = 4;\n    \n    private static final int A_ASCII = 97;\n    private static final int BASE_TEN = 10;\n\n    public static int checksum(final String iban) {\n        String tmp = (iban.substring(SUFFIX_OFFSET) + iban.substring(0, SUFFIX_OFFSET)).toUpperCase();\n        StringBuffer digits = new StringBuffer();\n        for (int i = 0; i < tmp.length(); i++) {\n            char c = tmp.charAt(i);\n            if (c >= '0' && c <= '9') {\n                digits.append(c);\n            } else if (c >= 'A' && c <= 'Z') {\n                int n = c - 'A' + BASE_TEN;\n                digits.append((char) ('0' + n / BASE_TEN));\n                digits.append((char) ('0' + (n % BASE_TEN)));\n            } else {\n                return -1;\n            }\n        }\n        BigDecimal n = new BigDecimal(digits.toString());\n        return n.remainder(BigDecimal.valueOf(A_ASCII)).intValue();\n    }\n\n    public static String fixChecksum(final String ibanTemplate) {\n        int remainder = checksum(ibanTemplate);\n        String pp = StringUtils.leftPad(String.valueOf(1+A_ASCII - remainder), 2, '0');\n        return ibanTemplate.substring(0, 2) + pp + ibanTemplate.substring(SUFFIX_OFFSET);\n    }\n\n    public static boolean valid(final String iban) {\n        if (iban == null || \n            iban.length() < IBAN_LENGTH_MIN || \n            iban.length() > IBAN_LENGTH_MAX) {\n            return false;\n        }\n\n        final int checksum = checksum(iban);\n        return (checksum == 1);\n    }\n\n}",
+        "package": "package org.estatio.dom.financial.utils;",
+        "tree_path": "IBANValidator",
+        "name": "IBANValidator",
+        "modifiers": "public final",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n    \n    private IBANValidator(){}\n\n    private static final int IBAN_LENGTH_MAX = 32;\n\n    private static final int IBAN_LENGTH_MIN = 15;\n\n    private static final int SUFFIX_OFFSET = 4;\n    \n    private static final int A_ASCII = 97;\n    private static final int BASE_TEN = 10;\n\n    public static int checksum(final String iban) {\n        String tmp = (iban.substring(SUFFIX_OFFSET) + iban.substring(0, SUFFIX_OFFSET)).toUpperCase();\n        StringBuffer digits = new StringBuffer();\n        for (int i = 0; i < tmp.length(); i++) {\n            char c = tmp.charAt(i);\n            if (c >= '0' && c <= '9') {\n                digits.append(c);\n            } else if (c >= 'A' && c <= 'Z') {\n                int n = c - 'A' + BASE_TEN;\n                digits.append((char) ('0' + n / BASE_TEN));\n                digits.append((char) ('0' + (n % BASE_TEN)));\n            } else {\n                return -1;\n            }\n        }\n        BigDecimal n = new BigDecimal(digits.toString());\n        return n.remainder(BigDecimal.valueOf(A_ASCII)).intValue();\n    }\n\n    public static String fixChecksum(final String ibanTemplate) {\n        int remainder = checksum(ibanTemplate);\n        String pp = StringUtils.leftPad(String.valueOf(1+A_ASCII - remainder), 2, '0');\n        return ibanTemplate.substring(0, 2) + pp + ibanTemplate.substring(SUFFIX_OFFSET);\n    }\n\n    public static boolean valid(final String iban) {\n        if (iban == null || \n            iban.length() < IBAN_LENGTH_MIN || \n            iban.length() > IBAN_LENGTH_MAX) {\n            return false;\n        }\n\n        final int checksum = checksum(iban);\n        return (checksum == 1);\n    }\n\n}",
+        "start_point": {
+            "row": 24,
+            "column": 0
+        },
+        "end_point": {
+            "row": 73,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "private IBANValidator(){}",
+                "name": "IBANValidator",
+                "modifiers": "private",
+                "parameters": [],
+                "body": "{}",
+                "constructor": true,
+                "start_point": {
+                    "row": 26,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 26,
+                    "column": 29
+                }
+            },
+            {
+                "definition": "public static int checksum(final String iban) {\n    String tmp = (iban.substring(SUFFIX_OFFSET) + iban.substring(0, SUFFIX_OFFSET)).toUpperCase();\n    StringBuffer digits = new StringBuffer();\n    for (int i = 0; i < tmp.length(); i++) {\n        char c = tmp.charAt(i);\n        if (c >= '0' && c <= '9') {\n            digits.append(c);\n        } else if (c >= 'A' && c <= 'Z') {\n            int n = c - 'A' + BASE_TEN;\n            digits.append((char) ('0' + n / BASE_TEN));\n            digits.append((char) ('0' + (n % BASE_TEN)));\n        } else {\n            return -1;\n        }\n    }\n    BigDecimal n = new BigDecimal(digits.toString());\n    return n.remainder(BigDecimal.valueOf(A_ASCII)).intValue();\n}",
+                "name": "checksum",
+                "modifiers": "public static",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "String"
+                    }
+                ],
+                "body": "{\n    String tmp = (iban.substring(SUFFIX_OFFSET) + iban.substring(0, SUFFIX_OFFSET)).toUpperCase();\n    StringBuffer digits = new StringBuffer();\n    for (int i = 0; i < tmp.length(); i++) {\n        char c = tmp.charAt(i);\n        if (c >= '0' && c <= '9') {\n            digits.append(c);\n        } else if (c >= 'A' && c <= 'Z') {\n            int n = c - 'A' + BASE_TEN;\n            digits.append((char) ('0' + n / BASE_TEN));\n            digits.append((char) ('0' + (n % BASE_TEN)));\n        } else {\n            return -1;\n        }\n    }\n    BigDecimal n = new BigDecimal(digits.toString());\n    return n.remainder(BigDecimal.valueOf(A_ASCII)).intValue();\n}",
+                "start_point": {
+                    "row": 37,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 54,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public static String fixChecksum(final String ibanTemplate) {\n    int remainder = checksum(ibanTemplate);\n    String pp = StringUtils.leftPad(String.valueOf(1+A_ASCII - remainder), 2, '0');\n    return ibanTemplate.substring(0, 2) + pp + ibanTemplate.substring(SUFFIX_OFFSET);\n}",
+                "name": "fixChecksum",
+                "modifiers": "public static",
+                "return_type": "String",
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "String"
+                    }
+                ],
+                "body": "{\n    int remainder = checksum(ibanTemplate);\n    String pp = StringUtils.leftPad(String.valueOf(1+A_ASCII - remainder), 2, '0');\n    return ibanTemplate.substring(0, 2) + pp + ibanTemplate.substring(SUFFIX_OFFSET);\n}",
+                "start_point": {
+                    "row": 56,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 60,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public static boolean valid(final String iban) {\n    if (iban == null || \n        iban.length() < IBAN_LENGTH_MIN || \n        iban.length() > IBAN_LENGTH_MAX) {\n        return false;\n    }\n\n    final int checksum = checksum(iban);\n    return (checksum == 1);\n}",
+                "name": "valid",
+                "modifiers": "public static",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "String"
+                    }
+                ],
+                "body": "{\n    if (iban == null || \n        iban.length() < IBAN_LENGTH_MIN || \n        iban.length() > IBAN_LENGTH_MAX) {\n        return false;\n    }\n\n    final int checksum = checksum(iban);\n    return (checksum == 1);\n}",
+                "start_point": {
+                    "row": 62,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 71,
+                    "column": 5
+                }
+            }
+        ]
+    }
+]

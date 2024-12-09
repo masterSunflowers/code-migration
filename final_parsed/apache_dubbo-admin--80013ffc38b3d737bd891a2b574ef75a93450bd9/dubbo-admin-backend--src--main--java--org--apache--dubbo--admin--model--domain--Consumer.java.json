@@ -1,0 +1,649 @@
+[
+    {
+        "rev_path": "dubbo-admin-backend/src/main/java/org/apache/dubbo/admin/model/domain/Consumer.java",
+        "definition": "public class Consumer extends Entity {\n\n    private static final long serialVersionUID = -1140894843784583237L;\n\n    private String service; /* The name of the service referenced by the consumer */\n\n    private String parameters;\n\n    private String result;    /*route result*/\n\n    private String address; /* address of consumer */\n\n    private String registry; /* Consumer connected registry address */\n\n    private String application; /* application name */\n\n    private String username;      /* user name of consumer */\n\n    private String statistics;    /* Service call statistics */\n\n    private Date collected;  /* Date statistics was recorded */\n\n    private Override override;\n\n    private List<Override> overrides;\n\n    private List<Route> routes;\n\n    private List<Provider> providers;\n\n    private Date expired;\n\n    private long alived;    /*Time to live in milliseconds*/\n\n    public Consumer() {\n    }\n\n    public Consumer(Long id) {\n        super(id);\n    }\n\n    public String getService() {\n        return service;\n    }\n\n    public void setService(String service) {\n        this.service = service;\n    }\n\n    public String getParameters() {\n        return parameters;\n    }\n\n    public void setParameters(String parameters) {\n        this.parameters = parameters;\n    }\n\n    public String getAddress() {\n        return address;\n    }\n\n    public void setAddress(String address) {\n        this.address = address;\n    }\n\n    public String getRegistry() {\n        return registry;\n    }\n\n    public void setRegistry(String registry) {\n        this.registry = registry;\n    }\n\n    public String getUsername() {\n        return username;\n    }\n\n    public void setUsername(String username) {\n        this.username = username;\n    }\n\n    public String getStatistics() {\n        return statistics;\n    }\n\n    public void setStatistics(String statistics) {\n        this.statistics = statistics;\n    }\n\n    public Date getCollected() {\n        return collected;\n    }\n\n    public void setCollected(Date collected) {\n        this.collected = collected;\n    }\n\n    public String getResult() {\n        return result;\n    }\n\n    public void setResult(String result) {\n        this.result = result;\n    }\n\n    public String getApplication() {\n        return application;\n    }\n\n    public void setApplication(String application) {\n        this.application = application;\n    }\n\n    public Date getExpired() {\n        return expired;\n    }\n\n\n    public void setExpired(Date expired) {\n        this.expired = expired;\n    }\n\n\n    public long getAlived() {\n        return alived;\n    }\n\n\n    public void setAlived(long alived) {\n        this.alived = alived;\n    }\n\n    public Override getOverride() {\n        return override;\n    }\n\n    public void setOverride(Override override) {\n        this.override = override;\n    }\n\n    public List<Override> getOverrides() {\n        return overrides;\n    }\n\n    public void setOverrides(List<Override> overrides) {\n        this.overrides = overrides;\n    }\n\n    public List<Route> getRoutes() {\n        return routes;\n    }\n\n    public void setRoutes(List<Route> routes) {\n        this.routes = routes;\n    }\n\n    public List<Provider> getProviders() {\n        return providers;\n    }\n\n    public void setProviders(List<Provider> providers) {\n        this.providers = providers;\n    }\n\n    public String toString() {\n        return \"Consumer [service=\" + service + \", parameters=\" + parameters + \", result=\" + result\n                + \", address=\" + address + \", registry=\" + registry + \", application=\"\n                + application + \", username=\" + username + \", statistics=\" + statistics\n                + \", collected=\" + collected + \", routes=\" + routes + \", overrides=\" + overrides\n                + \", expired=\" + expired + \", alived=\" + alived + \"]\";\n    }\n\n    public URL toUrl() {\n        String group = null;\n        String version = null;\n        String path = service;\n        int i = path.indexOf(\"/\");\n        if (i > 0) {\n            group = path.substring(0, i);\n            path = path.substring(i + 1);\n        }\n        i = path.lastIndexOf(\":\");\n        if (i > 0) {\n            version = path.substring(i + 1);\n            path = path.substring(0, i);\n        }\n        Map<String, String> param = StringUtils.parseQueryString(parameters);\n        param.put(Constants.CATEGORY_KEY, Constants.CONSUMERS_CATEGORY);\n        if (group != null) {\n            param.put(Constants.GROUP_KEY, group);\n        }\n        if (version != null) {\n            param.put(Constants.VERSION_KEY, version);\n        }\n        return URL.valueOf(Constants.CONSUMER_PROTOCOL + \"://\" + address + \"/\" + path\n                + \"?\" + StringUtils.toQueryString(param));\n    }\n\n}",
+        "package": "package org.apache.dubbo.admin.model.domain;",
+        "tree_path": "Consumer",
+        "name": "Consumer",
+        "modifiers": "public",
+        "superclass": "extends Entity",
+        "super_interfaces": null,
+        "body": "{\n\n    private static final long serialVersionUID = -1140894843784583237L;\n\n    private String service; /* The name of the service referenced by the consumer */\n\n    private String parameters;\n\n    private String result;    /*route result*/\n\n    private String address; /* address of consumer */\n\n    private String registry; /* Consumer connected registry address */\n\n    private String application; /* application name */\n\n    private String username;      /* user name of consumer */\n\n    private String statistics;    /* Service call statistics */\n\n    private Date collected;  /* Date statistics was recorded */\n\n    private Override override;\n\n    private List<Override> overrides;\n\n    private List<Route> routes;\n\n    private List<Provider> providers;\n\n    private Date expired;\n\n    private long alived;    /*Time to live in milliseconds*/\n\n    public Consumer() {\n    }\n\n    public Consumer(Long id) {\n        super(id);\n    }\n\n    public String getService() {\n        return service;\n    }\n\n    public void setService(String service) {\n        this.service = service;\n    }\n\n    public String getParameters() {\n        return parameters;\n    }\n\n    public void setParameters(String parameters) {\n        this.parameters = parameters;\n    }\n\n    public String getAddress() {\n        return address;\n    }\n\n    public void setAddress(String address) {\n        this.address = address;\n    }\n\n    public String getRegistry() {\n        return registry;\n    }\n\n    public void setRegistry(String registry) {\n        this.registry = registry;\n    }\n\n    public String getUsername() {\n        return username;\n    }\n\n    public void setUsername(String username) {\n        this.username = username;\n    }\n\n    public String getStatistics() {\n        return statistics;\n    }\n\n    public void setStatistics(String statistics) {\n        this.statistics = statistics;\n    }\n\n    public Date getCollected() {\n        return collected;\n    }\n\n    public void setCollected(Date collected) {\n        this.collected = collected;\n    }\n\n    public String getResult() {\n        return result;\n    }\n\n    public void setResult(String result) {\n        this.result = result;\n    }\n\n    public String getApplication() {\n        return application;\n    }\n\n    public void setApplication(String application) {\n        this.application = application;\n    }\n\n    public Date getExpired() {\n        return expired;\n    }\n\n\n    public void setExpired(Date expired) {\n        this.expired = expired;\n    }\n\n\n    public long getAlived() {\n        return alived;\n    }\n\n\n    public void setAlived(long alived) {\n        this.alived = alived;\n    }\n\n    public Override getOverride() {\n        return override;\n    }\n\n    public void setOverride(Override override) {\n        this.override = override;\n    }\n\n    public List<Override> getOverrides() {\n        return overrides;\n    }\n\n    public void setOverrides(List<Override> overrides) {\n        this.overrides = overrides;\n    }\n\n    public List<Route> getRoutes() {\n        return routes;\n    }\n\n    public void setRoutes(List<Route> routes) {\n        this.routes = routes;\n    }\n\n    public List<Provider> getProviders() {\n        return providers;\n    }\n\n    public void setProviders(List<Provider> providers) {\n        this.providers = providers;\n    }\n\n    public String toString() {\n        return \"Consumer [service=\" + service + \", parameters=\" + parameters + \", result=\" + result\n                + \", address=\" + address + \", registry=\" + registry + \", application=\"\n                + application + \", username=\" + username + \", statistics=\" + statistics\n                + \", collected=\" + collected + \", routes=\" + routes + \", overrides=\" + overrides\n                + \", expired=\" + expired + \", alived=\" + alived + \"]\";\n    }\n\n    public URL toUrl() {\n        String group = null;\n        String version = null;\n        String path = service;\n        int i = path.indexOf(\"/\");\n        if (i > 0) {\n            group = path.substring(0, i);\n            path = path.substring(i + 1);\n        }\n        i = path.lastIndexOf(\":\");\n        if (i > 0) {\n            version = path.substring(i + 1);\n            path = path.substring(0, i);\n        }\n        Map<String, String> param = StringUtils.parseQueryString(parameters);\n        param.put(Constants.CATEGORY_KEY, Constants.CONSUMERS_CATEGORY);\n        if (group != null) {\n            param.put(Constants.GROUP_KEY, group);\n        }\n        if (version != null) {\n            param.put(Constants.VERSION_KEY, version);\n        }\n        return URL.valueOf(Constants.CONSUMER_PROTOCOL + \"://\" + address + \"/\" + path\n                + \"?\" + StringUtils.toQueryString(param));\n    }\n\n}",
+        "start_point": {
+            "row": 30,
+            "column": 0
+        },
+        "end_point": {
+            "row": 228,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "public Consumer() {\n}",
+                "name": "Consumer",
+                "modifiers": "public",
+                "parameters": [],
+                "body": "{\n}",
+                "constructor": true,
+                "start_point": {
+                    "row": 64,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 65,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public Consumer(Long id) {\n    super(id);\n}",
+                "name": "Consumer",
+                "modifiers": "public",
+                "parameters": [
+                    {
+                        "type": "Long",
+                        "name": "id"
+                    }
+                ],
+                "body": "{\n    super(id);\n}",
+                "constructor": true,
+                "start_point": {
+                    "row": 67,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 69,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public String getService() {\n    return service;\n}",
+                "name": "getService",
+                "modifiers": "public",
+                "return_type": "String",
+                "parameters": [],
+                "body": "{\n    return service;\n}",
+                "start_point": {
+                    "row": 71,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 73,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void setService(String service) {\n    this.service = service;\n}",
+                "name": "setService",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "service"
+                    }
+                ],
+                "body": "{\n    this.service = service;\n}",
+                "start_point": {
+                    "row": 75,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 77,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public String getParameters() {\n    return parameters;\n}",
+                "name": "getParameters",
+                "modifiers": "public",
+                "return_type": "String",
+                "parameters": [],
+                "body": "{\n    return parameters;\n}",
+                "start_point": {
+                    "row": 79,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 81,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void setParameters(String parameters) {\n    this.parameters = parameters;\n}",
+                "name": "setParameters",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "parameters"
+                    }
+                ],
+                "body": "{\n    this.parameters = parameters;\n}",
+                "start_point": {
+                    "row": 83,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 85,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public String getAddress() {\n    return address;\n}",
+                "name": "getAddress",
+                "modifiers": "public",
+                "return_type": "String",
+                "parameters": [],
+                "body": "{\n    return address;\n}",
+                "start_point": {
+                    "row": 87,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 89,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void setAddress(String address) {\n    this.address = address;\n}",
+                "name": "setAddress",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "address"
+                    }
+                ],
+                "body": "{\n    this.address = address;\n}",
+                "start_point": {
+                    "row": 91,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 93,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public String getRegistry() {\n    return registry;\n}",
+                "name": "getRegistry",
+                "modifiers": "public",
+                "return_type": "String",
+                "parameters": [],
+                "body": "{\n    return registry;\n}",
+                "start_point": {
+                    "row": 95,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 97,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void setRegistry(String registry) {\n    this.registry = registry;\n}",
+                "name": "setRegistry",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "registry"
+                    }
+                ],
+                "body": "{\n    this.registry = registry;\n}",
+                "start_point": {
+                    "row": 99,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 101,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public String getUsername() {\n    return username;\n}",
+                "name": "getUsername",
+                "modifiers": "public",
+                "return_type": "String",
+                "parameters": [],
+                "body": "{\n    return username;\n}",
+                "start_point": {
+                    "row": 103,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 105,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void setUsername(String username) {\n    this.username = username;\n}",
+                "name": "setUsername",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "username"
+                    }
+                ],
+                "body": "{\n    this.username = username;\n}",
+                "start_point": {
+                    "row": 107,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 109,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public String getStatistics() {\n    return statistics;\n}",
+                "name": "getStatistics",
+                "modifiers": "public",
+                "return_type": "String",
+                "parameters": [],
+                "body": "{\n    return statistics;\n}",
+                "start_point": {
+                    "row": 111,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 113,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void setStatistics(String statistics) {\n    this.statistics = statistics;\n}",
+                "name": "setStatistics",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "statistics"
+                    }
+                ],
+                "body": "{\n    this.statistics = statistics;\n}",
+                "start_point": {
+                    "row": 115,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 117,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public Date getCollected() {\n    return collected;\n}",
+                "name": "getCollected",
+                "modifiers": "public",
+                "return_type": "Date",
+                "parameters": [],
+                "body": "{\n    return collected;\n}",
+                "start_point": {
+                    "row": 119,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 121,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void setCollected(Date collected) {\n    this.collected = collected;\n}",
+                "name": "setCollected",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Date",
+                        "name": "collected"
+                    }
+                ],
+                "body": "{\n    this.collected = collected;\n}",
+                "start_point": {
+                    "row": 123,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 125,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public String getResult() {\n    return result;\n}",
+                "name": "getResult",
+                "modifiers": "public",
+                "return_type": "String",
+                "parameters": [],
+                "body": "{\n    return result;\n}",
+                "start_point": {
+                    "row": 127,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 129,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void setResult(String result) {\n    this.result = result;\n}",
+                "name": "setResult",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "result"
+                    }
+                ],
+                "body": "{\n    this.result = result;\n}",
+                "start_point": {
+                    "row": 131,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 133,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public String getApplication() {\n    return application;\n}",
+                "name": "getApplication",
+                "modifiers": "public",
+                "return_type": "String",
+                "parameters": [],
+                "body": "{\n    return application;\n}",
+                "start_point": {
+                    "row": 135,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 137,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void setApplication(String application) {\n    this.application = application;\n}",
+                "name": "setApplication",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "application"
+                    }
+                ],
+                "body": "{\n    this.application = application;\n}",
+                "start_point": {
+                    "row": 139,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 141,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public Date getExpired() {\n    return expired;\n}",
+                "name": "getExpired",
+                "modifiers": "public",
+                "return_type": "Date",
+                "parameters": [],
+                "body": "{\n    return expired;\n}",
+                "start_point": {
+                    "row": 143,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 145,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void setExpired(Date expired) {\n    this.expired = expired;\n}",
+                "name": "setExpired",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Date",
+                        "name": "expired"
+                    }
+                ],
+                "body": "{\n    this.expired = expired;\n}",
+                "start_point": {
+                    "row": 148,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 150,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public long getAlived() {\n    return alived;\n}",
+                "name": "getAlived",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return alived;\n}",
+                "start_point": {
+                    "row": 153,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 155,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void setAlived(long alived) {\n    this.alived = alived;\n}",
+                "name": "setAlived",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "long",
+                        "name": "alived"
+                    }
+                ],
+                "body": "{\n    this.alived = alived;\n}",
+                "start_point": {
+                    "row": 158,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 160,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public Override getOverride() {\n    return override;\n}",
+                "name": "getOverride",
+                "modifiers": "public",
+                "return_type": "Override",
+                "parameters": [],
+                "body": "{\n    return override;\n}",
+                "start_point": {
+                    "row": 162,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 164,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void setOverride(Override override) {\n    this.override = override;\n}",
+                "name": "setOverride",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Override",
+                        "name": "override"
+                    }
+                ],
+                "body": "{\n    this.override = override;\n}",
+                "start_point": {
+                    "row": 166,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 168,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public List<Override> getOverrides() {\n    return overrides;\n}",
+                "name": "getOverrides",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return overrides;\n}",
+                "start_point": {
+                    "row": 170,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 172,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void setOverrides(List<Override> overrides) {\n    this.overrides = overrides;\n}",
+                "name": "setOverrides",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "List<Override>",
+                        "name": "overrides"
+                    }
+                ],
+                "body": "{\n    this.overrides = overrides;\n}",
+                "start_point": {
+                    "row": 174,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 176,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public List<Route> getRoutes() {\n    return routes;\n}",
+                "name": "getRoutes",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return routes;\n}",
+                "start_point": {
+                    "row": 178,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 180,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void setRoutes(List<Route> routes) {\n    this.routes = routes;\n}",
+                "name": "setRoutes",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "List<Route>",
+                        "name": "routes"
+                    }
+                ],
+                "body": "{\n    this.routes = routes;\n}",
+                "start_point": {
+                    "row": 182,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 184,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public List<Provider> getProviders() {\n    return providers;\n}",
+                "name": "getProviders",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return providers;\n}",
+                "start_point": {
+                    "row": 186,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 188,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void setProviders(List<Provider> providers) {\n    this.providers = providers;\n}",
+                "name": "setProviders",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "List<Provider>",
+                        "name": "providers"
+                    }
+                ],
+                "body": "{\n    this.providers = providers;\n}",
+                "start_point": {
+                    "row": 190,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 192,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public String toString() {\n    return \"Consumer [service=\" + service + \", parameters=\" + parameters + \", result=\" + result\n            + \", address=\" + address + \", registry=\" + registry + \", application=\"\n            + application + \", username=\" + username + \", statistics=\" + statistics\n            + \", collected=\" + collected + \", routes=\" + routes + \", overrides=\" + overrides\n            + \", expired=\" + expired + \", alived=\" + alived + \"]\";\n}",
+                "name": "toString",
+                "modifiers": "public",
+                "return_type": "String",
+                "parameters": [],
+                "body": "{\n    return \"Consumer [service=\" + service + \", parameters=\" + parameters + \", result=\" + result\n            + \", address=\" + address + \", registry=\" + registry + \", application=\"\n            + application + \", username=\" + username + \", statistics=\" + statistics\n            + \", collected=\" + collected + \", routes=\" + routes + \", overrides=\" + overrides\n            + \", expired=\" + expired + \", alived=\" + alived + \"]\";\n}",
+                "start_point": {
+                    "row": 194,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 200,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public URL toUrl() {\n    String group = null;\n    String version = null;\n    String path = service;\n    int i = path.indexOf(\"/\");\n    if (i > 0) {\n        group = path.substring(0, i);\n        path = path.substring(i + 1);\n    }\n    i = path.lastIndexOf(\":\");\n    if (i > 0) {\n        version = path.substring(i + 1);\n        path = path.substring(0, i);\n    }\n    Map<String, String> param = StringUtils.parseQueryString(parameters);\n    param.put(Constants.CATEGORY_KEY, Constants.CONSUMERS_CATEGORY);\n    if (group != null) {\n        param.put(Constants.GROUP_KEY, group);\n    }\n    if (version != null) {\n        param.put(Constants.VERSION_KEY, version);\n    }\n    return URL.valueOf(Constants.CONSUMER_PROTOCOL + \"://\" + address + \"/\" + path\n            + \"?\" + StringUtils.toQueryString(param));\n}",
+                "name": "toUrl",
+                "modifiers": "public",
+                "return_type": "URL",
+                "parameters": [],
+                "body": "{\n    String group = null;\n    String version = null;\n    String path = service;\n    int i = path.indexOf(\"/\");\n    if (i > 0) {\n        group = path.substring(0, i);\n        path = path.substring(i + 1);\n    }\n    i = path.lastIndexOf(\":\");\n    if (i > 0) {\n        version = path.substring(i + 1);\n        path = path.substring(0, i);\n    }\n    Map<String, String> param = StringUtils.parseQueryString(parameters);\n    param.put(Constants.CATEGORY_KEY, Constants.CONSUMERS_CATEGORY);\n    if (group != null) {\n        param.put(Constants.GROUP_KEY, group);\n    }\n    if (version != null) {\n        param.put(Constants.VERSION_KEY, version);\n    }\n    return URL.valueOf(Constants.CONSUMER_PROTOCOL + \"://\" + address + \"/\" + path\n            + \"?\" + StringUtils.toQueryString(param));\n}",
+                "start_point": {
+                    "row": 202,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 226,
+                    "column": 5
+                }
+            }
+        ]
+    }
+]

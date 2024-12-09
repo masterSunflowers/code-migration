@@ -1,0 +1,83 @@
+[
+    {
+        "rev_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-oauth2/src/main/java/io/gravitee/am/management/handlers/oauth2/security/impl/IdentityProviderManagerImpl.java",
+        "definition": "public class IdentityProviderManagerImpl implements IdentityProviderManager, InitializingBean {\n\n    /**\n     * Logger\n     */\n    private final Logger logger = LoggerFactory.getLogger(IdentityProviderManagerImpl.class);\n\n    @Autowired\n    private Domain domain;\n\n    @Autowired\n    private IdentityProviderPluginManager identityProviderPluginManager;\n\n    @Autowired\n    private IdentityProviderService identityProviderService;\n\n    private Map<String, AuthenticationProvider> providers = new HashMap<>();\n    private Map<String, IdentityProvider> identities = new HashMap<>();\n\n    @Override\n    public AuthenticationProvider get(String id) {\n        return providers.get(id);\n    }\n\n    public IdentityProvider getIdentityProvider(String id) {\n        return identities.get(id);\n    }\n\n    @Override\n    public void afterPropertiesSet() throws Exception {\n        logger.info(\"Initializing identity providers for domain {}\", domain.getName());\n        // TODO async call\n        List<IdentityProvider> identityProviders = identityProviderService.findByDomain(domain.getId()).blockingGet();\n\n        identityProviders.forEach(identityProvider -> {\n            logger.info(\"\\tInitializing identity provider: {} [{}]\", identityProvider.getName(), identityProvider.getType());\n\n            AuthenticationProvider authenticationProvider =\n                    identityProviderPluginManager.create(identityProvider.getType(), identityProvider.getConfiguration(),\n                            identityProvider.getMappers(), identityProvider.getRoleMapper());\n            providers.put(identityProvider.getId(), authenticationProvider);\n            identities.put(identityProvider.getId(), identityProvider);\n        });\n    }\n}",
+        "package": "package io.gravitee.am.management.handlers.oauth2.security.impl;",
+        "tree_path": "IdentityProviderManagerImpl",
+        "name": "IdentityProviderManagerImpl",
+        "modifiers": "public",
+        "superclass": null,
+        "super_interfaces": "implements IdentityProviderManager, InitializingBean",
+        "body": "{\n\n    /**\n     * Logger\n     */\n    private final Logger logger = LoggerFactory.getLogger(IdentityProviderManagerImpl.class);\n\n    @Autowired\n    private Domain domain;\n\n    @Autowired\n    private IdentityProviderPluginManager identityProviderPluginManager;\n\n    @Autowired\n    private IdentityProviderService identityProviderService;\n\n    private Map<String, AuthenticationProvider> providers = new HashMap<>();\n    private Map<String, IdentityProvider> identities = new HashMap<>();\n\n    @Override\n    public AuthenticationProvider get(String id) {\n        return providers.get(id);\n    }\n\n    public IdentityProvider getIdentityProvider(String id) {\n        return identities.get(id);\n    }\n\n    @Override\n    public void afterPropertiesSet() throws Exception {\n        logger.info(\"Initializing identity providers for domain {}\", domain.getName());\n        // TODO async call\n        List<IdentityProvider> identityProviders = identityProviderService.findByDomain(domain.getId()).blockingGet();\n\n        identityProviders.forEach(identityProvider -> {\n            logger.info(\"\\tInitializing identity provider: {} [{}]\", identityProvider.getName(), identityProvider.getType());\n\n            AuthenticationProvider authenticationProvider =\n                    identityProviderPluginManager.create(identityProvider.getType(), identityProvider.getConfiguration(),\n                            identityProvider.getMappers(), identityProvider.getRoleMapper());\n            providers.put(identityProvider.getId(), authenticationProvider);\n            identities.put(identityProvider.getId(), identityProvider);\n        });\n    }\n}",
+        "start_point": {
+            "row": 36,
+            "column": 0
+        },
+        "end_point": {
+            "row": 80,
+            "column": 1
+        },
+        "file_mode": "Renamed-Modified",
+        "map_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-admin/src/main/java/io/gravitee/am/management/handlers/admin/security/impl/IdentityProviderManagerImpl.java",
+        "methods": [
+            {
+                "definition": "@Override\npublic AuthenticationProvider get(String id) {\n    return providers.get(id);\n}",
+                "name": "get",
+                "modifiers": "@Override\n    public",
+                "return_type": "AuthenticationProvider",
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "id"
+                    }
+                ],
+                "body": "{\n    return providers.get(id);\n}",
+                "start_point": {
+                    "row": 55,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 58,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public IdentityProvider getIdentityProvider(String id) {\n    return identities.get(id);\n}",
+                "name": "getIdentityProvider",
+                "modifiers": "public",
+                "return_type": "IdentityProvider",
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "id"
+                    }
+                ],
+                "body": "{\n    return identities.get(id);\n}",
+                "start_point": {
+                    "row": 60,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 62,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic void afterPropertiesSet() throws Exception {\n    logger.info(\"Initializing identity providers for domain {}\", domain.getName());\n    // TODO async call\n    List<IdentityProvider> identityProviders = identityProviderService.findByDomain(domain.getId()).blockingGet();\n\n    identityProviders.forEach(identityProvider -> {\n        logger.info(\"\\tInitializing identity provider: {} [{}]\", identityProvider.getName(), identityProvider.getType());\n\n        AuthenticationProvider authenticationProvider =\n                identityProviderPluginManager.create(identityProvider.getType(), identityProvider.getConfiguration(),\n                        identityProvider.getMappers(), identityProvider.getRoleMapper());\n        providers.put(identityProvider.getId(), authenticationProvider);\n        identities.put(identityProvider.getId(), identityProvider);\n    });\n}",
+                "name": "afterPropertiesSet",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    logger.info(\"Initializing identity providers for domain {}\", domain.getName());\n    // TODO async call\n    List<IdentityProvider> identityProviders = identityProviderService.findByDomain(domain.getId()).blockingGet();\n\n    identityProviders.forEach(identityProvider -> {\n        logger.info(\"\\tInitializing identity provider: {} [{}]\", identityProvider.getName(), identityProvider.getType());\n\n        AuthenticationProvider authenticationProvider =\n                identityProviderPluginManager.create(identityProvider.getType(), identityProvider.getConfiguration(),\n                        identityProvider.getMappers(), identityProvider.getRoleMapper());\n        providers.put(identityProvider.getId(), authenticationProvider);\n        identities.put(identityProvider.getId(), identityProvider);\n    });\n}",
+                "start_point": {
+                    "row": 64,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 79,
+                    "column": 5
+                }
+            }
+        ]
+    }
+]

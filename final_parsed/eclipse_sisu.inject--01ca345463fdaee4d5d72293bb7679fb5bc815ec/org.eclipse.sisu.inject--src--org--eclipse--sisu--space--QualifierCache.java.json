@@ -1,0 +1,91 @@
+[
+    {
+        "rev_path": "org.eclipse.sisu.inject/src/org/eclipse/sisu/space/QualifierCache.java",
+        "definition": "final class QualifierCache\n    extends ClassVisitor\n{\n    // ----------------------------------------------------------------------\n    // Constants\n    // ----------------------------------------------------------------------\n\n    private static final String QUALIFIER_DESC = Type.getDescriptor( Qualifier.class );\n\n    // ----------------------------------------------------------------------\n    // Implementation fields\n    // ----------------------------------------------------------------------\n\n    private static final Map<String, Boolean> cachedResults = new ConcurrentHashMap<String, Boolean>( 32, 0.75f, 1 );\n\n    private boolean isQualified;\n\n    // ----------------------------------------------------------------------\n    // Constructors\n    // ----------------------------------------------------------------------\n\n    QualifierCache()\n    {\n        super( Opcodes.ASM4 );\n    }\n\n    // ----------------------------------------------------------------------\n    // Public methods\n    // ----------------------------------------------------------------------\n\n    @Override\n    public AnnotationVisitor visitAnnotation( final String desc, final boolean visible )\n    {\n        isQualified |= QUALIFIER_DESC.equals( desc );\n        return null;\n    }\n\n    // ----------------------------------------------------------------------\n    // Local methods\n    // ----------------------------------------------------------------------\n\n    /**\n     * Attempts to load the potential {@link Qualifier} annotation and return its class.\n     * \n     * @param space The class space\n     * @param desc The annotation descriptor\n     * @return {@code true} if the annotation is a qualifier; otherwise {@code false}\n     */\n    boolean qualify( final ClassSpace space, final String desc )\n    {\n        final Boolean result = cachedResults.get( desc );\n        if ( null == result )\n        {\n            isQualified = false;\n\n            final String name = desc.substring( 1, desc.length() - 1 );\n            ClassSpaceScanner.accept( this, space.getResource( name + \".class\" ) );\n            cachedResults.put( desc, Boolean.valueOf( isQualified ) );\n\n            return isQualified;\n        }\n        return result.booleanValue();\n    }\n}",
+        "package": "package org.eclipse.sisu.space;",
+        "tree_path": "QualifierCache",
+        "name": "QualifierCache",
+        "modifiers": "final",
+        "superclass": "extends ClassVisitor",
+        "super_interfaces": null,
+        "body": "{\n    // ----------------------------------------------------------------------\n    // Constants\n    // ----------------------------------------------------------------------\n\n    private static final String QUALIFIER_DESC = Type.getDescriptor( Qualifier.class );\n\n    // ----------------------------------------------------------------------\n    // Implementation fields\n    // ----------------------------------------------------------------------\n\n    private static final Map<String, Boolean> cachedResults = new ConcurrentHashMap<String, Boolean>( 32, 0.75f, 1 );\n\n    private boolean isQualified;\n\n    // ----------------------------------------------------------------------\n    // Constructors\n    // ----------------------------------------------------------------------\n\n    QualifierCache()\n    {\n        super( Opcodes.ASM4 );\n    }\n\n    // ----------------------------------------------------------------------\n    // Public methods\n    // ----------------------------------------------------------------------\n\n    @Override\n    public AnnotationVisitor visitAnnotation( final String desc, final boolean visible )\n    {\n        isQualified |= QUALIFIER_DESC.equals( desc );\n        return null;\n    }\n\n    // ----------------------------------------------------------------------\n    // Local methods\n    // ----------------------------------------------------------------------\n\n    /**\n     * Attempts to load the potential {@link Qualifier} annotation and return its class.\n     * \n     * @param space The class space\n     * @param desc The annotation descriptor\n     * @return {@code true} if the annotation is a qualifier; otherwise {@code false}\n     */\n    boolean qualify( final ClassSpace space, final String desc )\n    {\n        final Boolean result = cachedResults.get( desc );\n        if ( null == result )\n        {\n            isQualified = false;\n\n            final String name = desc.substring( 1, desc.length() - 1 );\n            ClassSpaceScanner.accept( this, space.getResource( name + \".class\" ) );\n            cachedResults.put( desc, Boolean.valueOf( isQualified ) );\n\n            return isQualified;\n        }\n        return result.booleanValue();\n    }\n}",
+        "start_point": {
+            "row": 25,
+            "column": 0
+        },
+        "end_point": {
+            "row": 88,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "QualifierCache()\n{\n    super( Opcodes.ASM4 );\n}",
+                "name": "QualifierCache",
+                "modifiers": null,
+                "parameters": [],
+                "body": "{\n    super( Opcodes.ASM4 );\n}",
+                "constructor": true,
+                "start_point": {
+                    "row": 46,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 49,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic AnnotationVisitor visitAnnotation( final String desc, final boolean visible )\n{\n    isQualified |= QUALIFIER_DESC.equals( desc );\n    return null;\n}",
+                "name": "visitAnnotation",
+                "modifiers": "@Override\n    public",
+                "return_type": "AnnotationVisitor",
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "String"
+                    },
+                    {
+                        "type": "final",
+                        "name": "boolean"
+                    }
+                ],
+                "body": "{\n    isQualified |= QUALIFIER_DESC.equals( desc );\n    return null;\n}",
+                "start_point": {
+                    "row": 55,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 60,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "boolean qualify( final ClassSpace space, final String desc )\n{\n    final Boolean result = cachedResults.get( desc );\n    if ( null == result )\n    {\n        isQualified = false;\n\n        final String name = desc.substring( 1, desc.length() - 1 );\n        ClassSpaceScanner.accept( this, space.getResource( name + \".class\" ) );\n        cachedResults.put( desc, Boolean.valueOf( isQualified ) );\n\n        return isQualified;\n    }\n    return result.booleanValue();\n}",
+                "name": "qualify",
+                "modifiers": null,
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "ClassSpace"
+                    },
+                    {
+                        "type": "final",
+                        "name": "String"
+                    }
+                ],
+                "body": "{\n    final Boolean result = cachedResults.get( desc );\n    if ( null == result )\n    {\n        isQualified = false;\n\n        final String name = desc.substring( 1, desc.length() - 1 );\n        ClassSpaceScanner.accept( this, space.getResource( name + \".class\" ) );\n        cachedResults.put( desc, Boolean.valueOf( isQualified ) );\n\n        return isQualified;\n    }\n    return result.booleanValue();\n}",
+                "start_point": {
+                    "row": 73,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 87,
+                    "column": 5
+                }
+            }
+        ]
+    }
+]

@@ -1,0 +1,275 @@
+[
+    {
+        "rev_path": "dubbo-admin-backend/src/main/java/org/apache/dubbo/admin/controller/OverridesController.java",
+        "definition": "@RestController\n@RequestMapping(\"/api/{env}/rules/override\")\npublic class OverridesController {\n\n    private final OverrideService overrideService;\n\n    @Autowired\n    public OverridesController(OverrideService overrideService) {\n        this.overrideService = overrideService;\n    }\n\n    @RequestMapping(method = RequestMethod.POST)\n    @ResponseStatus(HttpStatus.CREATED)\n    public boolean createOverride(@RequestBody OverrideDTO overrideDTO, @PathVariable String env) {\n        String serviceName = overrideDTO.getService();\n        if (StringUtils.isEmpty(serviceName)) {\n            throw new ParamValidationException(\"serviceName is Empty!\");\n        }\n        Override override = new Override();\n        override.setService(serviceName);\n        override.setApplication(overrideDTO.getApplication());\n        override.setAddress(overrideDTO.getAddress());\n        override.setEnabled(overrideDTO.isEnabled());\n        overrideDTOToParams(override, overrideDTO);\n        overrideService.saveOverride(override);\n        return true;\n    }\n\n    @RequestMapping(value = \"/{id}\", method = RequestMethod.PUT)\n    public boolean updateOverride(@PathVariable String id, @RequestBody OverrideDTO overrideDTO, @PathVariable String env) {\n        Override old = overrideService.findById(id);\n        if (old == null) {\n            throw new ResourceNotFoundException(\"Unknown ID!\");\n        }\n        Override override = new Override();\n        override.setService(overrideDTO.getService());\n        override.setApplication(overrideDTO.getApplication());\n        override.setAddress(overrideDTO.getAddress());\n        override.setEnabled(overrideDTO.isEnabled());\n        overrideDTOToParams(override, overrideDTO);\n        override.setHash(id);\n        overrideService.updateOverride(override);\n        return true;\n    }\n\n    @RequestMapping(method = RequestMethod.GET)\n    public List<OverrideDTO> searchOverride(@RequestParam(required = false) String service, @PathVariable String env) {\n        List<Override> overrides;\n        if (StringUtils.isEmpty(service)) {\n            overrides = overrideService.findAll();\n        } else {\n            overrides = overrideService.findByService(service);\n        }\n        List<OverrideDTO> result = new ArrayList<>();\n        for (Override override : overrides) {\n            OverrideDTO overrideDTO = new OverrideDTO();\n            overrideDTO.setAddress(override.getAddress().split(\":\")[0]);\n            overrideDTO.setApplication(override.getApplication());\n            overrideDTO.setEnabled(override.isEnabled());\n            overrideDTO.setService(override.getService());\n            overrideDTO.setId(override.getHash());\n            paramsToOverrideDTO(override, overrideDTO);\n            result.add(overrideDTO);\n        }\n        return result;\n    }\n\n    @RequestMapping(value = \"/{id}\", method = RequestMethod.GET)\n    public OverrideDTO detailOverride(@PathVariable String id, @PathVariable String env) {\n        Override override = overrideService.findById(id);\n        if (override == null) {\n            throw new ResourceNotFoundException(\"Unknown ID!\");\n        }\n        OverrideDTO overrideDTO = new OverrideDTO();\n        overrideDTO.setAddress(override.getAddress().split(\":\")[0]);\n        overrideDTO.setApplication(override.getApplication());\n        overrideDTO.setEnabled(override.isEnabled());\n        overrideDTO.setService(override.getService());\n        paramsToOverrideDTO(override, overrideDTO);\n        return overrideDTO;\n    }\n\n    @RequestMapping(value = \"/{id}\", method = RequestMethod.DELETE)\n    public boolean deleteOverride(@PathVariable String id, @PathVariable String env) {\n        overrideService.deleteOverride(id);\n        return true;\n    }\n\n    @RequestMapping(value = \"/enable/{id}\", method = RequestMethod.PUT)\n    public boolean enableRoute(@PathVariable String id, @PathVariable String env) {\n\n        overrideService.enableOverride(id);\n        return true;\n    }\n\n    @RequestMapping(value = \"/disable/{id}\", method = RequestMethod.PUT)\n    public boolean disableRoute(@PathVariable String id, @PathVariable String env) {\n\n        overrideService.disableOverride(id);\n        return true;\n    }\n\n    private void overrideDTOToParams(Override override, OverrideDTO overrideDTO) {\n        Map<Object, String>[] mocks = overrideDTO.getMock();\n        Map<String, Object>[] parameters = overrideDTO.getParameters();\n        StringBuilder params = new StringBuilder();\n        if (mocks != null) {\n            for (Map<Object, String> mock : mocks) {\n                for (Map.Entry<Object, String> entry : mock.entrySet()) {\n                    String key;\n                    if (entry.getKey().equals(\"0\")) {\n                        key = \"mock\";\n                    } else {\n                        key = entry.getKey() + \".mock\";\n                    }\n                    String value = key + \"=\" + URL.encode(entry.getValue());\n                    params.append(value).append(\"&\");\n                }\n            }\n        }\n\n        if (parameters != null) {\n            for (Map<String, Object> param : parameters) {\n                for (Map.Entry<String, Object> entry : param.entrySet()) {\n                    String value = entry.getKey() + \"=\" + entry.getValue();\n                    params.append(value).append(\"&\");\n                }\n            }\n        }\n        if (StringUtils.isNotEmpty(params)) {\n            int length = params.length();\n            if (params.charAt(length - 1) == '&') {\n                params.deleteCharAt(length - 1);\n            }\n        }\n        override.setParams(params.toString());\n    }\n\n    private void paramsToOverrideDTO(Override override, OverrideDTO overrideDTO) {\n        String params = override.getParams();\n        if (StringUtils.isNotEmpty(params)) {\n            List<Map<Object, String>> mock = new ArrayList<>();\n            List<Map<String, Object>> parameters = new ArrayList<>();\n            String[] pair = params.split(\"&\");\n            for (String p : pair) {\n                String key = p.split(\"=\")[0];\n                if (key.contains(\"mock\")) {\n                    //mock\n                    String value = URL.decode(p.split(\"=\")[1]);\n                    Map<Object, String> item = new HashMap<>();\n                    if (key.contains(\".\")) {\n                        //single method mock\n                        key = key.split(\"\\\\.\")[0];\n                        item.put(key, value);\n                    } else {\n                        item.put(0, value);\n                    }\n                    mock.add(item);\n                } else {\n                    //parameter\n                    String value = p.split(\"=\")[1];\n                    Map<String, Object> item = new HashMap<>();\n                    item.put(key, value);\n                    parameters.add(item);\n                }\n            }\n            Map<Object, String>[] mockArray = new Map[mock.size()];\n            overrideDTO.setMock(mock.toArray(mockArray));\n            Map<String, Object>[] paramArray = new Map[parameters.size()];\n            overrideDTO.setParameters(parameters.toArray(paramArray));\n        }\n    }\n\n}",
+        "package": "package org.apache.dubbo.admin.controller;",
+        "tree_path": "OverridesController",
+        "name": "OverridesController",
+        "modifiers": "@RestController\n@RequestMapping(\"/api/{env}/rules/override\")\npublic",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n\n    private final OverrideService overrideService;\n\n    @Autowired\n    public OverridesController(OverrideService overrideService) {\n        this.overrideService = overrideService;\n    }\n\n    @RequestMapping(method = RequestMethod.POST)\n    @ResponseStatus(HttpStatus.CREATED)\n    public boolean createOverride(@RequestBody OverrideDTO overrideDTO, @PathVariable String env) {\n        String serviceName = overrideDTO.getService();\n        if (StringUtils.isEmpty(serviceName)) {\n            throw new ParamValidationException(\"serviceName is Empty!\");\n        }\n        Override override = new Override();\n        override.setService(serviceName);\n        override.setApplication(overrideDTO.getApplication());\n        override.setAddress(overrideDTO.getAddress());\n        override.setEnabled(overrideDTO.isEnabled());\n        overrideDTOToParams(override, overrideDTO);\n        overrideService.saveOverride(override);\n        return true;\n    }\n\n    @RequestMapping(value = \"/{id}\", method = RequestMethod.PUT)\n    public boolean updateOverride(@PathVariable String id, @RequestBody OverrideDTO overrideDTO, @PathVariable String env) {\n        Override old = overrideService.findById(id);\n        if (old == null) {\n            throw new ResourceNotFoundException(\"Unknown ID!\");\n        }\n        Override override = new Override();\n        override.setService(overrideDTO.getService());\n        override.setApplication(overrideDTO.getApplication());\n        override.setAddress(overrideDTO.getAddress());\n        override.setEnabled(overrideDTO.isEnabled());\n        overrideDTOToParams(override, overrideDTO);\n        override.setHash(id);\n        overrideService.updateOverride(override);\n        return true;\n    }\n\n    @RequestMapping(method = RequestMethod.GET)\n    public List<OverrideDTO> searchOverride(@RequestParam(required = false) String service, @PathVariable String env) {\n        List<Override> overrides;\n        if (StringUtils.isEmpty(service)) {\n            overrides = overrideService.findAll();\n        } else {\n            overrides = overrideService.findByService(service);\n        }\n        List<OverrideDTO> result = new ArrayList<>();\n        for (Override override : overrides) {\n            OverrideDTO overrideDTO = new OverrideDTO();\n            overrideDTO.setAddress(override.getAddress().split(\":\")[0]);\n            overrideDTO.setApplication(override.getApplication());\n            overrideDTO.setEnabled(override.isEnabled());\n            overrideDTO.setService(override.getService());\n            overrideDTO.setId(override.getHash());\n            paramsToOverrideDTO(override, overrideDTO);\n            result.add(overrideDTO);\n        }\n        return result;\n    }\n\n    @RequestMapping(value = \"/{id}\", method = RequestMethod.GET)\n    public OverrideDTO detailOverride(@PathVariable String id, @PathVariable String env) {\n        Override override = overrideService.findById(id);\n        if (override == null) {\n            throw new ResourceNotFoundException(\"Unknown ID!\");\n        }\n        OverrideDTO overrideDTO = new OverrideDTO();\n        overrideDTO.setAddress(override.getAddress().split(\":\")[0]);\n        overrideDTO.setApplication(override.getApplication());\n        overrideDTO.setEnabled(override.isEnabled());\n        overrideDTO.setService(override.getService());\n        paramsToOverrideDTO(override, overrideDTO);\n        return overrideDTO;\n    }\n\n    @RequestMapping(value = \"/{id}\", method = RequestMethod.DELETE)\n    public boolean deleteOverride(@PathVariable String id, @PathVariable String env) {\n        overrideService.deleteOverride(id);\n        return true;\n    }\n\n    @RequestMapping(value = \"/enable/{id}\", method = RequestMethod.PUT)\n    public boolean enableRoute(@PathVariable String id, @PathVariable String env) {\n\n        overrideService.enableOverride(id);\n        return true;\n    }\n\n    @RequestMapping(value = \"/disable/{id}\", method = RequestMethod.PUT)\n    public boolean disableRoute(@PathVariable String id, @PathVariable String env) {\n\n        overrideService.disableOverride(id);\n        return true;\n    }\n\n    private void overrideDTOToParams(Override override, OverrideDTO overrideDTO) {\n        Map<Object, String>[] mocks = overrideDTO.getMock();\n        Map<String, Object>[] parameters = overrideDTO.getParameters();\n        StringBuilder params = new StringBuilder();\n        if (mocks != null) {\n            for (Map<Object, String> mock : mocks) {\n                for (Map.Entry<Object, String> entry : mock.entrySet()) {\n                    String key;\n                    if (entry.getKey().equals(\"0\")) {\n                        key = \"mock\";\n                    } else {\n                        key = entry.getKey() + \".mock\";\n                    }\n                    String value = key + \"=\" + URL.encode(entry.getValue());\n                    params.append(value).append(\"&\");\n                }\n            }\n        }\n\n        if (parameters != null) {\n            for (Map<String, Object> param : parameters) {\n                for (Map.Entry<String, Object> entry : param.entrySet()) {\n                    String value = entry.getKey() + \"=\" + entry.getValue();\n                    params.append(value).append(\"&\");\n                }\n            }\n        }\n        if (StringUtils.isNotEmpty(params)) {\n            int length = params.length();\n            if (params.charAt(length - 1) == '&') {\n                params.deleteCharAt(length - 1);\n            }\n        }\n        override.setParams(params.toString());\n    }\n\n    private void paramsToOverrideDTO(Override override, OverrideDTO overrideDTO) {\n        String params = override.getParams();\n        if (StringUtils.isNotEmpty(params)) {\n            List<Map<Object, String>> mock = new ArrayList<>();\n            List<Map<String, Object>> parameters = new ArrayList<>();\n            String[] pair = params.split(\"&\");\n            for (String p : pair) {\n                String key = p.split(\"=\")[0];\n                if (key.contains(\"mock\")) {\n                    //mock\n                    String value = URL.decode(p.split(\"=\")[1]);\n                    Map<Object, String> item = new HashMap<>();\n                    if (key.contains(\".\")) {\n                        //single method mock\n                        key = key.split(\"\\\\.\")[0];\n                        item.put(key, value);\n                    } else {\n                        item.put(0, value);\n                    }\n                    mock.add(item);\n                } else {\n                    //parameter\n                    String value = p.split(\"=\")[1];\n                    Map<String, Object> item = new HashMap<>();\n                    item.put(key, value);\n                    parameters.add(item);\n                }\n            }\n            Map<Object, String>[] mockArray = new Map[mock.size()];\n            overrideDTO.setMock(mock.toArray(mockArray));\n            Map<String, Object>[] paramArray = new Map[parameters.size()];\n            overrideDTO.setParameters(parameters.toArray(paramArray));\n        }\n    }\n\n}",
+        "start_point": {
+            "row": 35,
+            "column": 0
+        },
+        "end_point": {
+            "row": 208,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "@Autowired\npublic OverridesController(OverrideService overrideService) {\n    this.overrideService = overrideService;\n}",
+                "name": "OverridesController",
+                "modifiers": "@Autowired\n    public",
+                "parameters": [
+                    {
+                        "type": "OverrideService",
+                        "name": "overrideService"
+                    }
+                ],
+                "body": "{\n    this.overrideService = overrideService;\n}",
+                "constructor": true,
+                "start_point": {
+                    "row": 41,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 44,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@RequestMapping(method = RequestMethod.POST)\n@ResponseStatus(HttpStatus.CREATED)\npublic boolean createOverride(@RequestBody OverrideDTO overrideDTO, @PathVariable String env) {\n    String serviceName = overrideDTO.getService();\n    if (StringUtils.isEmpty(serviceName)) {\n        throw new ParamValidationException(\"serviceName is Empty!\");\n    }\n    Override override = new Override();\n    override.setService(serviceName);\n    override.setApplication(overrideDTO.getApplication());\n    override.setAddress(overrideDTO.getAddress());\n    override.setEnabled(overrideDTO.isEnabled());\n    overrideDTOToParams(override, overrideDTO);\n    overrideService.saveOverride(override);\n    return true;\n}",
+                "name": "createOverride",
+                "modifiers": "@RequestMapping(method = RequestMethod.POST)\n    @ResponseStatus(HttpStatus.CREATED)\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "@RequestBody",
+                        "name": "OverrideDTO"
+                    },
+                    {
+                        "type": "@PathVariable",
+                        "name": "String"
+                    }
+                ],
+                "body": "{\n    String serviceName = overrideDTO.getService();\n    if (StringUtils.isEmpty(serviceName)) {\n        throw new ParamValidationException(\"serviceName is Empty!\");\n    }\n    Override override = new Override();\n    override.setService(serviceName);\n    override.setApplication(overrideDTO.getApplication());\n    override.setAddress(overrideDTO.getAddress());\n    override.setEnabled(overrideDTO.isEnabled());\n    overrideDTOToParams(override, overrideDTO);\n    overrideService.saveOverride(override);\n    return true;\n}",
+                "start_point": {
+                    "row": 46,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 61,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@RequestMapping(value = \"/{id}\", method = RequestMethod.PUT)\npublic boolean updateOverride(@PathVariable String id, @RequestBody OverrideDTO overrideDTO, @PathVariable String env) {\n    Override old = overrideService.findById(id);\n    if (old == null) {\n        throw new ResourceNotFoundException(\"Unknown ID!\");\n    }\n    Override override = new Override();\n    override.setService(overrideDTO.getService());\n    override.setApplication(overrideDTO.getApplication());\n    override.setAddress(overrideDTO.getAddress());\n    override.setEnabled(overrideDTO.isEnabled());\n    overrideDTOToParams(override, overrideDTO);\n    override.setHash(id);\n    overrideService.updateOverride(override);\n    return true;\n}",
+                "name": "updateOverride",
+                "modifiers": "@RequestMapping(value = \"/{id}\", method = RequestMethod.PUT)\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "@PathVariable",
+                        "name": "String"
+                    },
+                    {
+                        "type": "@RequestBody",
+                        "name": "OverrideDTO"
+                    },
+                    {
+                        "type": "@PathVariable",
+                        "name": "String"
+                    }
+                ],
+                "body": "{\n    Override old = overrideService.findById(id);\n    if (old == null) {\n        throw new ResourceNotFoundException(\"Unknown ID!\");\n    }\n    Override override = new Override();\n    override.setService(overrideDTO.getService());\n    override.setApplication(overrideDTO.getApplication());\n    override.setAddress(overrideDTO.getAddress());\n    override.setEnabled(overrideDTO.isEnabled());\n    overrideDTOToParams(override, overrideDTO);\n    override.setHash(id);\n    overrideService.updateOverride(override);\n    return true;\n}",
+                "start_point": {
+                    "row": 63,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 78,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@RequestMapping(method = RequestMethod.GET)\npublic List<OverrideDTO> searchOverride(@RequestParam(required = false) String service, @PathVariable String env) {\n    List<Override> overrides;\n    if (StringUtils.isEmpty(service)) {\n        overrides = overrideService.findAll();\n    } else {\n        overrides = overrideService.findByService(service);\n    }\n    List<OverrideDTO> result = new ArrayList<>();\n    for (Override override : overrides) {\n        OverrideDTO overrideDTO = new OverrideDTO();\n        overrideDTO.setAddress(override.getAddress().split(\":\")[0]);\n        overrideDTO.setApplication(override.getApplication());\n        overrideDTO.setEnabled(override.isEnabled());\n        overrideDTO.setService(override.getService());\n        overrideDTO.setId(override.getHash());\n        paramsToOverrideDTO(override, overrideDTO);\n        result.add(overrideDTO);\n    }\n    return result;\n}",
+                "name": "searchOverride",
+                "modifiers": "@RequestMapping(method = RequestMethod.GET)\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "@RequestParam(required = false)",
+                        "name": "String"
+                    },
+                    {
+                        "type": "@PathVariable",
+                        "name": "String"
+                    }
+                ],
+                "body": "{\n    List<Override> overrides;\n    if (StringUtils.isEmpty(service)) {\n        overrides = overrideService.findAll();\n    } else {\n        overrides = overrideService.findByService(service);\n    }\n    List<OverrideDTO> result = new ArrayList<>();\n    for (Override override : overrides) {\n        OverrideDTO overrideDTO = new OverrideDTO();\n        overrideDTO.setAddress(override.getAddress().split(\":\")[0]);\n        overrideDTO.setApplication(override.getApplication());\n        overrideDTO.setEnabled(override.isEnabled());\n        overrideDTO.setService(override.getService());\n        overrideDTO.setId(override.getHash());\n        paramsToOverrideDTO(override, overrideDTO);\n        result.add(overrideDTO);\n    }\n    return result;\n}",
+                "start_point": {
+                    "row": 80,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 100,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@RequestMapping(value = \"/{id}\", method = RequestMethod.GET)\npublic OverrideDTO detailOverride(@PathVariable String id, @PathVariable String env) {\n    Override override = overrideService.findById(id);\n    if (override == null) {\n        throw new ResourceNotFoundException(\"Unknown ID!\");\n    }\n    OverrideDTO overrideDTO = new OverrideDTO();\n    overrideDTO.setAddress(override.getAddress().split(\":\")[0]);\n    overrideDTO.setApplication(override.getApplication());\n    overrideDTO.setEnabled(override.isEnabled());\n    overrideDTO.setService(override.getService());\n    paramsToOverrideDTO(override, overrideDTO);\n    return overrideDTO;\n}",
+                "name": "detailOverride",
+                "modifiers": "@RequestMapping(value = \"/{id}\", method = RequestMethod.GET)\n    public",
+                "return_type": "OverrideDTO",
+                "parameters": [
+                    {
+                        "type": "@PathVariable",
+                        "name": "String"
+                    },
+                    {
+                        "type": "@PathVariable",
+                        "name": "String"
+                    }
+                ],
+                "body": "{\n    Override override = overrideService.findById(id);\n    if (override == null) {\n        throw new ResourceNotFoundException(\"Unknown ID!\");\n    }\n    OverrideDTO overrideDTO = new OverrideDTO();\n    overrideDTO.setAddress(override.getAddress().split(\":\")[0]);\n    overrideDTO.setApplication(override.getApplication());\n    overrideDTO.setEnabled(override.isEnabled());\n    overrideDTO.setService(override.getService());\n    paramsToOverrideDTO(override, overrideDTO);\n    return overrideDTO;\n}",
+                "start_point": {
+                    "row": 102,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 115,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@RequestMapping(value = \"/{id}\", method = RequestMethod.DELETE)\npublic boolean deleteOverride(@PathVariable String id, @PathVariable String env) {\n    overrideService.deleteOverride(id);\n    return true;\n}",
+                "name": "deleteOverride",
+                "modifiers": "@RequestMapping(value = \"/{id}\", method = RequestMethod.DELETE)\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "@PathVariable",
+                        "name": "String"
+                    },
+                    {
+                        "type": "@PathVariable",
+                        "name": "String"
+                    }
+                ],
+                "body": "{\n    overrideService.deleteOverride(id);\n    return true;\n}",
+                "start_point": {
+                    "row": 117,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 121,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@RequestMapping(value = \"/enable/{id}\", method = RequestMethod.PUT)\npublic boolean enableRoute(@PathVariable String id, @PathVariable String env) {\n\n    overrideService.enableOverride(id);\n    return true;\n}",
+                "name": "enableRoute",
+                "modifiers": "@RequestMapping(value = \"/enable/{id}\", method = RequestMethod.PUT)\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "@PathVariable",
+                        "name": "String"
+                    },
+                    {
+                        "type": "@PathVariable",
+                        "name": "String"
+                    }
+                ],
+                "body": "{\n\n    overrideService.enableOverride(id);\n    return true;\n}",
+                "start_point": {
+                    "row": 123,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 128,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@RequestMapping(value = \"/disable/{id}\", method = RequestMethod.PUT)\npublic boolean disableRoute(@PathVariable String id, @PathVariable String env) {\n\n    overrideService.disableOverride(id);\n    return true;\n}",
+                "name": "disableRoute",
+                "modifiers": "@RequestMapping(value = \"/disable/{id}\", method = RequestMethod.PUT)\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "@PathVariable",
+                        "name": "String"
+                    },
+                    {
+                        "type": "@PathVariable",
+                        "name": "String"
+                    }
+                ],
+                "body": "{\n\n    overrideService.disableOverride(id);\n    return true;\n}",
+                "start_point": {
+                    "row": 130,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 135,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "private void overrideDTOToParams(Override override, OverrideDTO overrideDTO) {\n    Map<Object, String>[] mocks = overrideDTO.getMock();\n    Map<String, Object>[] parameters = overrideDTO.getParameters();\n    StringBuilder params = new StringBuilder();\n    if (mocks != null) {\n        for (Map<Object, String> mock : mocks) {\n            for (Map.Entry<Object, String> entry : mock.entrySet()) {\n                String key;\n                if (entry.getKey().equals(\"0\")) {\n                    key = \"mock\";\n                } else {\n                    key = entry.getKey() + \".mock\";\n                }\n                String value = key + \"=\" + URL.encode(entry.getValue());\n                params.append(value).append(\"&\");\n            }\n        }\n    }\n\n    if (parameters != null) {\n        for (Map<String, Object> param : parameters) {\n            for (Map.Entry<String, Object> entry : param.entrySet()) {\n                String value = entry.getKey() + \"=\" + entry.getValue();\n                params.append(value).append(\"&\");\n            }\n        }\n    }\n    if (StringUtils.isNotEmpty(params)) {\n        int length = params.length();\n        if (params.charAt(length - 1) == '&') {\n            params.deleteCharAt(length - 1);\n        }\n    }\n    override.setParams(params.toString());\n}",
+                "name": "overrideDTOToParams",
+                "modifiers": "private",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Override",
+                        "name": "override"
+                    },
+                    {
+                        "type": "OverrideDTO",
+                        "name": "overrideDTO"
+                    }
+                ],
+                "body": "{\n    Map<Object, String>[] mocks = overrideDTO.getMock();\n    Map<String, Object>[] parameters = overrideDTO.getParameters();\n    StringBuilder params = new StringBuilder();\n    if (mocks != null) {\n        for (Map<Object, String> mock : mocks) {\n            for (Map.Entry<Object, String> entry : mock.entrySet()) {\n                String key;\n                if (entry.getKey().equals(\"0\")) {\n                    key = \"mock\";\n                } else {\n                    key = entry.getKey() + \".mock\";\n                }\n                String value = key + \"=\" + URL.encode(entry.getValue());\n                params.append(value).append(\"&\");\n            }\n        }\n    }\n\n    if (parameters != null) {\n        for (Map<String, Object> param : parameters) {\n            for (Map.Entry<String, Object> entry : param.entrySet()) {\n                String value = entry.getKey() + \"=\" + entry.getValue();\n                params.append(value).append(\"&\");\n            }\n        }\n    }\n    if (StringUtils.isNotEmpty(params)) {\n        int length = params.length();\n        if (params.charAt(length - 1) == '&') {\n            params.deleteCharAt(length - 1);\n        }\n    }\n    override.setParams(params.toString());\n}",
+                "start_point": {
+                    "row": 137,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 171,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "private void paramsToOverrideDTO(Override override, OverrideDTO overrideDTO) {\n    String params = override.getParams();\n    if (StringUtils.isNotEmpty(params)) {\n        List<Map<Object, String>> mock = new ArrayList<>();\n        List<Map<String, Object>> parameters = new ArrayList<>();\n        String[] pair = params.split(\"&\");\n        for (String p : pair) {\n            String key = p.split(\"=\")[0];\n            if (key.contains(\"mock\")) {\n                //mock\n                String value = URL.decode(p.split(\"=\")[1]);\n                Map<Object, String> item = new HashMap<>();\n                if (key.contains(\".\")) {\n                    //single method mock\n                    key = key.split(\"\\\\.\")[0];\n                    item.put(key, value);\n                } else {\n                    item.put(0, value);\n                }\n                mock.add(item);\n            } else {\n                //parameter\n                String value = p.split(\"=\")[1];\n                Map<String, Object> item = new HashMap<>();\n                item.put(key, value);\n                parameters.add(item);\n            }\n        }\n        Map<Object, String>[] mockArray = new Map[mock.size()];\n        overrideDTO.setMock(mock.toArray(mockArray));\n        Map<String, Object>[] paramArray = new Map[parameters.size()];\n        overrideDTO.setParameters(parameters.toArray(paramArray));\n    }\n}",
+                "name": "paramsToOverrideDTO",
+                "modifiers": "private",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Override",
+                        "name": "override"
+                    },
+                    {
+                        "type": "OverrideDTO",
+                        "name": "overrideDTO"
+                    }
+                ],
+                "body": "{\n    String params = override.getParams();\n    if (StringUtils.isNotEmpty(params)) {\n        List<Map<Object, String>> mock = new ArrayList<>();\n        List<Map<String, Object>> parameters = new ArrayList<>();\n        String[] pair = params.split(\"&\");\n        for (String p : pair) {\n            String key = p.split(\"=\")[0];\n            if (key.contains(\"mock\")) {\n                //mock\n                String value = URL.decode(p.split(\"=\")[1]);\n                Map<Object, String> item = new HashMap<>();\n                if (key.contains(\".\")) {\n                    //single method mock\n                    key = key.split(\"\\\\.\")[0];\n                    item.put(key, value);\n                } else {\n                    item.put(0, value);\n                }\n                mock.add(item);\n            } else {\n                //parameter\n                String value = p.split(\"=\")[1];\n                Map<String, Object> item = new HashMap<>();\n                item.put(key, value);\n                parameters.add(item);\n            }\n        }\n        Map<Object, String>[] mockArray = new Map[mock.size()];\n        overrideDTO.setMock(mock.toArray(mockArray));\n        Map<String, Object>[] paramArray = new Map[parameters.size()];\n        overrideDTO.setParameters(parameters.toArray(paramArray));\n    }\n}",
+                "start_point": {
+                    "row": 173,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 206,
+                    "column": 5
+                }
+            }
+        ]
+    }
+]

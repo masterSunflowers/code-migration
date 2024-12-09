@@ -1,0 +1,24 @@
+[
+    {
+        "rev_path": "intention/src/main/java/club/newtech/qbike/domain/core/vo/User.java",
+        "definition": "@Embeddable\n@Data\npublic class User {\n    private int id;\n    private String name;\n    private String mobile;\n}",
+        "package": "package club.newtech.qbike.domain.core.vo;",
+        "tree_path": "User",
+        "name": "User",
+        "modifiers": "@Embeddable\n@Data\npublic",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n    private int id;\n    private String name;\n    private String mobile;\n}",
+        "start_point": {
+            "row": 6,
+            "column": 0
+        },
+        "end_point": {
+            "row": 12,
+            "column": 1
+        },
+        "file_mode": "Renamed-Modified",
+        "map_path": "trip/src/main/java/club/newtech/qbike/trip/domain/core/vo/Driver.java",
+        "methods": []
+    }
+]

@@ -56,3 +56,9 @@
 3. Much repo has multiple migrations
 
 4. Repo that start/end commit does not exist
+
+5. 2/3 số lượng renamed file có nội dung giống hoàn toàn, chỉ đổi vị trí file 44/69
+
+6. Thay đổi interface, record, enum (có đuôi java) -> bỏ qua 2 interface / 94 file
+
+7. Set rename similarity threshold (because some file with similarity index = 0.5 is diffenrent but same in license / some java docs (authorship))

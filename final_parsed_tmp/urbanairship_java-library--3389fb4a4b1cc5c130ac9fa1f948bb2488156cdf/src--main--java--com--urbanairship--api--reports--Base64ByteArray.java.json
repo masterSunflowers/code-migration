@@ -1,0 +1,131 @@
+[
+    {
+        "rev_path": "src/main/java/com/urbanairship/api/reports/Base64ByteArray.java",
+        "definition": "public final class Base64ByteArray {\n\n    public byte[] binary;\n\n    public Base64ByteArray(String value) {\n        this.binary = BaseEncoding.base64().decode(value);\n    }\n\n    public byte[] getByteArray() {\n        return binary;\n    }\n\n    public String getBase64EncodedString() {\n        return BaseEncoding.base64().encode(binary);\n    }\n\n    @Override\n    public String toString() {\n        return new String(binary);\n    }\n\n    // Does not use Guava::Objects, gives inconsistent results with byte array\n    @Override\n    public boolean equals(Object o) {\n        if (this == o) {\n            return true;\n        }\n        if (o == null || getClass() != o.getClass()) {\n            return false;\n        }\n\n        Base64ByteArray that = (Base64ByteArray) o;\n\n        return Arrays.equals(binary, that.binary);\n\n    }\n\n    @Override\n    public int hashCode() {\n        return binary != null ? Arrays.hashCode(binary) : 0;\n    }\n}",
+        "package": "package com.urbanairship.api.reports;",
+        "tree_path": "Base64ByteArray",
+        "name": "Base64ByteArray",
+        "modifiers": "public final",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n\n    public byte[] binary;\n\n    public Base64ByteArray(String value) {\n        this.binary = BaseEncoding.base64().decode(value);\n    }\n\n    public byte[] getByteArray() {\n        return binary;\n    }\n\n    public String getBase64EncodedString() {\n        return BaseEncoding.base64().encode(binary);\n    }\n\n    @Override\n    public String toString() {\n        return new String(binary);\n    }\n\n    // Does not use Guava::Objects, gives inconsistent results with byte array\n    @Override\n    public boolean equals(Object o) {\n        if (this == o) {\n            return true;\n        }\n        if (o == null || getClass() != o.getClass()) {\n            return false;\n        }\n\n        Base64ByteArray that = (Base64ByteArray) o;\n\n        return Arrays.equals(binary, that.binary);\n\n    }\n\n    @Override\n    public int hashCode() {\n        return binary != null ? Arrays.hashCode(binary) : 0;\n    }\n}",
+        "start_point": {
+            "row": 10,
+            "column": 0
+        },
+        "end_point": {
+            "row": 51,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "public Base64ByteArray(String value) {\n    this.binary = BaseEncoding.base64().decode(value);\n}",
+                "name": "Base64ByteArray",
+                "modifiers": "public",
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "value"
+                    }
+                ],
+                "body": "{\n    this.binary = BaseEncoding.base64().decode(value);\n}",
+                "constructor": true,
+                "start_point": {
+                    "row": 14,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 16,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public byte[] getByteArray() {\n    return binary;\n}",
+                "name": "getByteArray",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return binary;\n}",
+                "start_point": {
+                    "row": 18,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 20,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public String getBase64EncodedString() {\n    return BaseEncoding.base64().encode(binary);\n}",
+                "name": "getBase64EncodedString",
+                "modifiers": "public",
+                "return_type": "String",
+                "parameters": [],
+                "body": "{\n    return BaseEncoding.base64().encode(binary);\n}",
+                "start_point": {
+                    "row": 22,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 24,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic String toString() {\n    return new String(binary);\n}",
+                "name": "toString",
+                "modifiers": "@Override\n    public",
+                "return_type": "String",
+                "parameters": [],
+                "body": "{\n    return new String(binary);\n}",
+                "start_point": {
+                    "row": 26,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 29,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic boolean equals(Object o) {\n    if (this == o) {\n        return true;\n    }\n    if (o == null || getClass() != o.getClass()) {\n        return false;\n    }\n\n    Base64ByteArray that = (Base64ByteArray) o;\n\n    return Arrays.equals(binary, that.binary);\n\n}",
+                "name": "equals",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Object",
+                        "name": "o"
+                    }
+                ],
+                "body": "{\n    if (this == o) {\n        return true;\n    }\n    if (o == null || getClass() != o.getClass()) {\n        return false;\n    }\n\n    Base64ByteArray that = (Base64ByteArray) o;\n\n    return Arrays.equals(binary, that.binary);\n\n}",
+                "start_point": {
+                    "row": 32,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 45,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic int hashCode() {\n    return binary != null ? Arrays.hashCode(binary) : 0;\n}",
+                "name": "hashCode",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return binary != null ? Arrays.hashCode(binary) : 0;\n}",
+                "start_point": {
+                    "row": 47,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 50,
+                    "column": 5
+                }
+            }
+        ]
+    }
+]

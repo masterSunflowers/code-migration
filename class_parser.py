@@ -59,10 +59,11 @@ def parse_java_files(
         if file_map[file_mode]:
             match file_mode:
                 case "Added":
-                    for rev_path in file_map[file_mode]:
-                        current_code = get_code(repo_dir, cur_commit, rev_path)
-                        tree = get_ast(current_code)
-                        yield rev_path, tree, file_mode, cur_commit, None
+                    # for rev_path in file_map[file_mode]:
+                    #     current_code = get_code(repo_dir, cur_commit, rev_path)
+                    #     tree = get_ast(current_code)
+                    #     yield rev_path, tree, file_mode, cur_commit, None
+                    pass
                 case "Modified":
                     for rev_path in file_map[file_mode]:
                         current_code = get_code(repo_dir, cur_commit, rev_path)
@@ -73,12 +74,13 @@ def parse_java_files(
                         tree = get_ast(previous_code)
                         yield rev_path, tree, file_mode, prev_commit, None
                 case "Deleted":
-                    for rev_path in file_map[file_mode]:
-                        previous_code = get_code(repo_dir, prev_commit, rev_path)
-                        tree = get_ast(previous_code)
-                        yield rev_path, tree, file_mode, prev_commit, None
-                case "Renamed":
-                    for old_path, new_path in file_map[file_mode]:
+                    # for rev_path in file_map[file_mode]:
+                    #     previous_code = get_code(repo_dir, prev_commit, rev_path)
+                    #     tree = get_ast(previous_code)
+                    #     yield rev_path, tree, file_mode, prev_commit, None
+                    pass
+                case "Renamed-Modified":
+                    for old_path, new_path, _ in file_map[file_mode]:
                         current_code = get_code(repo_dir, cur_commit, new_path)
                         tree = get_ast(current_code)
                         yield new_path, tree, file_mode, cur_commit, old_path
@@ -86,7 +88,11 @@ def parse_java_files(
                         previous_code = get_code(repo_dir, prev_commit, old_path)
                         tree = get_ast(previous_code)
                         yield old_path, tree, file_mode, prev_commit, new_path
+                case "Renamed-Unchanged":
+                    pass
+
                 case _:
+                    print(f"Unknown file mode: {file_mode}")
                     continue
 
 
@@ -246,8 +252,17 @@ def main(args):
             repo_dir = os.path.join(args.repos_dir, row["repoName"])
             file_map = eval(row["diff_files"])
             # Parse the AST for files in previous commit version and current commit version
-            all_previous_class = []
-            all_current_class = []
+            output_prev = os.path.join(
+                args.output_dir, row["repoName"] + "--" + row["prev_commit"]
+            )
+            output_cur = os.path.join(
+                args.output_dir, row["repoName"] + "--" + row["endCommit"]
+            )
+            if not os.path.exists(output_prev):
+                os.makedirs(output_prev, exist_ok=True)
+            if not os.path.exists(output_cur):
+                os.makedirs(output_cur, exist_ok=True)
+
             for rev_path, tree, file_mode, commit_hash, map_path in parse_java_files(
                 repo_dir,
                 file_map,
@@ -255,27 +270,21 @@ def main(args):
                 row["endCommit"],
             ):
                 lst_class_info = get_definitions(rev_path, tree, file_mode, map_path)
+                file_name = (
+                    "--".join(os.path.normpath(rev_path).split(os.sep)) + ".json"
+                )
                 if commit_hash == row["prev_commit"]:
-                    all_previous_class.extend(lst_class_info)
+                    with open(
+                        os.path.join(output_prev, file_name),
+                        "w",
+                    ) as f:
+                        json.dump(lst_class_info, f, indent=4)
                 else:
-                    all_current_class.extend(lst_class_info)
-
-            if not os.path.exists(args.output_dir):
-                os.makedirs(args.output_dir, exist_ok=True)
-
-            prev_identifier = row["repoName"] + "--" + row["prev_commit"] + ".json"
-            with open(
-                os.path.join(args.output_dir, prev_identifier),
-                "w",
-            ) as f:
-                json.dump(all_previous_class, f, indent=4)
-
-            cur_identifier = row["repoName"] + "--" + row["endCommit"] + ".json"
-            with open(
-                os.path.join(args.output_dir, cur_identifier),
-                "w",
-            ) as f:
-                json.dump(all_current_class, f, indent=4)
+                    with open(
+                        os.path.join(output_cur, file_name),
+                        "w",
+                    ) as f:
+                        json.dump(lst_class_info, f, indent=4)
 
 
 if __name__ == "__main__":

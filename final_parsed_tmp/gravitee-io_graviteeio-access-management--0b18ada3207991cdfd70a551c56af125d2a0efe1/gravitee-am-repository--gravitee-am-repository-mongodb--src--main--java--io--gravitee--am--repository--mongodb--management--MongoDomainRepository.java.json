@@ -1,0 +1,246 @@
+[
+    {
+        "rev_path": "gravitee-am-repository/gravitee-am-repository-mongodb/src/main/java/io/gravitee/am/repository/mongodb/management/MongoDomainRepository.java",
+        "definition": "@Component\npublic class MongoDomainRepository extends AbstractManagementMongoRepository implements DomainRepository {\n\n    private static final String FIELD_ID = \"_id\";\n    private MongoCollection<DomainMongo> domainsCollection;\n\n    @Autowired\n    private IdGenerator idGenerator;\n\n    @PostConstruct\n    public void init() {\n        domainsCollection = mongoOperations.getCollection(\"domains\", DomainMongo.class);\n    }\n\n    @Override\n    public Single<Set<Domain>> findAll() {\n        return Observable.fromPublisher(domainsCollection.find()).map(this::convert).collect(HashSet::new, Set::add);\n    }\n\n    @Override\n    public Maybe<Domain> findById(String id) {\n        return Observable.fromPublisher(domainsCollection.find(eq(FIELD_ID, id)).first()).firstElement().map(this::convert);\n    }\n\n    @Override\n    public Single<Set<Domain>> findByIdIn(Collection<String> ids) {\n        return Observable.fromPublisher(domainsCollection.find(in(FIELD_ID, ids))).map(this::convert).collect(HashSet::new, Set::add);\n    }\n\n    @Override\n    public Single<Domain> create(Domain item) {\n        DomainMongo domain = convert(item);\n        domain.setId(domain.getId() == null ? (String) idGenerator.generate() : domain.getId());\n        return Single.fromPublisher(domainsCollection.insertOne(domain)).flatMap(success -> findById(domain.getId()).toSingle());\n    }\n\n    @Override\n    public Single<Domain> update(Domain item) {\n        DomainMongo domain = convert(item);\n        return Single.fromPublisher(domainsCollection.replaceOne(eq(FIELD_ID, domain.getId()), domain)).flatMap(updateResult -> findById(domain.getId()).toSingle());\n    }\n\n    @Override\n    public Single<Irrelevant> delete(String id) {\n        return Single.fromPublisher(domainsCollection.deleteOne(eq(FIELD_ID, id))).map(deleteResult -> Irrelevant.DOMAIN);\n    }\n\n    private Domain convert(DomainMongo domainMongo) {\n        if (domainMongo == null) {\n            return null;\n        }\n\n        Domain domain = new Domain();\n        domain.setId(domainMongo.getId());\n        domain.setPath(domainMongo.getPath());\n        domain.setCreatedAt(domainMongo.getCreatedAt());\n        domain.setUpdatedAt(domainMongo.getUpdatedAt());\n        domain.setName(domainMongo.getName());\n        domain.setDescription(domainMongo.getDescription());\n        domain.setEnabled(domainMongo.isEnabled());\n        domain.setMaster(domainMongo.isMaster());\n        domain.setLoginForm(convert(domainMongo.getLoginForm()));\n        domain.setIdentities(domainMongo.getIdentities());\n        domain.setOauth2Identities(domainMongo.getOauth2Identities());\n        return domain;\n    }\n\n    private DomainMongo convert(Domain domain) {\n        if (domain == null) {\n            return null;\n        }\n\n        DomainMongo domainMongo = new DomainMongo();\n        domainMongo.setId(domain.getId());\n        domainMongo.setPath(domain.getPath());\n        domainMongo.setCreatedAt(domain.getCreatedAt());\n        domainMongo.setUpdatedAt(domain.getUpdatedAt());\n        domainMongo.setName(domain.getName());\n        domainMongo.setDescription(domain.getDescription());\n        domainMongo.setEnabled(domain.isEnabled());\n        domainMongo.setMaster(domain.isMaster());\n        domainMongo.setLoginForm(convert(domain.getLoginForm()));\n        domainMongo.setIdentities(domain.getIdentities());\n        domainMongo.setOauth2Identities(domain.getOauth2Identities());\n        return domainMongo;\n    }\n\n    private LoginForm convert(LoginFormMongo loginFormMongo) {\n        if (loginFormMongo == null) {\n            return null;\n        }\n\n        LoginForm loginForm = new LoginForm();\n        loginForm.setEnabled(loginFormMongo.isEnabled());\n        loginForm.setContent(loginFormMongo.getContent());\n        loginForm.setAssets(loginFormMongo.getAssets());\n        return loginForm;\n    }\n\n    private LoginFormMongo convert(LoginForm loginForm) {\n        if (loginForm == null) {\n            return null;\n        }\n\n        LoginFormMongo formMongo = new LoginFormMongo();\n        formMongo.setEnabled(loginForm.isEnabled());\n        formMongo.setContent(loginForm.getContent());\n        formMongo.setAssets(loginForm.getAssets());\n        return formMongo;\n    }\n}",
+        "package": "package io.gravitee.am.repository.mongodb.management;",
+        "tree_path": "MongoDomainRepository",
+        "name": "MongoDomainRepository",
+        "modifiers": "@Component\npublic",
+        "superclass": "extends AbstractManagementMongoRepository",
+        "super_interfaces": "implements DomainRepository",
+        "body": "{\n\n    private static final String FIELD_ID = \"_id\";\n    private MongoCollection<DomainMongo> domainsCollection;\n\n    @Autowired\n    private IdGenerator idGenerator;\n\n    @PostConstruct\n    public void init() {\n        domainsCollection = mongoOperations.getCollection(\"domains\", DomainMongo.class);\n    }\n\n    @Override\n    public Single<Set<Domain>> findAll() {\n        return Observable.fromPublisher(domainsCollection.find()).map(this::convert).collect(HashSet::new, Set::add);\n    }\n\n    @Override\n    public Maybe<Domain> findById(String id) {\n        return Observable.fromPublisher(domainsCollection.find(eq(FIELD_ID, id)).first()).firstElement().map(this::convert);\n    }\n\n    @Override\n    public Single<Set<Domain>> findByIdIn(Collection<String> ids) {\n        return Observable.fromPublisher(domainsCollection.find(in(FIELD_ID, ids))).map(this::convert).collect(HashSet::new, Set::add);\n    }\n\n    @Override\n    public Single<Domain> create(Domain item) {\n        DomainMongo domain = convert(item);\n        domain.setId(domain.getId() == null ? (String) idGenerator.generate() : domain.getId());\n        return Single.fromPublisher(domainsCollection.insertOne(domain)).flatMap(success -> findById(domain.getId()).toSingle());\n    }\n\n    @Override\n    public Single<Domain> update(Domain item) {\n        DomainMongo domain = convert(item);\n        return Single.fromPublisher(domainsCollection.replaceOne(eq(FIELD_ID, domain.getId()), domain)).flatMap(updateResult -> findById(domain.getId()).toSingle());\n    }\n\n    @Override\n    public Single<Irrelevant> delete(String id) {\n        return Single.fromPublisher(domainsCollection.deleteOne(eq(FIELD_ID, id))).map(deleteResult -> Irrelevant.DOMAIN);\n    }\n\n    private Domain convert(DomainMongo domainMongo) {\n        if (domainMongo == null) {\n            return null;\n        }\n\n        Domain domain = new Domain();\n        domain.setId(domainMongo.getId());\n        domain.setPath(domainMongo.getPath());\n        domain.setCreatedAt(domainMongo.getCreatedAt());\n        domain.setUpdatedAt(domainMongo.getUpdatedAt());\n        domain.setName(domainMongo.getName());\n        domain.setDescription(domainMongo.getDescription());\n        domain.setEnabled(domainMongo.isEnabled());\n        domain.setMaster(domainMongo.isMaster());\n        domain.setLoginForm(convert(domainMongo.getLoginForm()));\n        domain.setIdentities(domainMongo.getIdentities());\n        domain.setOauth2Identities(domainMongo.getOauth2Identities());\n        return domain;\n    }\n\n    private DomainMongo convert(Domain domain) {\n        if (domain == null) {\n            return null;\n        }\n\n        DomainMongo domainMongo = new DomainMongo();\n        domainMongo.setId(domain.getId());\n        domainMongo.setPath(domain.getPath());\n        domainMongo.setCreatedAt(domain.getCreatedAt());\n        domainMongo.setUpdatedAt(domain.getUpdatedAt());\n        domainMongo.setName(domain.getName());\n        domainMongo.setDescription(domain.getDescription());\n        domainMongo.setEnabled(domain.isEnabled());\n        domainMongo.setMaster(domain.isMaster());\n        domainMongo.setLoginForm(convert(domain.getLoginForm()));\n        domainMongo.setIdentities(domain.getIdentities());\n        domainMongo.setOauth2Identities(domain.getOauth2Identities());\n        return domainMongo;\n    }\n\n    private LoginForm convert(LoginFormMongo loginFormMongo) {\n        if (loginFormMongo == null) {\n            return null;\n        }\n\n        LoginForm loginForm = new LoginForm();\n        loginForm.setEnabled(loginFormMongo.isEnabled());\n        loginForm.setContent(loginFormMongo.getContent());\n        loginForm.setAssets(loginFormMongo.getAssets());\n        return loginForm;\n    }\n\n    private LoginFormMongo convert(LoginForm loginForm) {\n        if (loginForm == null) {\n            return null;\n        }\n\n        LoginFormMongo formMongo = new LoginFormMongo();\n        formMongo.setEnabled(loginForm.isEnabled());\n        formMongo.setContent(loginForm.getContent());\n        formMongo.setAssets(loginForm.getAssets());\n        return formMongo;\n    }\n}",
+        "start_point": {
+            "row": 44,
+            "column": 0
+        },
+        "end_point": {
+            "row": 154,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "@PostConstruct\npublic void init() {\n    domainsCollection = mongoOperations.getCollection(\"domains\", DomainMongo.class);\n}",
+                "name": "init",
+                "modifiers": "@PostConstruct\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    domainsCollection = mongoOperations.getCollection(\"domains\", DomainMongo.class);\n}",
+                "start_point": {
+                    "row": 53,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 56,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic Single<Set<Domain>> findAll() {\n    return Observable.fromPublisher(domainsCollection.find()).map(this::convert).collect(HashSet::new, Set::add);\n}",
+                "name": "findAll",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return Observable.fromPublisher(domainsCollection.find()).map(this::convert).collect(HashSet::new, Set::add);\n}",
+                "start_point": {
+                    "row": 58,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 61,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic Maybe<Domain> findById(String id) {\n    return Observable.fromPublisher(domainsCollection.find(eq(FIELD_ID, id)).first()).firstElement().map(this::convert);\n}",
+                "name": "findById",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "id"
+                    }
+                ],
+                "body": "{\n    return Observable.fromPublisher(domainsCollection.find(eq(FIELD_ID, id)).first()).firstElement().map(this::convert);\n}",
+                "start_point": {
+                    "row": 63,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 66,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic Single<Set<Domain>> findByIdIn(Collection<String> ids) {\n    return Observable.fromPublisher(domainsCollection.find(in(FIELD_ID, ids))).map(this::convert).collect(HashSet::new, Set::add);\n}",
+                "name": "findByIdIn",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Collection<String>",
+                        "name": "ids"
+                    }
+                ],
+                "body": "{\n    return Observable.fromPublisher(domainsCollection.find(in(FIELD_ID, ids))).map(this::convert).collect(HashSet::new, Set::add);\n}",
+                "start_point": {
+                    "row": 68,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 71,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic Single<Domain> create(Domain item) {\n    DomainMongo domain = convert(item);\n    domain.setId(domain.getId() == null ? (String) idGenerator.generate() : domain.getId());\n    return Single.fromPublisher(domainsCollection.insertOne(domain)).flatMap(success -> findById(domain.getId()).toSingle());\n}",
+                "name": "create",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Domain",
+                        "name": "item"
+                    }
+                ],
+                "body": "{\n    DomainMongo domain = convert(item);\n    domain.setId(domain.getId() == null ? (String) idGenerator.generate() : domain.getId());\n    return Single.fromPublisher(domainsCollection.insertOne(domain)).flatMap(success -> findById(domain.getId()).toSingle());\n}",
+                "start_point": {
+                    "row": 73,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 78,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic Single<Domain> update(Domain item) {\n    DomainMongo domain = convert(item);\n    return Single.fromPublisher(domainsCollection.replaceOne(eq(FIELD_ID, domain.getId()), domain)).flatMap(updateResult -> findById(domain.getId()).toSingle());\n}",
+                "name": "update",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Domain",
+                        "name": "item"
+                    }
+                ],
+                "body": "{\n    DomainMongo domain = convert(item);\n    return Single.fromPublisher(domainsCollection.replaceOne(eq(FIELD_ID, domain.getId()), domain)).flatMap(updateResult -> findById(domain.getId()).toSingle());\n}",
+                "start_point": {
+                    "row": 80,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 84,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic Single<Irrelevant> delete(String id) {\n    return Single.fromPublisher(domainsCollection.deleteOne(eq(FIELD_ID, id))).map(deleteResult -> Irrelevant.DOMAIN);\n}",
+                "name": "delete",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "id"
+                    }
+                ],
+                "body": "{\n    return Single.fromPublisher(domainsCollection.deleteOne(eq(FIELD_ID, id))).map(deleteResult -> Irrelevant.DOMAIN);\n}",
+                "start_point": {
+                    "row": 86,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 89,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "private Domain convert(DomainMongo domainMongo) {\n    if (domainMongo == null) {\n        return null;\n    }\n\n    Domain domain = new Domain();\n    domain.setId(domainMongo.getId());\n    domain.setPath(domainMongo.getPath());\n    domain.setCreatedAt(domainMongo.getCreatedAt());\n    domain.setUpdatedAt(domainMongo.getUpdatedAt());\n    domain.setName(domainMongo.getName());\n    domain.setDescription(domainMongo.getDescription());\n    domain.setEnabled(domainMongo.isEnabled());\n    domain.setMaster(domainMongo.isMaster());\n    domain.setLoginForm(convert(domainMongo.getLoginForm()));\n    domain.setIdentities(domainMongo.getIdentities());\n    domain.setOauth2Identities(domainMongo.getOauth2Identities());\n    return domain;\n}",
+                "name": "convert",
+                "modifiers": "private",
+                "return_type": "Domain",
+                "parameters": [
+                    {
+                        "type": "DomainMongo",
+                        "name": "domainMongo"
+                    }
+                ],
+                "body": "{\n    if (domainMongo == null) {\n        return null;\n    }\n\n    Domain domain = new Domain();\n    domain.setId(domainMongo.getId());\n    domain.setPath(domainMongo.getPath());\n    domain.setCreatedAt(domainMongo.getCreatedAt());\n    domain.setUpdatedAt(domainMongo.getUpdatedAt());\n    domain.setName(domainMongo.getName());\n    domain.setDescription(domainMongo.getDescription());\n    domain.setEnabled(domainMongo.isEnabled());\n    domain.setMaster(domainMongo.isMaster());\n    domain.setLoginForm(convert(domainMongo.getLoginForm()));\n    domain.setIdentities(domainMongo.getIdentities());\n    domain.setOauth2Identities(domainMongo.getOauth2Identities());\n    return domain;\n}",
+                "start_point": {
+                    "row": 91,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 109,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "private DomainMongo convert(Domain domain) {\n    if (domain == null) {\n        return null;\n    }\n\n    DomainMongo domainMongo = new DomainMongo();\n    domainMongo.setId(domain.getId());\n    domainMongo.setPath(domain.getPath());\n    domainMongo.setCreatedAt(domain.getCreatedAt());\n    domainMongo.setUpdatedAt(domain.getUpdatedAt());\n    domainMongo.setName(domain.getName());\n    domainMongo.setDescription(domain.getDescription());\n    domainMongo.setEnabled(domain.isEnabled());\n    domainMongo.setMaster(domain.isMaster());\n    domainMongo.setLoginForm(convert(domain.getLoginForm()));\n    domainMongo.setIdentities(domain.getIdentities());\n    domainMongo.setOauth2Identities(domain.getOauth2Identities());\n    return domainMongo;\n}",
+                "name": "convert",
+                "modifiers": "private",
+                "return_type": "DomainMongo",
+                "parameters": [
+                    {
+                        "type": "Domain",
+                        "name": "domain"
+                    }
+                ],
+                "body": "{\n    if (domain == null) {\n        return null;\n    }\n\n    DomainMongo domainMongo = new DomainMongo();\n    domainMongo.setId(domain.getId());\n    domainMongo.setPath(domain.getPath());\n    domainMongo.setCreatedAt(domain.getCreatedAt());\n    domainMongo.setUpdatedAt(domain.getUpdatedAt());\n    domainMongo.setName(domain.getName());\n    domainMongo.setDescription(domain.getDescription());\n    domainMongo.setEnabled(domain.isEnabled());\n    domainMongo.setMaster(domain.isMaster());\n    domainMongo.setLoginForm(convert(domain.getLoginForm()));\n    domainMongo.setIdentities(domain.getIdentities());\n    domainMongo.setOauth2Identities(domain.getOauth2Identities());\n    return domainMongo;\n}",
+                "start_point": {
+                    "row": 111,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 129,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "private LoginForm convert(LoginFormMongo loginFormMongo) {\n    if (loginFormMongo == null) {\n        return null;\n    }\n\n    LoginForm loginForm = new LoginForm();\n    loginForm.setEnabled(loginFormMongo.isEnabled());\n    loginForm.setContent(loginFormMongo.getContent());\n    loginForm.setAssets(loginFormMongo.getAssets());\n    return loginForm;\n}",
+                "name": "convert",
+                "modifiers": "private",
+                "return_type": "LoginForm",
+                "parameters": [
+                    {
+                        "type": "LoginFormMongo",
+                        "name": "loginFormMongo"
+                    }
+                ],
+                "body": "{\n    if (loginFormMongo == null) {\n        return null;\n    }\n\n    LoginForm loginForm = new LoginForm();\n    loginForm.setEnabled(loginFormMongo.isEnabled());\n    loginForm.setContent(loginFormMongo.getContent());\n    loginForm.setAssets(loginFormMongo.getAssets());\n    return loginForm;\n}",
+                "start_point": {
+                    "row": 131,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 141,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "private LoginFormMongo convert(LoginForm loginForm) {\n    if (loginForm == null) {\n        return null;\n    }\n\n    LoginFormMongo formMongo = new LoginFormMongo();\n    formMongo.setEnabled(loginForm.isEnabled());\n    formMongo.setContent(loginForm.getContent());\n    formMongo.setAssets(loginForm.getAssets());\n    return formMongo;\n}",
+                "name": "convert",
+                "modifiers": "private",
+                "return_type": "LoginFormMongo",
+                "parameters": [
+                    {
+                        "type": "LoginForm",
+                        "name": "loginForm"
+                    }
+                ],
+                "body": "{\n    if (loginForm == null) {\n        return null;\n    }\n\n    LoginFormMongo formMongo = new LoginFormMongo();\n    formMongo.setEnabled(loginForm.isEnabled());\n    formMongo.setContent(loginForm.getContent());\n    formMongo.setAssets(loginForm.getAssets());\n    return formMongo;\n}",
+                "start_point": {
+                    "row": 143,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 153,
+                    "column": 5
+                }
+            }
+        ]
+    }
+]

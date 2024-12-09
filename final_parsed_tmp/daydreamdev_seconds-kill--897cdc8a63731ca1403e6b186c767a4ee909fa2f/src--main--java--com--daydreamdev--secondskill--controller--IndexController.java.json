@@ -1,0 +1,171 @@
+[
+    {
+        "rev_path": "src/main/java/com/daydreamdev/secondskill/controller/IndexController.java",
+        "definition": "@Slf4j\n@Controller\n@RequestMapping(value = \"/\")\npublic class IndexController {\n\n    private static final String success = \"SUCCESS\";\n    private static final String error = \"ERROR\";\n\n    @Autowired\n    private OrderService orderService;\n\n    @Autowired\n    private StockService stockService;\n\n    /**\n     * \u538b\u6d4b\u524d\u5148\u8bf7\u6c42\u8be5\u65b9\u6cd5\uff0c\u521d\u59cb\u5316\u6570\u636e\u5e93\u548c\u7f13\u5b58\n     */\n    @RequestMapping(value = \"initDBAndRedis\", method = RequestMethod.POST)\n    @ResponseBody\n    public String initDBAndRedisBefore(HttpServletRequest request) {\n        int res = 0;\n        try {\n            // \u521d\u59cb\u5316\u5e93\u5b58\u4fe1\u606f\n            res = stockService.initDBBefore();\n            // \u6e05\u7a7a\u8ba2\u5355\u8868\n            res &= (orderService.delOrderDBBefore() == 0 ? 1 : 0);\n            // \u91cd\u7f6e\u7f13\u5b58\n            StockWithRedis.initRedisBefore();\n        } catch (Exception e) {\n            log.error(\"Exception: \", e);\n        }\n        if (res == 1) {\n            log.info(\"\u91cd\u7f6e\u6570\u636e\u5e93\u548c\u7f13\u5b58\u6210\u529f\uff01\");\n        }\n        return res == 1 ? success : error;\n    }\n\n    /**\n     * \u79d2\u6740\u57fa\u672c\u903b\u8f91\uff0c\u5b58\u5728\u8d85\u5356\u95ee\u9898\n     *\n     * @param sid\n     * @return\n     */\n    @RequestMapping(value = \"createWrongOrder\", method = RequestMethod.POST)\n    @ResponseBody\n    public String createWrongOrder(HttpServletRequest request, int sid) {\n        int res = 0;\n        try {\n            res = orderService.createWrongOrder(sid);\n        } catch (Exception e) {\n            log.error(\"Exception: \", e);\n        }\n        return res == 1 ? success : error;\n    }\n\n    /**\n     * \u4e50\u89c2\u9501\u6263\u5e93\u5b58\n     *\n     * @param sid\n     * @return\n     */\n    @RequestMapping(value = \"createOptimisticOrder\", method = RequestMethod.POST)\n    @ResponseBody\n    public String createOptimisticOrder(HttpServletRequest request, int sid) {\n        int res = 0;\n        try {\n            res = orderService.createOptimisticOrder(sid);\n        } catch (Exception e) {\n            log.error(\"Exception: \" + e);\n        }\n        return res == 1 ? success : error;\n    }\n\n    /**\n     * \u4e50\u89c2\u9501\u66f4\u65b0 + \u9650\u6d41\n     *\n     * @param sid\n     */\n    @RequestMapping(value = \"createOptimisticLimitOrder\", method = RequestMethod.POST)\n    @ResponseBody\n    public String createOptimisticLimitOrder(HttpServletRequest request, int sid) {\n        int res = 0;\n        try {\n            if (RedisLimit.limit()) {\n                res = orderService.createOptimisticOrder(sid);\n            }\n        } catch (Exception e) {\n            log.error(\"Exception: \" + e);\n        }\n        return res == 1 ? success : error;\n    }\n\n    /**\n     * Redis \u7f13\u5b58\u5e93\u5b58\uff0c\u51cf\u5c11 DB \u538b\u529b\n     * \u5728 RedisPreheatRunner \u505a\u7f13\u5b58\u9884\u70ed\uff0c\u9700\u8981 stock.id = 1\n     * @param sid\n     */\n    @RequestMapping(value = \"createOrderWithLimitAndRedis\", method = RequestMethod.POST)\n    @ResponseBody\n    public String createOrderWithLimitAndRedis(HttpServletRequest request, int sid) {\n        int res = 0;\n        try {\n            if (RedisLimit.limit()) {\n                res = orderService.createOrderWithLimitAndRedis(sid);\n                if (res == 1) {\n                    log.info(\"\u79d2\u6740\u6210\u529f\");\n                }\n            }\n        } catch (Exception e) {\n            log.error(\"Exception: \" + e);\n        }\n        return res == 1 ? success : error;\n    }\n\n    /**\n     * \u9650\u6d41 + Redis \u7f13\u5b58\u5e93\u5b58 + KafkaTest \u5f02\u6b65\u4e0b\u5355\n     * @param sid\n     */\n    @RequestMapping(value = \"createOrderWithLimitAndRedisAndKafka\", method = RequestMethod.POST)\n    @ResponseBody\n    public String createOrderWithLimitAndRedisAndKafka(HttpServletRequest request, int sid) {\n        try {\n            if (RedisLimit.limit()) {\n                orderService.createOrderWithLimitAndRedisAndKafka(sid);\n            }\n        } catch (Exception e) {\n            log.error(\"Exception: \" + e);\n        }\n        return \"\u79d2\u6740\u8bf7\u6c42\u6b63\u5728\u5904\u7406\uff0c\u6392\u961f\u4e2d\";\n    }\n}",
+        "package": "package com.daydreamdev.secondskill.controller;",
+        "tree_path": "IndexController",
+        "name": "IndexController",
+        "modifiers": "@Slf4j\n@Controller\n@RequestMapping(value = \"/\")\npublic",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n\n    private static final String success = \"SUCCESS\";\n    private static final String error = \"ERROR\";\n\n    @Autowired\n    private OrderService orderService;\n\n    @Autowired\n    private StockService stockService;\n\n    /**\n     * \u538b\u6d4b\u524d\u5148\u8bf7\u6c42\u8be5\u65b9\u6cd5\uff0c\u521d\u59cb\u5316\u6570\u636e\u5e93\u548c\u7f13\u5b58\n     */\n    @RequestMapping(value = \"initDBAndRedis\", method = RequestMethod.POST)\n    @ResponseBody\n    public String initDBAndRedisBefore(HttpServletRequest request) {\n        int res = 0;\n        try {\n            // \u521d\u59cb\u5316\u5e93\u5b58\u4fe1\u606f\n            res = stockService.initDBBefore();\n            // \u6e05\u7a7a\u8ba2\u5355\u8868\n            res &= (orderService.delOrderDBBefore() == 0 ? 1 : 0);\n            // \u91cd\u7f6e\u7f13\u5b58\n            StockWithRedis.initRedisBefore();\n        } catch (Exception e) {\n            log.error(\"Exception: \", e);\n        }\n        if (res == 1) {\n            log.info(\"\u91cd\u7f6e\u6570\u636e\u5e93\u548c\u7f13\u5b58\u6210\u529f\uff01\");\n        }\n        return res == 1 ? success : error;\n    }\n\n    /**\n     * \u79d2\u6740\u57fa\u672c\u903b\u8f91\uff0c\u5b58\u5728\u8d85\u5356\u95ee\u9898\n     *\n     * @param sid\n     * @return\n     */\n    @RequestMapping(value = \"createWrongOrder\", method = RequestMethod.POST)\n    @ResponseBody\n    public String createWrongOrder(HttpServletRequest request, int sid) {\n        int res = 0;\n        try {\n            res = orderService.createWrongOrder(sid);\n        } catch (Exception e) {\n            log.error(\"Exception: \", e);\n        }\n        return res == 1 ? success : error;\n    }\n\n    /**\n     * \u4e50\u89c2\u9501\u6263\u5e93\u5b58\n     *\n     * @param sid\n     * @return\n     */\n    @RequestMapping(value = \"createOptimisticOrder\", method = RequestMethod.POST)\n    @ResponseBody\n    public String createOptimisticOrder(HttpServletRequest request, int sid) {\n        int res = 0;\n        try {\n            res = orderService.createOptimisticOrder(sid);\n        } catch (Exception e) {\n            log.error(\"Exception: \" + e);\n        }\n        return res == 1 ? success : error;\n    }\n\n    /**\n     * \u4e50\u89c2\u9501\u66f4\u65b0 + \u9650\u6d41\n     *\n     * @param sid\n     */\n    @RequestMapping(value = \"createOptimisticLimitOrder\", method = RequestMethod.POST)\n    @ResponseBody\n    public String createOptimisticLimitOrder(HttpServletRequest request, int sid) {\n        int res = 0;\n        try {\n            if (RedisLimit.limit()) {\n                res = orderService.createOptimisticOrder(sid);\n            }\n        } catch (Exception e) {\n            log.error(\"Exception: \" + e);\n        }\n        return res == 1 ? success : error;\n    }\n\n    /**\n     * Redis \u7f13\u5b58\u5e93\u5b58\uff0c\u51cf\u5c11 DB \u538b\u529b\n     * \u5728 RedisPreheatRunner \u505a\u7f13\u5b58\u9884\u70ed\uff0c\u9700\u8981 stock.id = 1\n     * @param sid\n     */\n    @RequestMapping(value = \"createOrderWithLimitAndRedis\", method = RequestMethod.POST)\n    @ResponseBody\n    public String createOrderWithLimitAndRedis(HttpServletRequest request, int sid) {\n        int res = 0;\n        try {\n            if (RedisLimit.limit()) {\n                res = orderService.createOrderWithLimitAndRedis(sid);\n                if (res == 1) {\n                    log.info(\"\u79d2\u6740\u6210\u529f\");\n                }\n            }\n        } catch (Exception e) {\n            log.error(\"Exception: \" + e);\n        }\n        return res == 1 ? success : error;\n    }\n\n    /**\n     * \u9650\u6d41 + Redis \u7f13\u5b58\u5e93\u5b58 + KafkaTest \u5f02\u6b65\u4e0b\u5355\n     * @param sid\n     */\n    @RequestMapping(value = \"createOrderWithLimitAndRedisAndKafka\", method = RequestMethod.POST)\n    @ResponseBody\n    public String createOrderWithLimitAndRedisAndKafka(HttpServletRequest request, int sid) {\n        try {\n            if (RedisLimit.limit()) {\n                orderService.createOrderWithLimitAndRedisAndKafka(sid);\n            }\n        } catch (Exception e) {\n            log.error(\"Exception: \" + e);\n        }\n        return \"\u79d2\u6740\u8bf7\u6c42\u6b63\u5728\u5904\u7406\uff0c\u6392\u961f\u4e2d\";\n    }\n}",
+        "start_point": {
+            "row": 20,
+            "column": 0
+        },
+        "end_point": {
+            "row": 150,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "@RequestMapping(value = \"initDBAndRedis\", method = RequestMethod.POST)\n@ResponseBody\npublic String initDBAndRedisBefore(HttpServletRequest request) {\n    int res = 0;\n    try {\n        // \u521d\u59cb\u5316\u5e93\u5b58\u4fe1\u606f\n        res = stockService.initDBBefore();\n        // \u6e05\u7a7a\u8ba2\u5355\u8868\n        res &= (orderService.delOrderDBBefore() == 0 ? 1 : 0);\n        // \u91cd\u7f6e\u7f13\u5b58\n        StockWithRedis.initRedisBefore();\n    } catch (Exception e) {\n        log.error(\"Exception: \", e);\n    }\n    if (res == 1) {\n        log.info(\"\u91cd\u7f6e\u6570\u636e\u5e93\u548c\u7f13\u5b58\u6210\u529f\uff01\");\n    }\n    return res == 1 ? success : error;\n}",
+                "name": "initDBAndRedisBefore",
+                "modifiers": "@RequestMapping(value = \"initDBAndRedis\", method = RequestMethod.POST)\n    @ResponseBody\n    public",
+                "return_type": "String",
+                "parameters": [
+                    {
+                        "type": "HttpServletRequest",
+                        "name": "request"
+                    }
+                ],
+                "body": "{\n    int res = 0;\n    try {\n        // \u521d\u59cb\u5316\u5e93\u5b58\u4fe1\u606f\n        res = stockService.initDBBefore();\n        // \u6e05\u7a7a\u8ba2\u5355\u8868\n        res &= (orderService.delOrderDBBefore() == 0 ? 1 : 0);\n        // \u91cd\u7f6e\u7f13\u5b58\n        StockWithRedis.initRedisBefore();\n    } catch (Exception e) {\n        log.error(\"Exception: \", e);\n    }\n    if (res == 1) {\n        log.info(\"\u91cd\u7f6e\u6570\u636e\u5e93\u548c\u7f13\u5b58\u6210\u529f\uff01\");\n    }\n    return res == 1 ? success : error;\n}",
+                "start_point": {
+                    "row": 37,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 55,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@RequestMapping(value = \"createWrongOrder\", method = RequestMethod.POST)\n@ResponseBody\npublic String createWrongOrder(HttpServletRequest request, int sid) {\n    int res = 0;\n    try {\n        res = orderService.createWrongOrder(sid);\n    } catch (Exception e) {\n        log.error(\"Exception: \", e);\n    }\n    return res == 1 ? success : error;\n}",
+                "name": "createWrongOrder",
+                "modifiers": "@RequestMapping(value = \"createWrongOrder\", method = RequestMethod.POST)\n    @ResponseBody\n    public",
+                "return_type": "String",
+                "parameters": [
+                    {
+                        "type": "HttpServletRequest",
+                        "name": "request"
+                    },
+                    {
+                        "type": "int",
+                        "name": "sid"
+                    }
+                ],
+                "body": "{\n    int res = 0;\n    try {\n        res = orderService.createWrongOrder(sid);\n    } catch (Exception e) {\n        log.error(\"Exception: \", e);\n    }\n    return res == 1 ? success : error;\n}",
+                "start_point": {
+                    "row": 63,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 73,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@RequestMapping(value = \"createOptimisticOrder\", method = RequestMethod.POST)\n@ResponseBody\npublic String createOptimisticOrder(HttpServletRequest request, int sid) {\n    int res = 0;\n    try {\n        res = orderService.createOptimisticOrder(sid);\n    } catch (Exception e) {\n        log.error(\"Exception: \" + e);\n    }\n    return res == 1 ? success : error;\n}",
+                "name": "createOptimisticOrder",
+                "modifiers": "@RequestMapping(value = \"createOptimisticOrder\", method = RequestMethod.POST)\n    @ResponseBody\n    public",
+                "return_type": "String",
+                "parameters": [
+                    {
+                        "type": "HttpServletRequest",
+                        "name": "request"
+                    },
+                    {
+                        "type": "int",
+                        "name": "sid"
+                    }
+                ],
+                "body": "{\n    int res = 0;\n    try {\n        res = orderService.createOptimisticOrder(sid);\n    } catch (Exception e) {\n        log.error(\"Exception: \" + e);\n    }\n    return res == 1 ? success : error;\n}",
+                "start_point": {
+                    "row": 81,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 91,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@RequestMapping(value = \"createOptimisticLimitOrder\", method = RequestMethod.POST)\n@ResponseBody\npublic String createOptimisticLimitOrder(HttpServletRequest request, int sid) {\n    int res = 0;\n    try {\n        if (RedisLimit.limit()) {\n            res = orderService.createOptimisticOrder(sid);\n        }\n    } catch (Exception e) {\n        log.error(\"Exception: \" + e);\n    }\n    return res == 1 ? success : error;\n}",
+                "name": "createOptimisticLimitOrder",
+                "modifiers": "@RequestMapping(value = \"createOptimisticLimitOrder\", method = RequestMethod.POST)\n    @ResponseBody\n    public",
+                "return_type": "String",
+                "parameters": [
+                    {
+                        "type": "HttpServletRequest",
+                        "name": "request"
+                    },
+                    {
+                        "type": "int",
+                        "name": "sid"
+                    }
+                ],
+                "body": "{\n    int res = 0;\n    try {\n        if (RedisLimit.limit()) {\n            res = orderService.createOptimisticOrder(sid);\n        }\n    } catch (Exception e) {\n        log.error(\"Exception: \" + e);\n    }\n    return res == 1 ? success : error;\n}",
+                "start_point": {
+                    "row": 98,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 110,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@RequestMapping(value = \"createOrderWithLimitAndRedis\", method = RequestMethod.POST)\n@ResponseBody\npublic String createOrderWithLimitAndRedis(HttpServletRequest request, int sid) {\n    int res = 0;\n    try {\n        if (RedisLimit.limit()) {\n            res = orderService.createOrderWithLimitAndRedis(sid);\n            if (res == 1) {\n                log.info(\"\u79d2\u6740\u6210\u529f\");\n            }\n        }\n    } catch (Exception e) {\n        log.error(\"Exception: \" + e);\n    }\n    return res == 1 ? success : error;\n}",
+                "name": "createOrderWithLimitAndRedis",
+                "modifiers": "@RequestMapping(value = \"createOrderWithLimitAndRedis\", method = RequestMethod.POST)\n    @ResponseBody\n    public",
+                "return_type": "String",
+                "parameters": [
+                    {
+                        "type": "HttpServletRequest",
+                        "name": "request"
+                    },
+                    {
+                        "type": "int",
+                        "name": "sid"
+                    }
+                ],
+                "body": "{\n    int res = 0;\n    try {\n        if (RedisLimit.limit()) {\n            res = orderService.createOrderWithLimitAndRedis(sid);\n            if (res == 1) {\n                log.info(\"\u79d2\u6740\u6210\u529f\");\n            }\n        }\n    } catch (Exception e) {\n        log.error(\"Exception: \" + e);\n    }\n    return res == 1 ? success : error;\n}",
+                "start_point": {
+                    "row": 117,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 132,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@RequestMapping(value = \"createOrderWithLimitAndRedisAndKafka\", method = RequestMethod.POST)\n@ResponseBody\npublic String createOrderWithLimitAndRedisAndKafka(HttpServletRequest request, int sid) {\n    try {\n        if (RedisLimit.limit()) {\n            orderService.createOrderWithLimitAndRedisAndKafka(sid);\n        }\n    } catch (Exception e) {\n        log.error(\"Exception: \" + e);\n    }\n    return \"\u79d2\u6740\u8bf7\u6c42\u6b63\u5728\u5904\u7406\uff0c\u6392\u961f\u4e2d\";\n}",
+                "name": "createOrderWithLimitAndRedisAndKafka",
+                "modifiers": "@RequestMapping(value = \"createOrderWithLimitAndRedisAndKafka\", method = RequestMethod.POST)\n    @ResponseBody\n    public",
+                "return_type": "String",
+                "parameters": [
+                    {
+                        "type": "HttpServletRequest",
+                        "name": "request"
+                    },
+                    {
+                        "type": "int",
+                        "name": "sid"
+                    }
+                ],
+                "body": "{\n    try {\n        if (RedisLimit.limit()) {\n            orderService.createOrderWithLimitAndRedisAndKafka(sid);\n        }\n    } catch (Exception e) {\n        log.error(\"Exception: \" + e);\n    }\n    return \"\u79d2\u6740\u8bf7\u6c42\u6b63\u5728\u5904\u7406\uff0c\u6392\u961f\u4e2d\";\n}",
+                "start_point": {
+                    "row": 138,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 149,
+                    "column": 5
+                }
+            }
+        ]
+    }
+]

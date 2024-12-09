@@ -1,0 +1,121 @@
+[
+    {
+        "rev_path": "agent/tollbooth/road-tollbooth-app/src/test/java/com/hotels/road/tollbooth/app/TollboothAppIntegrationTest.java",
+        "definition": "public class TollboothAppIntegrationTest {\n  private static final String ROAD_TOPIC = \"road\";\n  private static final String PATCH_TOPIC = \"patch\";\n\n  private static final int NUM_BROKERS = 1;\n\n  private static final ObjectMapper mapper = new ObjectMapper();\n\n  @ClassRule\n  public static EmbeddedKafkaCluster kafka = new EmbeddedKafkaCluster(NUM_BROKERS);\n  private static ConfigurableApplicationContext context;\n\n  private static KafkaProducer<String, String> producer;\n\n  private static Map<String, JsonNode> store;\n\n  private static int port;\n\n  @BeforeClass\n  public static void beforeClass() throws Exception {\n    try (ServerSocket socket = new ServerSocket(0)) {\n      port = socket.getLocalPort();\n    }\n\n    context = new SpringApplicationBuilder(TollboothApp.class)\n        .bannerMode(OFF)\n        .properties(ImmutableMap\n            .<String, Object> builder()\n            .put(\"server.port\", port)\n            .put(\"kafka.bootstrapServers\", kafka.bootstrapServers())\n            .put(\"kafka.zookeeper\", kafka.zKConnectString())\n            .put(\"kafka.store.topic\", ROAD_TOPIC)\n            .put(\"kafka.store.replicas\", \"1\")\n            .put(\"kafka.patch.topic\", PATCH_TOPIC)\n            .put(\"kafka.patch.replicas\", \"1\")\n            .put(\"kafka.patch.groupId\", \"patches\")\n            .build())\n        .build()\n        .run();\n\n    Properties properties = new Properties();\n    properties.setProperty(\"bootstrap.servers\", kafka.bootstrapServers());\n    producer = new KafkaProducer<>(properties, new StringSerializer(), new StringSerializer());\n\n    store = new KafkaStore<>(kafka.bootstrapServers(), new JsonNodeSerializer(mapper), ROAD_TOPIC);\n  }\n\n  @Test(timeout = 20000)\n  public void create_document_from_patch() throws Exception {\n    producer.send(new ProducerRecord<>(PATCH_TOPIC,\n        \"{\\\"documentId\\\":\\\"road0\\\",\\\"operations\\\":[{\\\"op\\\":\\\"add\\\",\\\"path\\\":\\\"\\\",\\\"value\\\":{\\\"name\\\":\\\"hello\\\"}}]}\"));\n\n    while (true) {\n      JsonNode result = store.get(\"road0\");\n      if (result != null) {\n        assertThat(result.path(\"name\").textValue(), is(\"hello\"));\n        return;\n      }\n      Thread.sleep(100);\n    }\n  }\n\n  @Test(timeout = 20000)\n  public void bad_patchs_are_skipped() throws Exception {\n    store.put(\"road1\", mapper.readTree(\"{\\\"name\\\":\\\"hello\\\"}\"));\n\n    producer.send(new ProducerRecord<>(PATCH_TOPIC, \"not json\"));\n    producer.send(new ProducerRecord<>(PATCH_TOPIC,\n        \"{\\\"documentId\\\":\\\"road1\\\",\\\"operations\\\":[{\\\"op\\\":\\\"replace\\\",\\\"path\\\":\\\"/name\\\",\\\"value\\\":\\\"hi there\\\"}]}\"));\n\n    while (!\"hi there\".equals(store.get(\"road1\").path(\"name\").asText())) {\n      Thread.sleep(100);\n    }\n  }\n\n  @Test(timeout = 20000)\n  public void remove_document() throws Exception {\n    store.put(\"road2\", mapper.readTree(\"{\\\"name\\\":\\\"goodbye\\\"}\"));\n\n    producer.send(new ProducerRecord<>(PATCH_TOPIC,\n        \"{\\\"documentId\\\":\\\"road2\\\",\\\"operations\\\":[{\\\"op\\\":\\\"remove\\\",\\\"path\\\":\\\"\\\"}]}\"));\n\n    while (store.containsKey(\"road2\")) {\n      Thread.sleep(100);\n    }\n  }\n\n  @Test(timeout = 20000)\n  public void testMetrics() throws Exception {\n    RestTemplate restTemplate = new RestTemplate();\n    String fooResourceUrl = \"http://localhost:\" + port + \"/actuator/prometheus\";\n\n    Awaitility.await().atMost(5, SECONDS).pollInterval(100, MILLISECONDS).until(() -> {\n      ResponseEntity<String> response = restTemplate.getForEntity(fooResourceUrl, String.class);\n      assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));\n      List<String> lines = Arrays.asList(response.getBody().split(\"\\n\")).stream().filter(l -> !l.startsWith(\"#\")).collect(toList());\n      assertThat(lines, not(emptyList()));\n    });\n  }\n\n  @AfterClass\n  public static void after() {\n    if (context != null) {\n      context.close();\n    }\n  }\n}",
+        "package": "package com.hotels.road.tollbooth.app;",
+        "tree_path": "TollboothAppIntegrationTest",
+        "name": "TollboothAppIntegrationTest",
+        "modifiers": "public",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n  private static final String ROAD_TOPIC = \"road\";\n  private static final String PATCH_TOPIC = \"patch\";\n\n  private static final int NUM_BROKERS = 1;\n\n  private static final ObjectMapper mapper = new ObjectMapper();\n\n  @ClassRule\n  public static EmbeddedKafkaCluster kafka = new EmbeddedKafkaCluster(NUM_BROKERS);\n  private static ConfigurableApplicationContext context;\n\n  private static KafkaProducer<String, String> producer;\n\n  private static Map<String, JsonNode> store;\n\n  private static int port;\n\n  @BeforeClass\n  public static void beforeClass() throws Exception {\n    try (ServerSocket socket = new ServerSocket(0)) {\n      port = socket.getLocalPort();\n    }\n\n    context = new SpringApplicationBuilder(TollboothApp.class)\n        .bannerMode(OFF)\n        .properties(ImmutableMap\n            .<String, Object> builder()\n            .put(\"server.port\", port)\n            .put(\"kafka.bootstrapServers\", kafka.bootstrapServers())\n            .put(\"kafka.zookeeper\", kafka.zKConnectString())\n            .put(\"kafka.store.topic\", ROAD_TOPIC)\n            .put(\"kafka.store.replicas\", \"1\")\n            .put(\"kafka.patch.topic\", PATCH_TOPIC)\n            .put(\"kafka.patch.replicas\", \"1\")\n            .put(\"kafka.patch.groupId\", \"patches\")\n            .build())\n        .build()\n        .run();\n\n    Properties properties = new Properties();\n    properties.setProperty(\"bootstrap.servers\", kafka.bootstrapServers());\n    producer = new KafkaProducer<>(properties, new StringSerializer(), new StringSerializer());\n\n    store = new KafkaStore<>(kafka.bootstrapServers(), new JsonNodeSerializer(mapper), ROAD_TOPIC);\n  }\n\n  @Test(timeout = 20000)\n  public void create_document_from_patch() throws Exception {\n    producer.send(new ProducerRecord<>(PATCH_TOPIC,\n        \"{\\\"documentId\\\":\\\"road0\\\",\\\"operations\\\":[{\\\"op\\\":\\\"add\\\",\\\"path\\\":\\\"\\\",\\\"value\\\":{\\\"name\\\":\\\"hello\\\"}}]}\"));\n\n    while (true) {\n      JsonNode result = store.get(\"road0\");\n      if (result != null) {\n        assertThat(result.path(\"name\").textValue(), is(\"hello\"));\n        return;\n      }\n      Thread.sleep(100);\n    }\n  }\n\n  @Test(timeout = 20000)\n  public void bad_patchs_are_skipped() throws Exception {\n    store.put(\"road1\", mapper.readTree(\"{\\\"name\\\":\\\"hello\\\"}\"));\n\n    producer.send(new ProducerRecord<>(PATCH_TOPIC, \"not json\"));\n    producer.send(new ProducerRecord<>(PATCH_TOPIC,\n        \"{\\\"documentId\\\":\\\"road1\\\",\\\"operations\\\":[{\\\"op\\\":\\\"replace\\\",\\\"path\\\":\\\"/name\\\",\\\"value\\\":\\\"hi there\\\"}]}\"));\n\n    while (!\"hi there\".equals(store.get(\"road1\").path(\"name\").asText())) {\n      Thread.sleep(100);\n    }\n  }\n\n  @Test(timeout = 20000)\n  public void remove_document() throws Exception {\n    store.put(\"road2\", mapper.readTree(\"{\\\"name\\\":\\\"goodbye\\\"}\"));\n\n    producer.send(new ProducerRecord<>(PATCH_TOPIC,\n        \"{\\\"documentId\\\":\\\"road2\\\",\\\"operations\\\":[{\\\"op\\\":\\\"remove\\\",\\\"path\\\":\\\"\\\"}]}\"));\n\n    while (store.containsKey(\"road2\")) {\n      Thread.sleep(100);\n    }\n  }\n\n  @Test(timeout = 20000)\n  public void testMetrics() throws Exception {\n    RestTemplate restTemplate = new RestTemplate();\n    String fooResourceUrl = \"http://localhost:\" + port + \"/actuator/prometheus\";\n\n    Awaitility.await().atMost(5, SECONDS).pollInterval(100, MILLISECONDS).until(() -> {\n      ResponseEntity<String> response = restTemplate.getForEntity(fooResourceUrl, String.class);\n      assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));\n      List<String> lines = Arrays.asList(response.getBody().split(\"\\n\")).stream().filter(l -> !l.startsWith(\"#\")).collect(toList());\n      assertThat(lines, not(emptyList()));\n    });\n  }\n\n  @AfterClass\n  public static void after() {\n    if (context != null) {\n      context.close();\n    }\n  }\n}",
+        "start_point": {
+            "row": 54,
+            "column": 0
+        },
+        "end_point": {
+            "row": 160,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "@BeforeClass\npublic static void beforeClass() throws Exception {\n  try (ServerSocket socket = new ServerSocket(0)) {\n    port = socket.getLocalPort();\n  }\n\n  context = new SpringApplicationBuilder(TollboothApp.class)\n      .bannerMode(OFF)\n      .properties(ImmutableMap\n          .<String, Object> builder()\n          .put(\"server.port\", port)\n          .put(\"kafka.bootstrapServers\", kafka.bootstrapServers())\n          .put(\"kafka.zookeeper\", kafka.zKConnectString())\n          .put(\"kafka.store.topic\", ROAD_TOPIC)\n          .put(\"kafka.store.replicas\", \"1\")\n          .put(\"kafka.patch.topic\", PATCH_TOPIC)\n          .put(\"kafka.patch.replicas\", \"1\")\n          .put(\"kafka.patch.groupId\", \"patches\")\n          .build())\n      .build()\n      .run();\n\n  Properties properties = new Properties();\n  properties.setProperty(\"bootstrap.servers\", kafka.bootstrapServers());\n  producer = new KafkaProducer<>(properties, new StringSerializer(), new StringSerializer());\n\n  store = new KafkaStore<>(kafka.bootstrapServers(), new JsonNodeSerializer(mapper), ROAD_TOPIC);\n}",
+                "name": "beforeClass",
+                "modifiers": "@BeforeClass\n  public static",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n  try (ServerSocket socket = new ServerSocket(0)) {\n    port = socket.getLocalPort();\n  }\n\n  context = new SpringApplicationBuilder(TollboothApp.class)\n      .bannerMode(OFF)\n      .properties(ImmutableMap\n          .<String, Object> builder()\n          .put(\"server.port\", port)\n          .put(\"kafka.bootstrapServers\", kafka.bootstrapServers())\n          .put(\"kafka.zookeeper\", kafka.zKConnectString())\n          .put(\"kafka.store.topic\", ROAD_TOPIC)\n          .put(\"kafka.store.replicas\", \"1\")\n          .put(\"kafka.patch.topic\", PATCH_TOPIC)\n          .put(\"kafka.patch.replicas\", \"1\")\n          .put(\"kafka.patch.groupId\", \"patches\")\n          .build())\n      .build()\n      .run();\n\n  Properties properties = new Properties();\n  properties.setProperty(\"bootstrap.servers\", kafka.bootstrapServers());\n  producer = new KafkaProducer<>(properties, new StringSerializer(), new StringSerializer());\n\n  store = new KafkaStore<>(kafka.bootstrapServers(), new JsonNodeSerializer(mapper), ROAD_TOPIC);\n}",
+                "start_point": {
+                    "row": 72,
+                    "column": 2
+                },
+                "end_point": {
+                    "row": 99,
+                    "column": 3
+                }
+            },
+            {
+                "definition": "@Test(timeout = 20000)\npublic void create_document_from_patch() throws Exception {\n  producer.send(new ProducerRecord<>(PATCH_TOPIC,\n      \"{\\\"documentId\\\":\\\"road0\\\",\\\"operations\\\":[{\\\"op\\\":\\\"add\\\",\\\"path\\\":\\\"\\\",\\\"value\\\":{\\\"name\\\":\\\"hello\\\"}}]}\"));\n\n  while (true) {\n    JsonNode result = store.get(\"road0\");\n    if (result != null) {\n      assertThat(result.path(\"name\").textValue(), is(\"hello\"));\n      return;\n    }\n    Thread.sleep(100);\n  }\n}",
+                "name": "create_document_from_patch",
+                "modifiers": "@Test(timeout = 20000)\n  public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n  producer.send(new ProducerRecord<>(PATCH_TOPIC,\n      \"{\\\"documentId\\\":\\\"road0\\\",\\\"operations\\\":[{\\\"op\\\":\\\"add\\\",\\\"path\\\":\\\"\\\",\\\"value\\\":{\\\"name\\\":\\\"hello\\\"}}]}\"));\n\n  while (true) {\n    JsonNode result = store.get(\"road0\");\n    if (result != null) {\n      assertThat(result.path(\"name\").textValue(), is(\"hello\"));\n      return;\n    }\n    Thread.sleep(100);\n  }\n}",
+                "start_point": {
+                    "row": 101,
+                    "column": 2
+                },
+                "end_point": {
+                    "row": 114,
+                    "column": 3
+                }
+            },
+            {
+                "definition": "@Test(timeout = 20000)\npublic void bad_patchs_are_skipped() throws Exception {\n  store.put(\"road1\", mapper.readTree(\"{\\\"name\\\":\\\"hello\\\"}\"));\n\n  producer.send(new ProducerRecord<>(PATCH_TOPIC, \"not json\"));\n  producer.send(new ProducerRecord<>(PATCH_TOPIC,\n      \"{\\\"documentId\\\":\\\"road1\\\",\\\"operations\\\":[{\\\"op\\\":\\\"replace\\\",\\\"path\\\":\\\"/name\\\",\\\"value\\\":\\\"hi there\\\"}]}\"));\n\n  while (!\"hi there\".equals(store.get(\"road1\").path(\"name\").asText())) {\n    Thread.sleep(100);\n  }\n}",
+                "name": "bad_patchs_are_skipped",
+                "modifiers": "@Test(timeout = 20000)\n  public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n  store.put(\"road1\", mapper.readTree(\"{\\\"name\\\":\\\"hello\\\"}\"));\n\n  producer.send(new ProducerRecord<>(PATCH_TOPIC, \"not json\"));\n  producer.send(new ProducerRecord<>(PATCH_TOPIC,\n      \"{\\\"documentId\\\":\\\"road1\\\",\\\"operations\\\":[{\\\"op\\\":\\\"replace\\\",\\\"path\\\":\\\"/name\\\",\\\"value\\\":\\\"hi there\\\"}]}\"));\n\n  while (!\"hi there\".equals(store.get(\"road1\").path(\"name\").asText())) {\n    Thread.sleep(100);\n  }\n}",
+                "start_point": {
+                    "row": 116,
+                    "column": 2
+                },
+                "end_point": {
+                    "row": 127,
+                    "column": 3
+                }
+            },
+            {
+                "definition": "@Test(timeout = 20000)\npublic void remove_document() throws Exception {\n  store.put(\"road2\", mapper.readTree(\"{\\\"name\\\":\\\"goodbye\\\"}\"));\n\n  producer.send(new ProducerRecord<>(PATCH_TOPIC,\n      \"{\\\"documentId\\\":\\\"road2\\\",\\\"operations\\\":[{\\\"op\\\":\\\"remove\\\",\\\"path\\\":\\\"\\\"}]}\"));\n\n  while (store.containsKey(\"road2\")) {\n    Thread.sleep(100);\n  }\n}",
+                "name": "remove_document",
+                "modifiers": "@Test(timeout = 20000)\n  public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n  store.put(\"road2\", mapper.readTree(\"{\\\"name\\\":\\\"goodbye\\\"}\"));\n\n  producer.send(new ProducerRecord<>(PATCH_TOPIC,\n      \"{\\\"documentId\\\":\\\"road2\\\",\\\"operations\\\":[{\\\"op\\\":\\\"remove\\\",\\\"path\\\":\\\"\\\"}]}\"));\n\n  while (store.containsKey(\"road2\")) {\n    Thread.sleep(100);\n  }\n}",
+                "start_point": {
+                    "row": 129,
+                    "column": 2
+                },
+                "end_point": {
+                    "row": 139,
+                    "column": 3
+                }
+            },
+            {
+                "definition": "@Test(timeout = 20000)\npublic void testMetrics() throws Exception {\n  RestTemplate restTemplate = new RestTemplate();\n  String fooResourceUrl = \"http://localhost:\" + port + \"/actuator/prometheus\";\n\n  Awaitility.await().atMost(5, SECONDS).pollInterval(100, MILLISECONDS).until(() -> {\n    ResponseEntity<String> response = restTemplate.getForEntity(fooResourceUrl, String.class);\n    assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));\n    List<String> lines = Arrays.asList(response.getBody().split(\"\\n\")).stream().filter(l -> !l.startsWith(\"#\")).collect(toList());\n    assertThat(lines, not(emptyList()));\n  });\n}",
+                "name": "testMetrics",
+                "modifiers": "@Test(timeout = 20000)\n  public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n  RestTemplate restTemplate = new RestTemplate();\n  String fooResourceUrl = \"http://localhost:\" + port + \"/actuator/prometheus\";\n\n  Awaitility.await().atMost(5, SECONDS).pollInterval(100, MILLISECONDS).until(() -> {\n    ResponseEntity<String> response = restTemplate.getForEntity(fooResourceUrl, String.class);\n    assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));\n    List<String> lines = Arrays.asList(response.getBody().split(\"\\n\")).stream().filter(l -> !l.startsWith(\"#\")).collect(toList());\n    assertThat(lines, not(emptyList()));\n  });\n}",
+                "start_point": {
+                    "row": 141,
+                    "column": 2
+                },
+                "end_point": {
+                    "row": 152,
+                    "column": 3
+                }
+            },
+            {
+                "definition": "@AfterClass\npublic static void after() {\n  if (context != null) {\n    context.close();\n  }\n}",
+                "name": "after",
+                "modifiers": "@AfterClass\n  public static",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n  if (context != null) {\n    context.close();\n  }\n}",
+                "start_point": {
+                    "row": 154,
+                    "column": 2
+                },
+                "end_point": {
+                    "row": 159,
+                    "column": 3
+                }
+            }
+        ]
+    }
+]

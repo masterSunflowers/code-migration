@@ -1,0 +1,41 @@
+[
+    {
+        "rev_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-oauth2/src/main/java/io/gravitee/am/management/handlers/oauth2/CustomAuthorizationServerEndpointsConfiguration.java",
+        "definition": "public class CustomAuthorizationServerEndpointsConfiguration extends AuthorizationServerEndpointsConfiguration {\n\n    @Bean\n    public RevokeTokenEndpoint revokeTokenEndpoint() {\n        RevokeTokenEndpoint endpoint = new RevokeTokenEndpoint(\n                getEndpointsConfigurer().getTokenStore(),\n                getEndpointsConfigurer().getResourceServerTokenServices());\n        endpoint.setExceptionTranslator(getEndpointsConfigurer().getExceptionTranslator());\n        return endpoint;\n    }\n}",
+        "package": "package io.gravitee.am.management.handlers.oauth2;",
+        "tree_path": "CustomAuthorizationServerEndpointsConfiguration",
+        "name": "CustomAuthorizationServerEndpointsConfiguration",
+        "modifiers": "public",
+        "superclass": "extends AuthorizationServerEndpointsConfiguration",
+        "super_interfaces": null,
+        "body": "{\n\n    @Bean\n    public RevokeTokenEndpoint revokeTokenEndpoint() {\n        RevokeTokenEndpoint endpoint = new RevokeTokenEndpoint(\n                getEndpointsConfigurer().getTokenStore(),\n                getEndpointsConfigurer().getResourceServerTokenServices());\n        endpoint.setExceptionTranslator(getEndpointsConfigurer().getExceptionTranslator());\n        return endpoint;\n    }\n}",
+        "start_point": {
+            "row": 25,
+            "column": 0
+        },
+        "end_point": {
+            "row": 35,
+            "column": 1
+        },
+        "file_mode": "Renamed-Modified",
+        "map_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-admin/src/main/java/io/gravitee/am/management/handlers/admin/spring/AdminConfiguration.java",
+        "methods": [
+            {
+                "definition": "@Bean\npublic RevokeTokenEndpoint revokeTokenEndpoint() {\n    RevokeTokenEndpoint endpoint = new RevokeTokenEndpoint(\n            getEndpointsConfigurer().getTokenStore(),\n            getEndpointsConfigurer().getResourceServerTokenServices());\n    endpoint.setExceptionTranslator(getEndpointsConfigurer().getExceptionTranslator());\n    return endpoint;\n}",
+                "name": "revokeTokenEndpoint",
+                "modifiers": "@Bean\n    public",
+                "return_type": "RevokeTokenEndpoint",
+                "parameters": [],
+                "body": "{\n    RevokeTokenEndpoint endpoint = new RevokeTokenEndpoint(\n            getEndpointsConfigurer().getTokenStore(),\n            getEndpointsConfigurer().getResourceServerTokenServices());\n    endpoint.setExceptionTranslator(getEndpointsConfigurer().getExceptionTranslator());\n    return endpoint;\n}",
+                "start_point": {
+                    "row": 27,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 34,
+                    "column": 5
+                }
+            }
+        ]
+    }
+]

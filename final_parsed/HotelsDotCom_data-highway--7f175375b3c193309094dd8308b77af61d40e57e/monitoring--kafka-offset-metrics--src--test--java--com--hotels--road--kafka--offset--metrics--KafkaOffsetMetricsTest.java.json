@@ -1,0 +1,78 @@
+[
+    {
+        "rev_path": "monitoring/kafka-offset-metrics/src/test/java/com/hotels/road/kafka/offset/metrics/KafkaOffsetMetricsTest.java",
+        "definition": "@RunWith(MockitoJUnitRunner.class)\npublic class KafkaOffsetMetricsTest {\n\n  @Mock\n  private AdminClient adminClient;\n  @Mock\n  private ScheduledReporter reporter;\n\n  private KafkaOffsetMetrics underTest;\n\n  @Before\n  public void before() {\n    underTest = new KafkaOffsetMetrics(adminClient, reporter);\n  }\n\n  @SuppressWarnings({ \"rawtypes\", \"unchecked\" })\n  @Test\n  public void happyPath() {\n    scala.collection.immutable.List<GroupOverview> listAllGroupsFlattened = asScalaSet(\n        singleton(GroupOverview.apply(\"groupId\", \"\"))).toList();\n    when(adminClient.listAllGroupsFlattened()).thenReturn(listAllGroupsFlattened);\n\n    scala.collection.immutable.Map<TopicPartition, Object> offsets = asScalaMap(\n        singletonMap(new TopicPartition(\"topicName\", 0), (Object) 1L));\n    when(adminClient.listGroupOffsets(\"groupId\")).thenReturn(offsets);\n\n    underTest.sendOffsets();\n\n    ArgumentCaptor<SortedMap<String, Gauge>> gaugesCaptor = ArgumentCaptor.forClass(SortedMap.class);\n\n    verify(reporter).report(gaugesCaptor.capture(), eq(emptySortedMap()), eq(emptySortedMap()), eq(emptySortedMap()),\n        eq(emptySortedMap()));\n\n    SortedMap<String, Gauge> gauges = gaugesCaptor.getValue();\n    assertThat(gauges.size(), is(1));\n    Gauge gauge = gauges.get(\"group.groupId.topic.topicName.partition.0.offset\");\n    assertThat(gauge.getValue(), is(1L));\n  }\n\n  private scala.collection.immutable.Map<TopicPartition, Object> asScalaMap(Map<TopicPartition, Object> map) {\n    return mapAsScalaMap(map).toMap(Predef.<Tuple2<TopicPartition, Object>> conforms());\n  }\n\n}",
+        "package": "package com.hotels.road.kafka.offset.metrics;",
+        "tree_path": "KafkaOffsetMetricsTest",
+        "name": "KafkaOffsetMetricsTest",
+        "modifiers": "@RunWith(MockitoJUnitRunner.class)\npublic",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n\n  @Mock\n  private AdminClient adminClient;\n  @Mock\n  private ScheduledReporter reporter;\n\n  private KafkaOffsetMetrics underTest;\n\n  @Before\n  public void before() {\n    underTest = new KafkaOffsetMetrics(adminClient, reporter);\n  }\n\n  @SuppressWarnings({ \"rawtypes\", \"unchecked\" })\n  @Test\n  public void happyPath() {\n    scala.collection.immutable.List<GroupOverview> listAllGroupsFlattened = asScalaSet(\n        singleton(GroupOverview.apply(\"groupId\", \"\"))).toList();\n    when(adminClient.listAllGroupsFlattened()).thenReturn(listAllGroupsFlattened);\n\n    scala.collection.immutable.Map<TopicPartition, Object> offsets = asScalaMap(\n        singletonMap(new TopicPartition(\"topicName\", 0), (Object) 1L));\n    when(adminClient.listGroupOffsets(\"groupId\")).thenReturn(offsets);\n\n    underTest.sendOffsets();\n\n    ArgumentCaptor<SortedMap<String, Gauge>> gaugesCaptor = ArgumentCaptor.forClass(SortedMap.class);\n\n    verify(reporter).report(gaugesCaptor.capture(), eq(emptySortedMap()), eq(emptySortedMap()), eq(emptySortedMap()),\n        eq(emptySortedMap()));\n\n    SortedMap<String, Gauge> gauges = gaugesCaptor.getValue();\n    assertThat(gauges.size(), is(1));\n    Gauge gauge = gauges.get(\"group.groupId.topic.topicName.partition.0.offset\");\n    assertThat(gauge.getValue(), is(1L));\n  }\n\n  private scala.collection.immutable.Map<TopicPartition, Object> asScalaMap(Map<TopicPartition, Object> map) {\n    return mapAsScalaMap(map).toMap(Predef.<Tuple2<TopicPartition, Object>> conforms());\n  }\n\n}",
+        "start_point": {
+            "row": 49,
+            "column": 0
+        },
+        "end_point": {
+            "row": 92,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "@Before\npublic void before() {\n  underTest = new KafkaOffsetMetrics(adminClient, reporter);\n}",
+                "name": "before",
+                "modifiers": "@Before\n  public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n  underTest = new KafkaOffsetMetrics(adminClient, reporter);\n}",
+                "start_point": {
+                    "row": 59,
+                    "column": 2
+                },
+                "end_point": {
+                    "row": 62,
+                    "column": 3
+                }
+            },
+            {
+                "definition": "@SuppressWarnings({ \"rawtypes\", \"unchecked\" })\n@Test\npublic void happyPath() {\n  scala.collection.immutable.List<GroupOverview> listAllGroupsFlattened = asScalaSet(\n      singleton(GroupOverview.apply(\"groupId\", \"\"))).toList();\n  when(adminClient.listAllGroupsFlattened()).thenReturn(listAllGroupsFlattened);\n\n  scala.collection.immutable.Map<TopicPartition, Object> offsets = asScalaMap(\n      singletonMap(new TopicPartition(\"topicName\", 0), (Object) 1L));\n  when(adminClient.listGroupOffsets(\"groupId\")).thenReturn(offsets);\n\n  underTest.sendOffsets();\n\n  ArgumentCaptor<SortedMap<String, Gauge>> gaugesCaptor = ArgumentCaptor.forClass(SortedMap.class);\n\n  verify(reporter).report(gaugesCaptor.capture(), eq(emptySortedMap()), eq(emptySortedMap()), eq(emptySortedMap()),\n      eq(emptySortedMap()));\n\n  SortedMap<String, Gauge> gauges = gaugesCaptor.getValue();\n  assertThat(gauges.size(), is(1));\n  Gauge gauge = gauges.get(\"group.groupId.topic.topicName.partition.0.offset\");\n  assertThat(gauge.getValue(), is(1L));\n}",
+                "name": "happyPath",
+                "modifiers": "@SuppressWarnings({ \"rawtypes\", \"unchecked\" })\n  @Test\n  public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n  scala.collection.immutable.List<GroupOverview> listAllGroupsFlattened = asScalaSet(\n      singleton(GroupOverview.apply(\"groupId\", \"\"))).toList();\n  when(adminClient.listAllGroupsFlattened()).thenReturn(listAllGroupsFlattened);\n\n  scala.collection.immutable.Map<TopicPartition, Object> offsets = asScalaMap(\n      singletonMap(new TopicPartition(\"topicName\", 0), (Object) 1L));\n  when(adminClient.listGroupOffsets(\"groupId\")).thenReturn(offsets);\n\n  underTest.sendOffsets();\n\n  ArgumentCaptor<SortedMap<String, Gauge>> gaugesCaptor = ArgumentCaptor.forClass(SortedMap.class);\n\n  verify(reporter).report(gaugesCaptor.capture(), eq(emptySortedMap()), eq(emptySortedMap()), eq(emptySortedMap()),\n      eq(emptySortedMap()));\n\n  SortedMap<String, Gauge> gauges = gaugesCaptor.getValue();\n  assertThat(gauges.size(), is(1));\n  Gauge gauge = gauges.get(\"group.groupId.topic.topicName.partition.0.offset\");\n  assertThat(gauge.getValue(), is(1L));\n}",
+                "start_point": {
+                    "row": 64,
+                    "column": 2
+                },
+                "end_point": {
+                    "row": 86,
+                    "column": 3
+                }
+            },
+            {
+                "definition": "private scala.collection.immutable.Map<TopicPartition, Object> asScalaMap(Map<TopicPartition, Object> map) {\n  return mapAsScalaMap(map).toMap(Predef.<Tuple2<TopicPartition, Object>> conforms());\n}",
+                "name": "asScalaMap",
+                "modifiers": "private",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Map<TopicPartition, Object>",
+                        "name": "map"
+                    }
+                ],
+                "body": "{\n  return mapAsScalaMap(map).toMap(Predef.<Tuple2<TopicPartition, Object>> conforms());\n}",
+                "start_point": {
+                    "row": 88,
+                    "column": 2
+                },
+                "end_point": {
+                    "row": 90,
+                    "column": 3
+                }
+            }
+        ]
+    }
+]

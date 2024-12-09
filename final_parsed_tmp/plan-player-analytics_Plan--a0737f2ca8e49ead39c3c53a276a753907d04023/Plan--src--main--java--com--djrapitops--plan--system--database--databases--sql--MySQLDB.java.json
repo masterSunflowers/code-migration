@@ -1,0 +1,142 @@
+[
+    {
+        "rev_path": "Plan/src/main/java/com/djrapitops/plan/system/database/databases/sql/MySQLDB.java",
+        "definition": "public class MySQLDB extends SQLDB {\n\n    protected DataSource dataSource;\n\n    public MySQLDB() {\n    }\n\n    /**\n     * Setups the {@link BasicDataSource}\n     */\n    @Override\n    public void setupDataSource() throws DBInitException {\n        BasicDataSource dataSource = new BasicDataSource();\n        this.dataSource = dataSource;\n        dataSource.setDriverClassName(\"com.mysql.jdbc.Driver\");\n\n        String host = Settings.DB_HOST.toString();\n        String port = Integer.toString(Settings.DB_PORT.getNumber());\n        String database = Settings.DB_DATABASE.toString();\n        String launchOptions = Settings.DB_LAUNCH_OPTIONS.toString();\n        if (launchOptions.isEmpty() || !launchOptions.startsWith(\"?\") || launchOptions.endsWith(\"&\")) {\n            Log.error(\"Launch Options were faulty, using default (?rewriteBatchedStatements=true&useSSL=false)\");\n            launchOptions = \"?rewriteBatchedStatements=true&useSSL=false\";\n        }\n\n        dataSource.setUrl(\"jdbc:mysql://\" + host + \":\" + port + \"/\" + database + launchOptions);\n\n        String username = Settings.DB_USER.toString();\n        String password = Settings.DB_PASS.toString();\n\n        dataSource.setUsername(username);\n        dataSource.setPassword(password);\n\n        dataSource.setInitialSize(1);\n        dataSource.setMaxTotal(8);\n    }\n\n    /**\n     * @return the name of the Database\n     */\n    @Override\n    public String getName() {\n        return \"MySQL\";\n    }\n\n    @Override\n    public Connection getConnection() throws SQLException {\n        return dataSource.getConnection();\n    }\n\n    @Override\n    public void close() {\n        try {\n            if (dataSource instanceof BasicDataSource) {\n                ((BasicDataSource) dataSource).close();\n            }\n        } catch (SQLException e) {\n            Log.toLog(this.getClass(), e);\n        }\n        super.close();\n    }\n\n    @Override\n    public boolean equals(Object o) {\n        if (this == o) return true;\n        if (o == null || getClass() != o.getClass()) return false;\n        if (!super.equals(o)) return false;\n        MySQLDB mySQLDB = (MySQLDB) o;\n        return Objects.equals(dataSource, mySQLDB.dataSource);\n    }\n\n    @Override\n    public int hashCode() {\n\n        return Objects.hash(super.hashCode(), dataSource);\n    }\n}",
+        "package": "package com.djrapitops.plan.system.database.databases.sql;",
+        "tree_path": "MySQLDB",
+        "name": "MySQLDB",
+        "modifiers": "public",
+        "superclass": "extends SQLDB",
+        "super_interfaces": null,
+        "body": "{\n\n    protected DataSource dataSource;\n\n    public MySQLDB() {\n    }\n\n    /**\n     * Setups the {@link BasicDataSource}\n     */\n    @Override\n    public void setupDataSource() throws DBInitException {\n        BasicDataSource dataSource = new BasicDataSource();\n        this.dataSource = dataSource;\n        dataSource.setDriverClassName(\"com.mysql.jdbc.Driver\");\n\n        String host = Settings.DB_HOST.toString();\n        String port = Integer.toString(Settings.DB_PORT.getNumber());\n        String database = Settings.DB_DATABASE.toString();\n        String launchOptions = Settings.DB_LAUNCH_OPTIONS.toString();\n        if (launchOptions.isEmpty() || !launchOptions.startsWith(\"?\") || launchOptions.endsWith(\"&\")) {\n            Log.error(\"Launch Options were faulty, using default (?rewriteBatchedStatements=true&useSSL=false)\");\n            launchOptions = \"?rewriteBatchedStatements=true&useSSL=false\";\n        }\n\n        dataSource.setUrl(\"jdbc:mysql://\" + host + \":\" + port + \"/\" + database + launchOptions);\n\n        String username = Settings.DB_USER.toString();\n        String password = Settings.DB_PASS.toString();\n\n        dataSource.setUsername(username);\n        dataSource.setPassword(password);\n\n        dataSource.setInitialSize(1);\n        dataSource.setMaxTotal(8);\n    }\n\n    /**\n     * @return the name of the Database\n     */\n    @Override\n    public String getName() {\n        return \"MySQL\";\n    }\n\n    @Override\n    public Connection getConnection() throws SQLException {\n        return dataSource.getConnection();\n    }\n\n    @Override\n    public void close() {\n        try {\n            if (dataSource instanceof BasicDataSource) {\n                ((BasicDataSource) dataSource).close();\n            }\n        } catch (SQLException e) {\n            Log.toLog(this.getClass(), e);\n        }\n        super.close();\n    }\n\n    @Override\n    public boolean equals(Object o) {\n        if (this == o) return true;\n        if (o == null || getClass() != o.getClass()) return false;\n        if (!super.equals(o)) return false;\n        MySQLDB mySQLDB = (MySQLDB) o;\n        return Objects.equals(dataSource, mySQLDB.dataSource);\n    }\n\n    @Override\n    public int hashCode() {\n\n        return Objects.hash(super.hashCode(), dataSource);\n    }\n}",
+        "start_point": {
+            "row": 15,
+            "column": 0
+        },
+        "end_point": {
+            "row": 91,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "public MySQLDB() {\n}",
+                "name": "MySQLDB",
+                "modifiers": "public",
+                "parameters": [],
+                "body": "{\n}",
+                "constructor": true,
+                "start_point": {
+                    "row": 19,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 20,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic void setupDataSource() throws DBInitException {\n    BasicDataSource dataSource = new BasicDataSource();\n    this.dataSource = dataSource;\n    dataSource.setDriverClassName(\"com.mysql.jdbc.Driver\");\n\n    String host = Settings.DB_HOST.toString();\n    String port = Integer.toString(Settings.DB_PORT.getNumber());\n    String database = Settings.DB_DATABASE.toString();\n    String launchOptions = Settings.DB_LAUNCH_OPTIONS.toString();\n    if (launchOptions.isEmpty() || !launchOptions.startsWith(\"?\") || launchOptions.endsWith(\"&\")) {\n        Log.error(\"Launch Options were faulty, using default (?rewriteBatchedStatements=true&useSSL=false)\");\n        launchOptions = \"?rewriteBatchedStatements=true&useSSL=false\";\n    }\n\n    dataSource.setUrl(\"jdbc:mysql://\" + host + \":\" + port + \"/\" + database + launchOptions);\n\n    String username = Settings.DB_USER.toString();\n    String password = Settings.DB_PASS.toString();\n\n    dataSource.setUsername(username);\n    dataSource.setPassword(password);\n\n    dataSource.setInitialSize(1);\n    dataSource.setMaxTotal(8);\n}",
+                "name": "setupDataSource",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    BasicDataSource dataSource = new BasicDataSource();\n    this.dataSource = dataSource;\n    dataSource.setDriverClassName(\"com.mysql.jdbc.Driver\");\n\n    String host = Settings.DB_HOST.toString();\n    String port = Integer.toString(Settings.DB_PORT.getNumber());\n    String database = Settings.DB_DATABASE.toString();\n    String launchOptions = Settings.DB_LAUNCH_OPTIONS.toString();\n    if (launchOptions.isEmpty() || !launchOptions.startsWith(\"?\") || launchOptions.endsWith(\"&\")) {\n        Log.error(\"Launch Options were faulty, using default (?rewriteBatchedStatements=true&useSSL=false)\");\n        launchOptions = \"?rewriteBatchedStatements=true&useSSL=false\";\n    }\n\n    dataSource.setUrl(\"jdbc:mysql://\" + host + \":\" + port + \"/\" + database + launchOptions);\n\n    String username = Settings.DB_USER.toString();\n    String password = Settings.DB_PASS.toString();\n\n    dataSource.setUsername(username);\n    dataSource.setPassword(password);\n\n    dataSource.setInitialSize(1);\n    dataSource.setMaxTotal(8);\n}",
+                "start_point": {
+                    "row": 25,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 50,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic String getName() {\n    return \"MySQL\";\n}",
+                "name": "getName",
+                "modifiers": "@Override\n    public",
+                "return_type": "String",
+                "parameters": [],
+                "body": "{\n    return \"MySQL\";\n}",
+                "start_point": {
+                    "row": 55,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 58,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic Connection getConnection() throws SQLException {\n    return dataSource.getConnection();\n}",
+                "name": "getConnection",
+                "modifiers": "@Override\n    public",
+                "return_type": "Connection",
+                "parameters": [],
+                "body": "{\n    return dataSource.getConnection();\n}",
+                "start_point": {
+                    "row": 60,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 63,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic void close() {\n    try {\n        if (dataSource instanceof BasicDataSource) {\n            ((BasicDataSource) dataSource).close();\n        }\n    } catch (SQLException e) {\n        Log.toLog(this.getClass(), e);\n    }\n    super.close();\n}",
+                "name": "close",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    try {\n        if (dataSource instanceof BasicDataSource) {\n            ((BasicDataSource) dataSource).close();\n        }\n    } catch (SQLException e) {\n        Log.toLog(this.getClass(), e);\n    }\n    super.close();\n}",
+                "start_point": {
+                    "row": 65,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 75,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic boolean equals(Object o) {\n    if (this == o) return true;\n    if (o == null || getClass() != o.getClass()) return false;\n    if (!super.equals(o)) return false;\n    MySQLDB mySQLDB = (MySQLDB) o;\n    return Objects.equals(dataSource, mySQLDB.dataSource);\n}",
+                "name": "equals",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Object",
+                        "name": "o"
+                    }
+                ],
+                "body": "{\n    if (this == o) return true;\n    if (o == null || getClass() != o.getClass()) return false;\n    if (!super.equals(o)) return false;\n    MySQLDB mySQLDB = (MySQLDB) o;\n    return Objects.equals(dataSource, mySQLDB.dataSource);\n}",
+                "start_point": {
+                    "row": 77,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 84,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic int hashCode() {\n\n    return Objects.hash(super.hashCode(), dataSource);\n}",
+                "name": "hashCode",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n\n    return Objects.hash(super.hashCode(), dataSource);\n}",
+                "start_point": {
+                    "row": 86,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 90,
+                    "column": 5
+                }
+            }
+        ]
+    }
+]

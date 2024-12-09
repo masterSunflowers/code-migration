@@ -1,0 +1,811 @@
+[
+    {
+        "rev_path": "dubbo-admin-backend/src/main/java/org/apache/dubbo/admin/common/util/RouteRule.java",
+        "definition": "public class RouteRule {\n    @SuppressWarnings(\"unchecked\")\n    static RouteRule EMPTY = new RouteRule(Collections.EMPTY_MAP, Collections.EMPTY_MAP);\n    private static Pattern ROUTE_PATTERN = Pattern.compile(\"([&!=,]*)\\\\s*([^&!=,\\\\s]+)\");\n    private static Pattern CONDITION_SEPERATOR = Pattern.compile(\"(.*)=>(.*)\");\n    private static Pattern VALUE_LIST_SEPARATOR = Pattern.compile(\"\\\\s*,\\\\s*\");\n    final Map<String, MatchPair> whenCondition;\n    final Map<String, MatchPair> thenCondition;\n    private volatile String tostring = null;\n\n    // FIXME\n    private RouteRule(Map<String, MatchPair> when, Map<String, MatchPair> then) {\n        for (Map.Entry<String, MatchPair> entry : when.entrySet()) {\n            entry.getValue().freeze();\n        }\n        for (Map.Entry<String, MatchPair> entry : then.entrySet()) {\n            entry.getValue().freeze();\n        }\n\n        // NOTE: Both When Condition and Then Condition can be null\n        this.whenCondition = when;\n        this.thenCondition = then;\n    }\n\n    public static Map<String, MatchPair> parseRule(String rule)\n            throws ParseException {\n        Map<String, MatchPair> condition = new HashMap<String, MatchPair>();\n        if (StringUtils.isBlank(rule)) {\n            return condition;\n        }\n        // K-V pair, contains matches part and mismatches part\n        MatchPair pair = null;\n        // V part has multiple values\n        Set<String> values = null;\n        final Matcher matcher = ROUTE_PATTERN.matcher(rule);\n        while (matcher.find()) { // match one by one\n            String separator = matcher.group(1);\n            String content = matcher.group(2);\n            // The expression starts\n            if (separator == null || separator.length() == 0) {\n                pair = new MatchPair();\n                condition.put(content, pair);\n            }\n            // The KV starts\n            else if (\"&\".equals(separator)) {\n                if (condition.get(content) == null) {\n                    pair = new MatchPair();\n                    condition.put(content, pair);\n                } else {\n                    condition.put(content, pair);\n                }\n\n            }\n            // The Value part of KV starts\n            else if (\"=\".equals(separator)) {\n                if (pair == null)\n                    throw new ParseException(\"Illegal route rule \\\"\"\n                            + rule + \"\\\", The error char '\" + separator\n                            + \"' at index \" + matcher.start() + \" before \\\"\"\n                            + content + \"\\\".\", matcher.start());\n\n                values = pair.matches;\n                values.add(content);\n            }\n            // The Value part of KV starts\n            else if (\"!=\".equals(separator)) {\n                if (pair == null)\n                    throw new ParseException(\"Illegal route rule \\\"\"\n                            + rule + \"\\\", The error char '\" + separator\n                            + \"' at index \" + matcher.start() + \" before \\\"\"\n                            + content + \"\\\".\", matcher.start());\n\n                values = pair.unmatches;\n                values.add(content);\n            }\n            // The Value part of KV has multiple values, separated by ','\n            else if (\",\".equals(separator)) { // separated by ','\n                if (values == null || values.size() == 0)\n                    throw new ParseException(\"Illegal route rule \\\"\"\n                            + rule + \"\\\", The error char '\" + separator\n                            + \"' at index \" + matcher.start() + \" before \\\"\"\n                            + content + \"\\\".\", matcher.start());\n                values.add(content);\n            } else {\n                throw new ParseException(\"Illegal route rule \\\"\" + rule\n                        + \"\\\", The error char '\" + separator + \"' at index \"\n                        + matcher.start() + \" before \\\"\" + content + \"\\\".\", matcher.start());\n            }\n        }\n        return condition;\n    }\n\n    /**\n     * Parse the RouteRule as a string into an object.\n     *\n     * @throws ParseException RouteRule string format is wrong. The following input conditions, RouteRule are illegal.\n     * <ul> <li> input is <code>null</code>\u3002\n     * <li> input is \"\" or \" \"\u3002\n     * <li> input Rule doesn't have a When Condition\n     * <li> input Rule doesn't have a Then Condition\n     * </ul>\n     */\n    public static RouteRule parse(Route route) throws ParseException {\n        if (route == null)\n            throw new ParseException(\"null route!\", 0);\n\n        if (route.getMatchRule() == null && route.getFilterRule() == null) {\n            return parse(route.getRule());\n        }\n\n        return parse(route == null ? null : route.getMatchRule(), route == null ? null : route.getFilterRule());\n    }\n\n    public static RouteRule parse(String whenRule, String thenRule) throws ParseException {\n        /*if (whenRule == null || whenRule.trim().length() == 0) {\n            throw new ParseException(\"Illegal route rule without when express\", 0);\n    \t}*/\n        if (thenRule == null || thenRule.trim().length() == 0) {\n            throw new ParseException(\"Illegal route rule without then express\", 0);\n        }\n        Map<String, MatchPair> when = parseRule(whenRule.trim());\n        Map<String, MatchPair> then = parseRule(thenRule.trim());\n        return new RouteRule(when, then);\n    }\n\n    public static RouteRule parse(String rule) throws ParseException {\n        if (StringUtils.isBlank(rule)) {\n            throw new ParseException(\"Illegal blank route rule\", 0);\n        }\n\n        final Matcher matcher = CONDITION_SEPERATOR.matcher(rule);\n        if (!matcher.matches()) throw new ParseException(\"condition seperator => not found!\", 0);\n\n        return parse(matcher.group(1), matcher.group(2));\n    }\n\n    /**\n     * @see #parse(String)\n     * @throws RuntimeException This is an wrapper exception for the {@link ParseException} thrown by the {@link #parse (String)} method.\n     */\n    public static RouteRule parseQuitely(Route route) {\n        try {\n            return parse(route);\n        } catch (ParseException e) {\n            throw new RuntimeException(e);\n        }\n    }\n\n    static Map<String, MatchPair> parseNameAndValueListString2Condition(Map<String, String> params, Map<String, String> notParams) {\n        Map<String, MatchPair> condition = new HashMap<String, MatchPair>();\n\n        for (Entry<String, String> entry : params.entrySet()) {\n            String valueListString = entry.getValue();\n            if (StringUtils.isBlank(valueListString)) {\n                continue;\n            }\n            String[] list = VALUE_LIST_SEPARATOR.split(valueListString);\n            Set<String> set = new HashSet<String>();\n            for (String item : list) {\n                if (StringUtils.isBlank(item)) {\n                    continue;\n                }\n                set.add(item.trim());\n            }\n            if (set.isEmpty()) {\n                continue;\n            }\n\n            String key = entry.getKey();\n            MatchPair matchPair = condition.get(key);\n            if (null == matchPair) {\n                matchPair = new MatchPair();\n                condition.put(key, matchPair);\n            }\n\n            matchPair.matches = set;\n        }\n        for (Entry<String, String> entry : notParams.entrySet()) {\n            String valueListString = entry.getValue();\n            if (StringUtils.isBlank(valueListString)) {\n                continue;\n            }\n            String[] list = VALUE_LIST_SEPARATOR.split(valueListString);\n            Set<String> set = new HashSet<String>();\n            for (String item : list) {\n                if (StringUtils.isBlank(item)) {\n                    continue;\n                }\n                set.add(item.trim());\n            }\n            if (set.isEmpty()) {\n                continue;\n            }\n\n            String key = entry.getKey();\n            MatchPair matchPair = condition.get(key);\n            if (null == matchPair) {\n                matchPair = new MatchPair();\n                condition.put(key, matchPair);\n            }\n\n            matchPair.unmatches = set;\n        }\n\n        return condition;\n    }\n\n    public static RouteRule createFromNameAndValueListString(Map<String, String> whenParams, Map<String, String> notWhenParams,\n                                                             Map<String, String> thenParams, Map<String, String> notThenParams) {\n        Map<String, MatchPair> when = parseNameAndValueListString2Condition(whenParams, notWhenParams);\n        Map<String, MatchPair> then = parseNameAndValueListString2Condition(thenParams, notThenParams);\n\n        return new RouteRule(when, then);\n    }\n\n    public static RouteRule createFromCondition(Map<String, MatchPair> whenCondition, Map<String, MatchPair> thenCondition) {\n        return new RouteRule(whenCondition, thenCondition);\n    }\n\n    public static RouteRule copyWithRemove(RouteRule copy, Set<String> whenParams, Set<String> thenParams) {\n        Map<String, MatchPair> when = new HashMap<String, MatchPair>();\n        for (Entry<String, MatchPair> entry : copy.getWhenCondition().entrySet()) {\n            if (whenParams == null || !whenParams.contains(entry.getKey())) {\n                when.put(entry.getKey(), entry.getValue());\n            }\n        }\n\n        Map<String, MatchPair> then = new HashMap<String, MatchPair>();\n        for (Entry<String, MatchPair> entry : copy.getThenCondition().entrySet()) {\n            if (thenParams == null || !thenParams.contains(entry.getKey())) {\n                then.put(entry.getKey(), entry.getValue());\n            }\n        }\n\n        return new RouteRule(when, then);\n    }\n\n    /**\n     * Replace with the new condition value.\n     *\n     * @param copy Replace Base\n     * @param whenCondition WhenCondition to replace, if Base does not have an item, insert it directly.\n     * @param thenCondition ThenCondition to replace, if Base has no items, then insert directly.\n     * @return RouteRule after replacement\n     */\n    public static RouteRule copyWithReplace(RouteRule copy, Map<String, MatchPair> whenCondition, Map<String, MatchPair> thenCondition) {\n        if (null == copy) {\n            throw new NullPointerException(\"Argument copy is null!\");\n        }\n\n        Map<String, MatchPair> when = new HashMap<String, MatchPair>();\n        when.putAll(copy.getWhenCondition());\n        if (whenCondition != null) {\n            when.putAll(whenCondition);\n        }\n\n        Map<String, MatchPair> then = new HashMap<String, MatchPair>();\n        then.putAll(copy.getThenCondition());\n        if (thenCondition != null) {\n            then.putAll(thenCondition);\n        }\n\n        return new RouteRule(when, then);\n    }\n\n    // TODO ToString out of the current list is out of order, should we sort?\n    static void join(StringBuilder sb, Set<String> valueSet) {\n        boolean isFirst = true;\n        for (String s : valueSet) {\n            if (isFirst) {\n                isFirst = false;\n            } else {\n                sb.append(\",\");\n            }\n\n            sb.append(s);\n        }\n    }\n\n    /**\n     * Whether the sample passed the conditions.\n     * <p>\n     * If there is a Key in the KV for the sample, there is a corresponding MatchPair, and Value does not pass through MatchPair; {@code false} is returned; otherwise, {@code true} is returned.\n     *\n     * @see MatchPair#pass(String)\n     */\n    public static boolean matchCondition(Map<String, String> sample,\n                                         Map<String, MatchPair> condition) {\n        for (Map.Entry<String, String> entry : sample.entrySet()) {\n            String key = entry.getKey();\n\n            MatchPair pair = condition.get(key);\n            if (pair != null && !pair.pass(entry.getValue())) {\n                return false;\n            }\n        }\n        return true;\n    }\n\n\n    // FIXME Remove such method calls\n    public static String join(Set<String> valueSet) {\n        StringBuilder sb = new StringBuilder(128);\n        join(sb, valueSet);\n        return sb.toString();\n    }\n\n    // TODO At present, the multiple Key of Condition is in disorder. Should we sort it?\n    public static void contidionToString(StringBuilder sb, Map<String, MatchPair> condition) {\n        boolean isFirst = true;\n        for (Entry<String, MatchPair> entry : condition.entrySet()) {\n            String keyName = entry.getKey();\n            MatchPair p = entry.getValue();\n\n            @SuppressWarnings(\"unchecked\")\n            Set<String>[] setArray = new Set[]{p.matches, p.unmatches};\n            String[] opArray = {\" = \", \" != \"};\n\n            for (int i = 0; i < setArray.length; ++i) {\n                if (setArray[i].isEmpty()) {\n                    continue;\n                }\n                if (isFirst) {\n                    isFirst = false;\n                } else {\n                    sb.append(\" & \");\n                }\n\n                sb.append(keyName);\n                sb.append(opArray[i]);\n                join(sb, setArray[i]);\n            }\n        }\n    }\n\n    public boolean isWhenContainValue(String key, String value) {\n        MatchPair matchPair = whenCondition.get(key);\n        if (null == matchPair) {\n            return false;\n        }\n\n        return matchPair.containeValue(value);\n    }\n\n    public boolean isThenContainValue(String key, String value) {\n        MatchPair matchPair = thenCondition.get(key);\n        if (null == matchPair) {\n            return false;\n        }\n\n        return matchPair.containeValue(value);\n    }\n\n    public boolean isContainValue(String key, String value) {\n        return isWhenContainValue(key, value) || isThenContainValue(key, value);\n    }\n\n    public Map<String, MatchPair> getWhenCondition() {\n        return whenCondition;\n    }\n\n    public Map<String, MatchPair> getThenCondition() {\n        return thenCondition;\n    }\n\n    public String getWhenConditionString() {\n        StringBuilder sb = new StringBuilder(512);\n        contidionToString(sb, whenCondition);\n        return sb.toString();\n    }\n\n    public String getThenConditionString() {\n        StringBuilder sb = new StringBuilder(512);\n        contidionToString(sb, thenCondition);\n        return sb.toString();\n    }\n\n    @Override\n    public String toString() {\n        if (tostring != null)\n            return tostring;\n        StringBuilder sb = new StringBuilder(512);\n        contidionToString(sb, whenCondition);\n        sb.append(\" => \");\n        contidionToString(sb, thenCondition);\n        return tostring = sb.toString();\n    }\n\n    // Automatic generation with Eclipse\n    @Override\n    public int hashCode() {\n        final int prime = 31;\n        int result = 1;\n        result = prime * result + ((thenCondition == null) ? 0 : thenCondition.hashCode());\n        result = prime * result + ((whenCondition == null) ? 0 : whenCondition.hashCode());\n        return result;\n    }\n\n    // Automatic generation with Eclipse\n    @Override\n    public boolean equals(Object obj) {\n        if (this == obj)\n            return true;\n        if (obj == null)\n            return false;\n        if (getClass() != obj.getClass())\n            return false;\n        RouteRule other = (RouteRule) obj;\n        if (thenCondition == null) {\n            if (other.thenCondition != null)\n                return false;\n        } else if (!thenCondition.equals(other.thenCondition))\n            return false;\n        if (whenCondition == null) {\n            if (other.whenCondition != null)\n                return false;\n        } else if (!whenCondition.equals(other.whenCondition))\n            return false;\n        return true;\n    }\n\n    public static class MatchPair {\n        Set<String> matches = new HashSet<String>();\n        Set<String> unmatches = new HashSet<String>();\n        private volatile boolean freezed = false;\n\n        public MatchPair() {\n        }\n\n        public MatchPair(Set<String> matches, Set<String> unmatches) {\n            if (matches == null || unmatches == null) {\n                throw new IllegalArgumentException(\"argument of MatchPair is null!\");\n            }\n\n            this.matches = matches;\n            this.unmatches = unmatches;\n        }\n\n        public Set<String> getMatches() {\n            return matches;\n        }\n\n        public Set<String> getUnmatches() {\n            return unmatches;\n        }\n\n        public MatchPair copy() {\n            MatchPair ret = new MatchPair();\n            ret.matches.addAll(matches);\n            ret.unmatches.addAll(unmatches);\n            return ret;\n        }\n\n        void freeze() {\n            if (freezed) return;\n            synchronized (this) {\n                if (freezed) return;\n                matches = Collections.unmodifiableSet(matches);\n                unmatches = Collections.unmodifiableSet(unmatches);\n            }\n        }\n\n        public boolean containeValue(String value) {\n            return matches.contains(value) || unmatches.contains(value);\n        }\n\n        /**\n         * Whether a given value is matched by the {@link MatchPair}.\n         * return {@code false}, if\n         * <ol>\n         * <li>value is in unmatches\n         * <li>matches is not null, but value is not in matches.\n         * </ol>\n         * otherwise, return<code>true</code>\u3002\n         */\n        public boolean pass(String sample) {\n            if (unmatches.contains(sample)) return false;\n            if (matches.isEmpty()) return true;\n            return matches.contains(sample);\n        }\n\n        @Override\n        public String toString() {\n            return String.format(\"{matches=%s,unmatches=%s}\", matches.toString(), unmatches.toString());\n        }\n\n        // Automatic generation with Eclipse\n        @Override\n        public int hashCode() {\n            final int prime = 31;\n            int result = 1;\n            result = prime * result + ((matches == null) ? 0 : matches.hashCode());\n            result = prime * result + ((unmatches == null) ? 0 : unmatches.hashCode());\n            return result;\n        }\n\n        // Automatic generation with Eclipse\n        @Override\n        public boolean equals(Object obj) {\n            if (this == obj)\n                return true;\n            if (obj == null)\n                return false;\n            if (getClass() != obj.getClass())\n                return false;\n            MatchPair other = (MatchPair) obj;\n            if (matches == null) {\n                if (other.matches != null)\n                    return false;\n            } else if (!matches.equals(other.matches))\n                return false;\n            if (unmatches == null) {\n                if (other.unmatches != null)\n                    return false;\n            } else if (!unmatches.equals(other.unmatches))\n                return false;\n            return true;\n        }\n    }\n}",
+        "package": "package org.apache.dubbo.admin.common.util;",
+        "tree_path": "RouteRule",
+        "name": "RouteRule",
+        "modifiers": "public",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n    @SuppressWarnings(\"unchecked\")\n    static RouteRule EMPTY = new RouteRule(Collections.EMPTY_MAP, Collections.EMPTY_MAP);\n    private static Pattern ROUTE_PATTERN = Pattern.compile(\"([&!=,]*)\\\\s*([^&!=,\\\\s]+)\");\n    private static Pattern CONDITION_SEPERATOR = Pattern.compile(\"(.*)=>(.*)\");\n    private static Pattern VALUE_LIST_SEPARATOR = Pattern.compile(\"\\\\s*,\\\\s*\");\n    final Map<String, MatchPair> whenCondition;\n    final Map<String, MatchPair> thenCondition;\n    private volatile String tostring = null;\n\n    // FIXME\n    private RouteRule(Map<String, MatchPair> when, Map<String, MatchPair> then) {\n        for (Map.Entry<String, MatchPair> entry : when.entrySet()) {\n            entry.getValue().freeze();\n        }\n        for (Map.Entry<String, MatchPair> entry : then.entrySet()) {\n            entry.getValue().freeze();\n        }\n\n        // NOTE: Both When Condition and Then Condition can be null\n        this.whenCondition = when;\n        this.thenCondition = then;\n    }\n\n    public static Map<String, MatchPair> parseRule(String rule)\n            throws ParseException {\n        Map<String, MatchPair> condition = new HashMap<String, MatchPair>();\n        if (StringUtils.isBlank(rule)) {\n            return condition;\n        }\n        // K-V pair, contains matches part and mismatches part\n        MatchPair pair = null;\n        // V part has multiple values\n        Set<String> values = null;\n        final Matcher matcher = ROUTE_PATTERN.matcher(rule);\n        while (matcher.find()) { // match one by one\n            String separator = matcher.group(1);\n            String content = matcher.group(2);\n            // The expression starts\n            if (separator == null || separator.length() == 0) {\n                pair = new MatchPair();\n                condition.put(content, pair);\n            }\n            // The KV starts\n            else if (\"&\".equals(separator)) {\n                if (condition.get(content) == null) {\n                    pair = new MatchPair();\n                    condition.put(content, pair);\n                } else {\n                    condition.put(content, pair);\n                }\n\n            }\n            // The Value part of KV starts\n            else if (\"=\".equals(separator)) {\n                if (pair == null)\n                    throw new ParseException(\"Illegal route rule \\\"\"\n                            + rule + \"\\\", The error char '\" + separator\n                            + \"' at index \" + matcher.start() + \" before \\\"\"\n                            + content + \"\\\".\", matcher.start());\n\n                values = pair.matches;\n                values.add(content);\n            }\n            // The Value part of KV starts\n            else if (\"!=\".equals(separator)) {\n                if (pair == null)\n                    throw new ParseException(\"Illegal route rule \\\"\"\n                            + rule + \"\\\", The error char '\" + separator\n                            + \"' at index \" + matcher.start() + \" before \\\"\"\n                            + content + \"\\\".\", matcher.start());\n\n                values = pair.unmatches;\n                values.add(content);\n            }\n            // The Value part of KV has multiple values, separated by ','\n            else if (\",\".equals(separator)) { // separated by ','\n                if (values == null || values.size() == 0)\n                    throw new ParseException(\"Illegal route rule \\\"\"\n                            + rule + \"\\\", The error char '\" + separator\n                            + \"' at index \" + matcher.start() + \" before \\\"\"\n                            + content + \"\\\".\", matcher.start());\n                values.add(content);\n            } else {\n                throw new ParseException(\"Illegal route rule \\\"\" + rule\n                        + \"\\\", The error char '\" + separator + \"' at index \"\n                        + matcher.start() + \" before \\\"\" + content + \"\\\".\", matcher.start());\n            }\n        }\n        return condition;\n    }\n\n    /**\n     * Parse the RouteRule as a string into an object.\n     *\n     * @throws ParseException RouteRule string format is wrong. The following input conditions, RouteRule are illegal.\n     * <ul> <li> input is <code>null</code>\u3002\n     * <li> input is \"\" or \" \"\u3002\n     * <li> input Rule doesn't have a When Condition\n     * <li> input Rule doesn't have a Then Condition\n     * </ul>\n     */\n    public static RouteRule parse(Route route) throws ParseException {\n        if (route == null)\n            throw new ParseException(\"null route!\", 0);\n\n        if (route.getMatchRule() == null && route.getFilterRule() == null) {\n            return parse(route.getRule());\n        }\n\n        return parse(route == null ? null : route.getMatchRule(), route == null ? null : route.getFilterRule());\n    }\n\n    public static RouteRule parse(String whenRule, String thenRule) throws ParseException {\n        /*if (whenRule == null || whenRule.trim().length() == 0) {\n            throw new ParseException(\"Illegal route rule without when express\", 0);\n    \t}*/\n        if (thenRule == null || thenRule.trim().length() == 0) {\n            throw new ParseException(\"Illegal route rule without then express\", 0);\n        }\n        Map<String, MatchPair> when = parseRule(whenRule.trim());\n        Map<String, MatchPair> then = parseRule(thenRule.trim());\n        return new RouteRule(when, then);\n    }\n\n    public static RouteRule parse(String rule) throws ParseException {\n        if (StringUtils.isBlank(rule)) {\n            throw new ParseException(\"Illegal blank route rule\", 0);\n        }\n\n        final Matcher matcher = CONDITION_SEPERATOR.matcher(rule);\n        if (!matcher.matches()) throw new ParseException(\"condition seperator => not found!\", 0);\n\n        return parse(matcher.group(1), matcher.group(2));\n    }\n\n    /**\n     * @see #parse(String)\n     * @throws RuntimeException This is an wrapper exception for the {@link ParseException} thrown by the {@link #parse (String)} method.\n     */\n    public static RouteRule parseQuitely(Route route) {\n        try {\n            return parse(route);\n        } catch (ParseException e) {\n            throw new RuntimeException(e);\n        }\n    }\n\n    static Map<String, MatchPair> parseNameAndValueListString2Condition(Map<String, String> params, Map<String, String> notParams) {\n        Map<String, MatchPair> condition = new HashMap<String, MatchPair>();\n\n        for (Entry<String, String> entry : params.entrySet()) {\n            String valueListString = entry.getValue();\n            if (StringUtils.isBlank(valueListString)) {\n                continue;\n            }\n            String[] list = VALUE_LIST_SEPARATOR.split(valueListString);\n            Set<String> set = new HashSet<String>();\n            for (String item : list) {\n                if (StringUtils.isBlank(item)) {\n                    continue;\n                }\n                set.add(item.trim());\n            }\n            if (set.isEmpty()) {\n                continue;\n            }\n\n            String key = entry.getKey();\n            MatchPair matchPair = condition.get(key);\n            if (null == matchPair) {\n                matchPair = new MatchPair();\n                condition.put(key, matchPair);\n            }\n\n            matchPair.matches = set;\n        }\n        for (Entry<String, String> entry : notParams.entrySet()) {\n            String valueListString = entry.getValue();\n            if (StringUtils.isBlank(valueListString)) {\n                continue;\n            }\n            String[] list = VALUE_LIST_SEPARATOR.split(valueListString);\n            Set<String> set = new HashSet<String>();\n            for (String item : list) {\n                if (StringUtils.isBlank(item)) {\n                    continue;\n                }\n                set.add(item.trim());\n            }\n            if (set.isEmpty()) {\n                continue;\n            }\n\n            String key = entry.getKey();\n            MatchPair matchPair = condition.get(key);\n            if (null == matchPair) {\n                matchPair = new MatchPair();\n                condition.put(key, matchPair);\n            }\n\n            matchPair.unmatches = set;\n        }\n\n        return condition;\n    }\n\n    public static RouteRule createFromNameAndValueListString(Map<String, String> whenParams, Map<String, String> notWhenParams,\n                                                             Map<String, String> thenParams, Map<String, String> notThenParams) {\n        Map<String, MatchPair> when = parseNameAndValueListString2Condition(whenParams, notWhenParams);\n        Map<String, MatchPair> then = parseNameAndValueListString2Condition(thenParams, notThenParams);\n\n        return new RouteRule(when, then);\n    }\n\n    public static RouteRule createFromCondition(Map<String, MatchPair> whenCondition, Map<String, MatchPair> thenCondition) {\n        return new RouteRule(whenCondition, thenCondition);\n    }\n\n    public static RouteRule copyWithRemove(RouteRule copy, Set<String> whenParams, Set<String> thenParams) {\n        Map<String, MatchPair> when = new HashMap<String, MatchPair>();\n        for (Entry<String, MatchPair> entry : copy.getWhenCondition().entrySet()) {\n            if (whenParams == null || !whenParams.contains(entry.getKey())) {\n                when.put(entry.getKey(), entry.getValue());\n            }\n        }\n\n        Map<String, MatchPair> then = new HashMap<String, MatchPair>();\n        for (Entry<String, MatchPair> entry : copy.getThenCondition().entrySet()) {\n            if (thenParams == null || !thenParams.contains(entry.getKey())) {\n                then.put(entry.getKey(), entry.getValue());\n            }\n        }\n\n        return new RouteRule(when, then);\n    }\n\n    /**\n     * Replace with the new condition value.\n     *\n     * @param copy Replace Base\n     * @param whenCondition WhenCondition to replace, if Base does not have an item, insert it directly.\n     * @param thenCondition ThenCondition to replace, if Base has no items, then insert directly.\n     * @return RouteRule after replacement\n     */\n    public static RouteRule copyWithReplace(RouteRule copy, Map<String, MatchPair> whenCondition, Map<String, MatchPair> thenCondition) {\n        if (null == copy) {\n            throw new NullPointerException(\"Argument copy is null!\");\n        }\n\n        Map<String, MatchPair> when = new HashMap<String, MatchPair>();\n        when.putAll(copy.getWhenCondition());\n        if (whenCondition != null) {\n            when.putAll(whenCondition);\n        }\n\n        Map<String, MatchPair> then = new HashMap<String, MatchPair>();\n        then.putAll(copy.getThenCondition());\n        if (thenCondition != null) {\n            then.putAll(thenCondition);\n        }\n\n        return new RouteRule(when, then);\n    }\n\n    // TODO ToString out of the current list is out of order, should we sort?\n    static void join(StringBuilder sb, Set<String> valueSet) {\n        boolean isFirst = true;\n        for (String s : valueSet) {\n            if (isFirst) {\n                isFirst = false;\n            } else {\n                sb.append(\",\");\n            }\n\n            sb.append(s);\n        }\n    }\n\n    /**\n     * Whether the sample passed the conditions.\n     * <p>\n     * If there is a Key in the KV for the sample, there is a corresponding MatchPair, and Value does not pass through MatchPair; {@code false} is returned; otherwise, {@code true} is returned.\n     *\n     * @see MatchPair#pass(String)\n     */\n    public static boolean matchCondition(Map<String, String> sample,\n                                         Map<String, MatchPair> condition) {\n        for (Map.Entry<String, String> entry : sample.entrySet()) {\n            String key = entry.getKey();\n\n            MatchPair pair = condition.get(key);\n            if (pair != null && !pair.pass(entry.getValue())) {\n                return false;\n            }\n        }\n        return true;\n    }\n\n\n    // FIXME Remove such method calls\n    public static String join(Set<String> valueSet) {\n        StringBuilder sb = new StringBuilder(128);\n        join(sb, valueSet);\n        return sb.toString();\n    }\n\n    // TODO At present, the multiple Key of Condition is in disorder. Should we sort it?\n    public static void contidionToString(StringBuilder sb, Map<String, MatchPair> condition) {\n        boolean isFirst = true;\n        for (Entry<String, MatchPair> entry : condition.entrySet()) {\n            String keyName = entry.getKey();\n            MatchPair p = entry.getValue();\n\n            @SuppressWarnings(\"unchecked\")\n            Set<String>[] setArray = new Set[]{p.matches, p.unmatches};\n            String[] opArray = {\" = \", \" != \"};\n\n            for (int i = 0; i < setArray.length; ++i) {\n                if (setArray[i].isEmpty()) {\n                    continue;\n                }\n                if (isFirst) {\n                    isFirst = false;\n                } else {\n                    sb.append(\" & \");\n                }\n\n                sb.append(keyName);\n                sb.append(opArray[i]);\n                join(sb, setArray[i]);\n            }\n        }\n    }\n\n    public boolean isWhenContainValue(String key, String value) {\n        MatchPair matchPair = whenCondition.get(key);\n        if (null == matchPair) {\n            return false;\n        }\n\n        return matchPair.containeValue(value);\n    }\n\n    public boolean isThenContainValue(String key, String value) {\n        MatchPair matchPair = thenCondition.get(key);\n        if (null == matchPair) {\n            return false;\n        }\n\n        return matchPair.containeValue(value);\n    }\n\n    public boolean isContainValue(String key, String value) {\n        return isWhenContainValue(key, value) || isThenContainValue(key, value);\n    }\n\n    public Map<String, MatchPair> getWhenCondition() {\n        return whenCondition;\n    }\n\n    public Map<String, MatchPair> getThenCondition() {\n        return thenCondition;\n    }\n\n    public String getWhenConditionString() {\n        StringBuilder sb = new StringBuilder(512);\n        contidionToString(sb, whenCondition);\n        return sb.toString();\n    }\n\n    public String getThenConditionString() {\n        StringBuilder sb = new StringBuilder(512);\n        contidionToString(sb, thenCondition);\n        return sb.toString();\n    }\n\n    @Override\n    public String toString() {\n        if (tostring != null)\n            return tostring;\n        StringBuilder sb = new StringBuilder(512);\n        contidionToString(sb, whenCondition);\n        sb.append(\" => \");\n        contidionToString(sb, thenCondition);\n        return tostring = sb.toString();\n    }\n\n    // Automatic generation with Eclipse\n    @Override\n    public int hashCode() {\n        final int prime = 31;\n        int result = 1;\n        result = prime * result + ((thenCondition == null) ? 0 : thenCondition.hashCode());\n        result = prime * result + ((whenCondition == null) ? 0 : whenCondition.hashCode());\n        return result;\n    }\n\n    // Automatic generation with Eclipse\n    @Override\n    public boolean equals(Object obj) {\n        if (this == obj)\n            return true;\n        if (obj == null)\n            return false;\n        if (getClass() != obj.getClass())\n            return false;\n        RouteRule other = (RouteRule) obj;\n        if (thenCondition == null) {\n            if (other.thenCondition != null)\n                return false;\n        } else if (!thenCondition.equals(other.thenCondition))\n            return false;\n        if (whenCondition == null) {\n            if (other.whenCondition != null)\n                return false;\n        } else if (!whenCondition.equals(other.whenCondition))\n            return false;\n        return true;\n    }\n\n    public static class MatchPair {\n        Set<String> matches = new HashSet<String>();\n        Set<String> unmatches = new HashSet<String>();\n        private volatile boolean freezed = false;\n\n        public MatchPair() {\n        }\n\n        public MatchPair(Set<String> matches, Set<String> unmatches) {\n            if (matches == null || unmatches == null) {\n                throw new IllegalArgumentException(\"argument of MatchPair is null!\");\n            }\n\n            this.matches = matches;\n            this.unmatches = unmatches;\n        }\n\n        public Set<String> getMatches() {\n            return matches;\n        }\n\n        public Set<String> getUnmatches() {\n            return unmatches;\n        }\n\n        public MatchPair copy() {\n            MatchPair ret = new MatchPair();\n            ret.matches.addAll(matches);\n            ret.unmatches.addAll(unmatches);\n            return ret;\n        }\n\n        void freeze() {\n            if (freezed) return;\n            synchronized (this) {\n                if (freezed) return;\n                matches = Collections.unmodifiableSet(matches);\n                unmatches = Collections.unmodifiableSet(unmatches);\n            }\n        }\n\n        public boolean containeValue(String value) {\n            return matches.contains(value) || unmatches.contains(value);\n        }\n\n        /**\n         * Whether a given value is matched by the {@link MatchPair}.\n         * return {@code false}, if\n         * <ol>\n         * <li>value is in unmatches\n         * <li>matches is not null, but value is not in matches.\n         * </ol>\n         * otherwise, return<code>true</code>\u3002\n         */\n        public boolean pass(String sample) {\n            if (unmatches.contains(sample)) return false;\n            if (matches.isEmpty()) return true;\n            return matches.contains(sample);\n        }\n\n        @Override\n        public String toString() {\n            return String.format(\"{matches=%s,unmatches=%s}\", matches.toString(), unmatches.toString());\n        }\n\n        // Automatic generation with Eclipse\n        @Override\n        public int hashCode() {\n            final int prime = 31;\n            int result = 1;\n            result = prime * result + ((matches == null) ? 0 : matches.hashCode());\n            result = prime * result + ((unmatches == null) ? 0 : unmatches.hashCode());\n            return result;\n        }\n\n        // Automatic generation with Eclipse\n        @Override\n        public boolean equals(Object obj) {\n            if (this == obj)\n                return true;\n            if (obj == null)\n                return false;\n            if (getClass() != obj.getClass())\n                return false;\n            MatchPair other = (MatchPair) obj;\n            if (matches == null) {\n                if (other.matches != null)\n                    return false;\n            } else if (!matches.equals(other.matches))\n                return false;\n            if (unmatches == null) {\n                if (other.unmatches != null)\n                    return false;\n            } else if (!unmatches.equals(other.unmatches))\n                return false;\n            return true;\n        }\n    }\n}",
+        "start_point": {
+            "row": 43,
+            "column": 0
+        },
+        "end_point": {
+            "row": 562,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "private RouteRule(Map<String, MatchPair> when, Map<String, MatchPair> then) {\n    for (Map.Entry<String, MatchPair> entry : when.entrySet()) {\n        entry.getValue().freeze();\n    }\n    for (Map.Entry<String, MatchPair> entry : then.entrySet()) {\n        entry.getValue().freeze();\n    }\n\n    // NOTE: Both When Condition and Then Condition can be null\n    this.whenCondition = when;\n    this.thenCondition = then;\n}",
+                "name": "RouteRule",
+                "modifiers": "private",
+                "parameters": [
+                    {
+                        "type": "Map<String, MatchPair>",
+                        "name": "when"
+                    },
+                    {
+                        "type": "Map<String, MatchPair>",
+                        "name": "then"
+                    }
+                ],
+                "body": "{\n    for (Map.Entry<String, MatchPair> entry : when.entrySet()) {\n        entry.getValue().freeze();\n    }\n    for (Map.Entry<String, MatchPair> entry : then.entrySet()) {\n        entry.getValue().freeze();\n    }\n\n    // NOTE: Both When Condition and Then Condition can be null\n    this.whenCondition = when;\n    this.thenCondition = then;\n}",
+                "constructor": true,
+                "start_point": {
+                    "row": 54,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 65,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public static Map<String, MatchPair> parseRule(String rule)\n        throws ParseException {\n    Map<String, MatchPair> condition = new HashMap<String, MatchPair>();\n    if (StringUtils.isBlank(rule)) {\n        return condition;\n    }\n    // K-V pair, contains matches part and mismatches part\n    MatchPair pair = null;\n    // V part has multiple values\n    Set<String> values = null;\n    final Matcher matcher = ROUTE_PATTERN.matcher(rule);\n    while (matcher.find()) { // match one by one\n        String separator = matcher.group(1);\n        String content = matcher.group(2);\n        // The expression starts\n        if (separator == null || separator.length() == 0) {\n            pair = new MatchPair();\n            condition.put(content, pair);\n        }\n        // The KV starts\n        else if (\"&\".equals(separator)) {\n            if (condition.get(content) == null) {\n                pair = new MatchPair();\n                condition.put(content, pair);\n            } else {\n                condition.put(content, pair);\n            }\n\n        }\n        // The Value part of KV starts\n        else if (\"=\".equals(separator)) {\n            if (pair == null)\n                throw new ParseException(\"Illegal route rule \\\"\"\n                        + rule + \"\\\", The error char '\" + separator\n                        + \"' at index \" + matcher.start() + \" before \\\"\"\n                        + content + \"\\\".\", matcher.start());\n\n            values = pair.matches;\n            values.add(content);\n        }\n        // The Value part of KV starts\n        else if (\"!=\".equals(separator)) {\n            if (pair == null)\n                throw new ParseException(\"Illegal route rule \\\"\"\n                        + rule + \"\\\", The error char '\" + separator\n                        + \"' at index \" + matcher.start() + \" before \\\"\"\n                        + content + \"\\\".\", matcher.start());\n\n            values = pair.unmatches;\n            values.add(content);\n        }\n        // The Value part of KV has multiple values, separated by ','\n        else if (\",\".equals(separator)) { // separated by ','\n            if (values == null || values.size() == 0)\n                throw new ParseException(\"Illegal route rule \\\"\"\n                        + rule + \"\\\", The error char '\" + separator\n                        + \"' at index \" + matcher.start() + \" before \\\"\"\n                        + content + \"\\\".\", matcher.start());\n            values.add(content);\n        } else {\n            throw new ParseException(\"Illegal route rule \\\"\" + rule\n                    + \"\\\", The error char '\" + separator + \"' at index \"\n                    + matcher.start() + \" before \\\"\" + content + \"\\\".\", matcher.start());\n        }\n    }\n    return condition;\n}",
+                "name": "parseRule",
+                "modifiers": "public static",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "rule"
+                    }
+                ],
+                "body": "{\n    Map<String, MatchPair> condition = new HashMap<String, MatchPair>();\n    if (StringUtils.isBlank(rule)) {\n        return condition;\n    }\n    // K-V pair, contains matches part and mismatches part\n    MatchPair pair = null;\n    // V part has multiple values\n    Set<String> values = null;\n    final Matcher matcher = ROUTE_PATTERN.matcher(rule);\n    while (matcher.find()) { // match one by one\n        String separator = matcher.group(1);\n        String content = matcher.group(2);\n        // The expression starts\n        if (separator == null || separator.length() == 0) {\n            pair = new MatchPair();\n            condition.put(content, pair);\n        }\n        // The KV starts\n        else if (\"&\".equals(separator)) {\n            if (condition.get(content) == null) {\n                pair = new MatchPair();\n                condition.put(content, pair);\n            } else {\n                condition.put(content, pair);\n            }\n\n        }\n        // The Value part of KV starts\n        else if (\"=\".equals(separator)) {\n            if (pair == null)\n                throw new ParseException(\"Illegal route rule \\\"\"\n                        + rule + \"\\\", The error char '\" + separator\n                        + \"' at index \" + matcher.start() + \" before \\\"\"\n                        + content + \"\\\".\", matcher.start());\n\n            values = pair.matches;\n            values.add(content);\n        }\n        // The Value part of KV starts\n        else if (\"!=\".equals(separator)) {\n            if (pair == null)\n                throw new ParseException(\"Illegal route rule \\\"\"\n                        + rule + \"\\\", The error char '\" + separator\n                        + \"' at index \" + matcher.start() + \" before \\\"\"\n                        + content + \"\\\".\", matcher.start());\n\n            values = pair.unmatches;\n            values.add(content);\n        }\n        // The Value part of KV has multiple values, separated by ','\n        else if (\",\".equals(separator)) { // separated by ','\n            if (values == null || values.size() == 0)\n                throw new ParseException(\"Illegal route rule \\\"\"\n                        + rule + \"\\\", The error char '\" + separator\n                        + \"' at index \" + matcher.start() + \" before \\\"\"\n                        + content + \"\\\".\", matcher.start());\n            values.add(content);\n        } else {\n            throw new ParseException(\"Illegal route rule \\\"\" + rule\n                    + \"\\\", The error char '\" + separator + \"' at index \"\n                    + matcher.start() + \" before \\\"\" + content + \"\\\".\", matcher.start());\n        }\n    }\n    return condition;\n}",
+                "start_point": {
+                    "row": 67,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 133,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public static RouteRule parse(Route route) throws ParseException {\n    if (route == null)\n        throw new ParseException(\"null route!\", 0);\n\n    if (route.getMatchRule() == null && route.getFilterRule() == null) {\n        return parse(route.getRule());\n    }\n\n    return parse(route == null ? null : route.getMatchRule(), route == null ? null : route.getFilterRule());\n}",
+                "name": "parse",
+                "modifiers": "public static",
+                "return_type": "RouteRule",
+                "parameters": [
+                    {
+                        "type": "Route",
+                        "name": "route"
+                    }
+                ],
+                "body": "{\n    if (route == null)\n        throw new ParseException(\"null route!\", 0);\n\n    if (route.getMatchRule() == null && route.getFilterRule() == null) {\n        return parse(route.getRule());\n    }\n\n    return parse(route == null ? null : route.getMatchRule(), route == null ? null : route.getFilterRule());\n}",
+                "start_point": {
+                    "row": 145,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 154,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public static RouteRule parse(String whenRule, String thenRule) throws ParseException {\n    /*if (whenRule == null || whenRule.trim().length() == 0) {\n        throw new ParseException(\"Illegal route rule without when express\", 0);\n\t}*/\n    if (thenRule == null || thenRule.trim().length() == 0) {\n        throw new ParseException(\"Illegal route rule without then express\", 0);\n    }\n    Map<String, MatchPair> when = parseRule(whenRule.trim());\n    Map<String, MatchPair> then = parseRule(thenRule.trim());\n    return new RouteRule(when, then);\n}",
+                "name": "parse",
+                "modifiers": "public static",
+                "return_type": "RouteRule",
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "whenRule"
+                    },
+                    {
+                        "type": "String",
+                        "name": "thenRule"
+                    }
+                ],
+                "body": "{\n    /*if (whenRule == null || whenRule.trim().length() == 0) {\n        throw new ParseException(\"Illegal route rule without when express\", 0);\n\t}*/\n    if (thenRule == null || thenRule.trim().length() == 0) {\n        throw new ParseException(\"Illegal route rule without then express\", 0);\n    }\n    Map<String, MatchPair> when = parseRule(whenRule.trim());\n    Map<String, MatchPair> then = parseRule(thenRule.trim());\n    return new RouteRule(when, then);\n}",
+                "start_point": {
+                    "row": 156,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 166,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public static RouteRule parse(String rule) throws ParseException {\n    if (StringUtils.isBlank(rule)) {\n        throw new ParseException(\"Illegal blank route rule\", 0);\n    }\n\n    final Matcher matcher = CONDITION_SEPERATOR.matcher(rule);\n    if (!matcher.matches()) throw new ParseException(\"condition seperator => not found!\", 0);\n\n    return parse(matcher.group(1), matcher.group(2));\n}",
+                "name": "parse",
+                "modifiers": "public static",
+                "return_type": "RouteRule",
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "rule"
+                    }
+                ],
+                "body": "{\n    if (StringUtils.isBlank(rule)) {\n        throw new ParseException(\"Illegal blank route rule\", 0);\n    }\n\n    final Matcher matcher = CONDITION_SEPERATOR.matcher(rule);\n    if (!matcher.matches()) throw new ParseException(\"condition seperator => not found!\", 0);\n\n    return parse(matcher.group(1), matcher.group(2));\n}",
+                "start_point": {
+                    "row": 168,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 177,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public static RouteRule parseQuitely(Route route) {\n    try {\n        return parse(route);\n    } catch (ParseException e) {\n        throw new RuntimeException(e);\n    }\n}",
+                "name": "parseQuitely",
+                "modifiers": "public static",
+                "return_type": "RouteRule",
+                "parameters": [
+                    {
+                        "type": "Route",
+                        "name": "route"
+                    }
+                ],
+                "body": "{\n    try {\n        return parse(route);\n    } catch (ParseException e) {\n        throw new RuntimeException(e);\n    }\n}",
+                "start_point": {
+                    "row": 183,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 189,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "static Map<String, MatchPair> parseNameAndValueListString2Condition(Map<String, String> params, Map<String, String> notParams) {\n    Map<String, MatchPair> condition = new HashMap<String, MatchPair>();\n\n    for (Entry<String, String> entry : params.entrySet()) {\n        String valueListString = entry.getValue();\n        if (StringUtils.isBlank(valueListString)) {\n            continue;\n        }\n        String[] list = VALUE_LIST_SEPARATOR.split(valueListString);\n        Set<String> set = new HashSet<String>();\n        for (String item : list) {\n            if (StringUtils.isBlank(item)) {\n                continue;\n            }\n            set.add(item.trim());\n        }\n        if (set.isEmpty()) {\n            continue;\n        }\n\n        String key = entry.getKey();\n        MatchPair matchPair = condition.get(key);\n        if (null == matchPair) {\n            matchPair = new MatchPair();\n            condition.put(key, matchPair);\n        }\n\n        matchPair.matches = set;\n    }\n    for (Entry<String, String> entry : notParams.entrySet()) {\n        String valueListString = entry.getValue();\n        if (StringUtils.isBlank(valueListString)) {\n            continue;\n        }\n        String[] list = VALUE_LIST_SEPARATOR.split(valueListString);\n        Set<String> set = new HashSet<String>();\n        for (String item : list) {\n            if (StringUtils.isBlank(item)) {\n                continue;\n            }\n            set.add(item.trim());\n        }\n        if (set.isEmpty()) {\n            continue;\n        }\n\n        String key = entry.getKey();\n        MatchPair matchPair = condition.get(key);\n        if (null == matchPair) {\n            matchPair = new MatchPair();\n            condition.put(key, matchPair);\n        }\n\n        matchPair.unmatches = set;\n    }\n\n    return condition;\n}",
+                "name": "parseNameAndValueListString2Condition",
+                "modifiers": "static",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Map<String, String>",
+                        "name": "params"
+                    },
+                    {
+                        "type": "Map<String, String>",
+                        "name": "notParams"
+                    }
+                ],
+                "body": "{\n    Map<String, MatchPair> condition = new HashMap<String, MatchPair>();\n\n    for (Entry<String, String> entry : params.entrySet()) {\n        String valueListString = entry.getValue();\n        if (StringUtils.isBlank(valueListString)) {\n            continue;\n        }\n        String[] list = VALUE_LIST_SEPARATOR.split(valueListString);\n        Set<String> set = new HashSet<String>();\n        for (String item : list) {\n            if (StringUtils.isBlank(item)) {\n                continue;\n            }\n            set.add(item.trim());\n        }\n        if (set.isEmpty()) {\n            continue;\n        }\n\n        String key = entry.getKey();\n        MatchPair matchPair = condition.get(key);\n        if (null == matchPair) {\n            matchPair = new MatchPair();\n            condition.put(key, matchPair);\n        }\n\n        matchPair.matches = set;\n    }\n    for (Entry<String, String> entry : notParams.entrySet()) {\n        String valueListString = entry.getValue();\n        if (StringUtils.isBlank(valueListString)) {\n            continue;\n        }\n        String[] list = VALUE_LIST_SEPARATOR.split(valueListString);\n        Set<String> set = new HashSet<String>();\n        for (String item : list) {\n            if (StringUtils.isBlank(item)) {\n                continue;\n            }\n            set.add(item.trim());\n        }\n        if (set.isEmpty()) {\n            continue;\n        }\n\n        String key = entry.getKey();\n        MatchPair matchPair = condition.get(key);\n        if (null == matchPair) {\n            matchPair = new MatchPair();\n            condition.put(key, matchPair);\n        }\n\n        matchPair.unmatches = set;\n    }\n\n    return condition;\n}",
+                "start_point": {
+                    "row": 191,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 248,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public static RouteRule createFromNameAndValueListString(Map<String, String> whenParams, Map<String, String> notWhenParams,\n                                                         Map<String, String> thenParams, Map<String, String> notThenParams) {\n    Map<String, MatchPair> when = parseNameAndValueListString2Condition(whenParams, notWhenParams);\n    Map<String, MatchPair> then = parseNameAndValueListString2Condition(thenParams, notThenParams);\n\n    return new RouteRule(when, then);\n}",
+                "name": "createFromNameAndValueListString",
+                "modifiers": "public static",
+                "return_type": "RouteRule",
+                "parameters": [
+                    {
+                        "type": "Map<String, String>",
+                        "name": "whenParams"
+                    },
+                    {
+                        "type": "Map<String, String>",
+                        "name": "notWhenParams"
+                    },
+                    {
+                        "type": "Map<String, String>",
+                        "name": "thenParams"
+                    },
+                    {
+                        "type": "Map<String, String>",
+                        "name": "notThenParams"
+                    }
+                ],
+                "body": "{\n    Map<String, MatchPair> when = parseNameAndValueListString2Condition(whenParams, notWhenParams);\n    Map<String, MatchPair> then = parseNameAndValueListString2Condition(thenParams, notThenParams);\n\n    return new RouteRule(when, then);\n}",
+                "start_point": {
+                    "row": 250,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 256,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public static RouteRule createFromCondition(Map<String, MatchPair> whenCondition, Map<String, MatchPair> thenCondition) {\n    return new RouteRule(whenCondition, thenCondition);\n}",
+                "name": "createFromCondition",
+                "modifiers": "public static",
+                "return_type": "RouteRule",
+                "parameters": [
+                    {
+                        "type": "Map<String, MatchPair>",
+                        "name": "whenCondition"
+                    },
+                    {
+                        "type": "Map<String, MatchPair>",
+                        "name": "thenCondition"
+                    }
+                ],
+                "body": "{\n    return new RouteRule(whenCondition, thenCondition);\n}",
+                "start_point": {
+                    "row": 258,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 260,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public static RouteRule copyWithRemove(RouteRule copy, Set<String> whenParams, Set<String> thenParams) {\n    Map<String, MatchPair> when = new HashMap<String, MatchPair>();\n    for (Entry<String, MatchPair> entry : copy.getWhenCondition().entrySet()) {\n        if (whenParams == null || !whenParams.contains(entry.getKey())) {\n            when.put(entry.getKey(), entry.getValue());\n        }\n    }\n\n    Map<String, MatchPair> then = new HashMap<String, MatchPair>();\n    for (Entry<String, MatchPair> entry : copy.getThenCondition().entrySet()) {\n        if (thenParams == null || !thenParams.contains(entry.getKey())) {\n            then.put(entry.getKey(), entry.getValue());\n        }\n    }\n\n    return new RouteRule(when, then);\n}",
+                "name": "copyWithRemove",
+                "modifiers": "public static",
+                "return_type": "RouteRule",
+                "parameters": [
+                    {
+                        "type": "RouteRule",
+                        "name": "copy"
+                    },
+                    {
+                        "type": "Set<String>",
+                        "name": "whenParams"
+                    },
+                    {
+                        "type": "Set<String>",
+                        "name": "thenParams"
+                    }
+                ],
+                "body": "{\n    Map<String, MatchPair> when = new HashMap<String, MatchPair>();\n    for (Entry<String, MatchPair> entry : copy.getWhenCondition().entrySet()) {\n        if (whenParams == null || !whenParams.contains(entry.getKey())) {\n            when.put(entry.getKey(), entry.getValue());\n        }\n    }\n\n    Map<String, MatchPair> then = new HashMap<String, MatchPair>();\n    for (Entry<String, MatchPair> entry : copy.getThenCondition().entrySet()) {\n        if (thenParams == null || !thenParams.contains(entry.getKey())) {\n            then.put(entry.getKey(), entry.getValue());\n        }\n    }\n\n    return new RouteRule(when, then);\n}",
+                "start_point": {
+                    "row": 262,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 278,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public static RouteRule copyWithReplace(RouteRule copy, Map<String, MatchPair> whenCondition, Map<String, MatchPair> thenCondition) {\n    if (null == copy) {\n        throw new NullPointerException(\"Argument copy is null!\");\n    }\n\n    Map<String, MatchPair> when = new HashMap<String, MatchPair>();\n    when.putAll(copy.getWhenCondition());\n    if (whenCondition != null) {\n        when.putAll(whenCondition);\n    }\n\n    Map<String, MatchPair> then = new HashMap<String, MatchPair>();\n    then.putAll(copy.getThenCondition());\n    if (thenCondition != null) {\n        then.putAll(thenCondition);\n    }\n\n    return new RouteRule(when, then);\n}",
+                "name": "copyWithReplace",
+                "modifiers": "public static",
+                "return_type": "RouteRule",
+                "parameters": [
+                    {
+                        "type": "RouteRule",
+                        "name": "copy"
+                    },
+                    {
+                        "type": "Map<String, MatchPair>",
+                        "name": "whenCondition"
+                    },
+                    {
+                        "type": "Map<String, MatchPair>",
+                        "name": "thenCondition"
+                    }
+                ],
+                "body": "{\n    if (null == copy) {\n        throw new NullPointerException(\"Argument copy is null!\");\n    }\n\n    Map<String, MatchPair> when = new HashMap<String, MatchPair>();\n    when.putAll(copy.getWhenCondition());\n    if (whenCondition != null) {\n        when.putAll(whenCondition);\n    }\n\n    Map<String, MatchPair> then = new HashMap<String, MatchPair>();\n    then.putAll(copy.getThenCondition());\n    if (thenCondition != null) {\n        then.putAll(thenCondition);\n    }\n\n    return new RouteRule(when, then);\n}",
+                "start_point": {
+                    "row": 288,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 306,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "static void join(StringBuilder sb, Set<String> valueSet) {\n    boolean isFirst = true;\n    for (String s : valueSet) {\n        if (isFirst) {\n            isFirst = false;\n        } else {\n            sb.append(\",\");\n        }\n\n        sb.append(s);\n    }\n}",
+                "name": "join",
+                "modifiers": "static",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "StringBuilder",
+                        "name": "sb"
+                    },
+                    {
+                        "type": "Set<String>",
+                        "name": "valueSet"
+                    }
+                ],
+                "body": "{\n    boolean isFirst = true;\n    for (String s : valueSet) {\n        if (isFirst) {\n            isFirst = false;\n        } else {\n            sb.append(\",\");\n        }\n\n        sb.append(s);\n    }\n}",
+                "start_point": {
+                    "row": 309,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 320,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public static boolean matchCondition(Map<String, String> sample,\n                                     Map<String, MatchPair> condition) {\n    for (Map.Entry<String, String> entry : sample.entrySet()) {\n        String key = entry.getKey();\n\n        MatchPair pair = condition.get(key);\n        if (pair != null && !pair.pass(entry.getValue())) {\n            return false;\n        }\n    }\n    return true;\n}",
+                "name": "matchCondition",
+                "modifiers": "public static",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Map<String, String>",
+                        "name": "sample"
+                    },
+                    {
+                        "type": "Map<String, MatchPair>",
+                        "name": "condition"
+                    }
+                ],
+                "body": "{\n    for (Map.Entry<String, String> entry : sample.entrySet()) {\n        String key = entry.getKey();\n\n        MatchPair pair = condition.get(key);\n        if (pair != null && !pair.pass(entry.getValue())) {\n            return false;\n        }\n    }\n    return true;\n}",
+                "start_point": {
+                    "row": 329,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 340,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public static String join(Set<String> valueSet) {\n    StringBuilder sb = new StringBuilder(128);\n    join(sb, valueSet);\n    return sb.toString();\n}",
+                "name": "join",
+                "modifiers": "public static",
+                "return_type": "String",
+                "parameters": [
+                    {
+                        "type": "Set<String>",
+                        "name": "valueSet"
+                    }
+                ],
+                "body": "{\n    StringBuilder sb = new StringBuilder(128);\n    join(sb, valueSet);\n    return sb.toString();\n}",
+                "start_point": {
+                    "row": 344,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 348,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public static void contidionToString(StringBuilder sb, Map<String, MatchPair> condition) {\n    boolean isFirst = true;\n    for (Entry<String, MatchPair> entry : condition.entrySet()) {\n        String keyName = entry.getKey();\n        MatchPair p = entry.getValue();\n\n        @SuppressWarnings(\"unchecked\")\n        Set<String>[] setArray = new Set[]{p.matches, p.unmatches};\n        String[] opArray = {\" = \", \" != \"};\n\n        for (int i = 0; i < setArray.length; ++i) {\n            if (setArray[i].isEmpty()) {\n                continue;\n            }\n            if (isFirst) {\n                isFirst = false;\n            } else {\n                sb.append(\" & \");\n            }\n\n            sb.append(keyName);\n            sb.append(opArray[i]);\n            join(sb, setArray[i]);\n        }\n    }\n}",
+                "name": "contidionToString",
+                "modifiers": "public static",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "StringBuilder",
+                        "name": "sb"
+                    },
+                    {
+                        "type": "Map<String, MatchPair>",
+                        "name": "condition"
+                    }
+                ],
+                "body": "{\n    boolean isFirst = true;\n    for (Entry<String, MatchPair> entry : condition.entrySet()) {\n        String keyName = entry.getKey();\n        MatchPair p = entry.getValue();\n\n        @SuppressWarnings(\"unchecked\")\n        Set<String>[] setArray = new Set[]{p.matches, p.unmatches};\n        String[] opArray = {\" = \", \" != \"};\n\n        for (int i = 0; i < setArray.length; ++i) {\n            if (setArray[i].isEmpty()) {\n                continue;\n            }\n            if (isFirst) {\n                isFirst = false;\n            } else {\n                sb.append(\" & \");\n            }\n\n            sb.append(keyName);\n            sb.append(opArray[i]);\n            join(sb, setArray[i]);\n        }\n    }\n}",
+                "start_point": {
+                    "row": 351,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 376,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public boolean isWhenContainValue(String key, String value) {\n    MatchPair matchPair = whenCondition.get(key);\n    if (null == matchPair) {\n        return false;\n    }\n\n    return matchPair.containeValue(value);\n}",
+                "name": "isWhenContainValue",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "key"
+                    },
+                    {
+                        "type": "String",
+                        "name": "value"
+                    }
+                ],
+                "body": "{\n    MatchPair matchPair = whenCondition.get(key);\n    if (null == matchPair) {\n        return false;\n    }\n\n    return matchPair.containeValue(value);\n}",
+                "start_point": {
+                    "row": 378,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 385,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public boolean isThenContainValue(String key, String value) {\n    MatchPair matchPair = thenCondition.get(key);\n    if (null == matchPair) {\n        return false;\n    }\n\n    return matchPair.containeValue(value);\n}",
+                "name": "isThenContainValue",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "key"
+                    },
+                    {
+                        "type": "String",
+                        "name": "value"
+                    }
+                ],
+                "body": "{\n    MatchPair matchPair = thenCondition.get(key);\n    if (null == matchPair) {\n        return false;\n    }\n\n    return matchPair.containeValue(value);\n}",
+                "start_point": {
+                    "row": 387,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 394,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public boolean isContainValue(String key, String value) {\n    return isWhenContainValue(key, value) || isThenContainValue(key, value);\n}",
+                "name": "isContainValue",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "key"
+                    },
+                    {
+                        "type": "String",
+                        "name": "value"
+                    }
+                ],
+                "body": "{\n    return isWhenContainValue(key, value) || isThenContainValue(key, value);\n}",
+                "start_point": {
+                    "row": 396,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 398,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public Map<String, MatchPair> getWhenCondition() {\n    return whenCondition;\n}",
+                "name": "getWhenCondition",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return whenCondition;\n}",
+                "start_point": {
+                    "row": 400,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 402,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public Map<String, MatchPair> getThenCondition() {\n    return thenCondition;\n}",
+                "name": "getThenCondition",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return thenCondition;\n}",
+                "start_point": {
+                    "row": 404,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 406,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public String getWhenConditionString() {\n    StringBuilder sb = new StringBuilder(512);\n    contidionToString(sb, whenCondition);\n    return sb.toString();\n}",
+                "name": "getWhenConditionString",
+                "modifiers": "public",
+                "return_type": "String",
+                "parameters": [],
+                "body": "{\n    StringBuilder sb = new StringBuilder(512);\n    contidionToString(sb, whenCondition);\n    return sb.toString();\n}",
+                "start_point": {
+                    "row": 408,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 412,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public String getThenConditionString() {\n    StringBuilder sb = new StringBuilder(512);\n    contidionToString(sb, thenCondition);\n    return sb.toString();\n}",
+                "name": "getThenConditionString",
+                "modifiers": "public",
+                "return_type": "String",
+                "parameters": [],
+                "body": "{\n    StringBuilder sb = new StringBuilder(512);\n    contidionToString(sb, thenCondition);\n    return sb.toString();\n}",
+                "start_point": {
+                    "row": 414,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 418,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic String toString() {\n    if (tostring != null)\n        return tostring;\n    StringBuilder sb = new StringBuilder(512);\n    contidionToString(sb, whenCondition);\n    sb.append(\" => \");\n    contidionToString(sb, thenCondition);\n    return tostring = sb.toString();\n}",
+                "name": "toString",
+                "modifiers": "@Override\n    public",
+                "return_type": "String",
+                "parameters": [],
+                "body": "{\n    if (tostring != null)\n        return tostring;\n    StringBuilder sb = new StringBuilder(512);\n    contidionToString(sb, whenCondition);\n    sb.append(\" => \");\n    contidionToString(sb, thenCondition);\n    return tostring = sb.toString();\n}",
+                "start_point": {
+                    "row": 420,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 429,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic int hashCode() {\n    final int prime = 31;\n    int result = 1;\n    result = prime * result + ((thenCondition == null) ? 0 : thenCondition.hashCode());\n    result = prime * result + ((whenCondition == null) ? 0 : whenCondition.hashCode());\n    return result;\n}",
+                "name": "hashCode",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    final int prime = 31;\n    int result = 1;\n    result = prime * result + ((thenCondition == null) ? 0 : thenCondition.hashCode());\n    result = prime * result + ((whenCondition == null) ? 0 : whenCondition.hashCode());\n    return result;\n}",
+                "start_point": {
+                    "row": 432,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 439,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic boolean equals(Object obj) {\n    if (this == obj)\n        return true;\n    if (obj == null)\n        return false;\n    if (getClass() != obj.getClass())\n        return false;\n    RouteRule other = (RouteRule) obj;\n    if (thenCondition == null) {\n        if (other.thenCondition != null)\n            return false;\n    } else if (!thenCondition.equals(other.thenCondition))\n        return false;\n    if (whenCondition == null) {\n        if (other.whenCondition != null)\n            return false;\n    } else if (!whenCondition.equals(other.whenCondition))\n        return false;\n    return true;\n}",
+                "name": "equals",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Object",
+                        "name": "obj"
+                    }
+                ],
+                "body": "{\n    if (this == obj)\n        return true;\n    if (obj == null)\n        return false;\n    if (getClass() != obj.getClass())\n        return false;\n    RouteRule other = (RouteRule) obj;\n    if (thenCondition == null) {\n        if (other.thenCondition != null)\n            return false;\n    } else if (!thenCondition.equals(other.thenCondition))\n        return false;\n    if (whenCondition == null) {\n        if (other.whenCondition != null)\n            return false;\n    } else if (!whenCondition.equals(other.whenCondition))\n        return false;\n    return true;\n}",
+                "start_point": {
+                    "row": 442,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 462,
+                    "column": 5
+                }
+            }
+        ]
+    },
+    {
+        "rev_path": "dubbo-admin-backend/src/main/java/org/apache/dubbo/admin/common/util/RouteRule.java",
+        "definition": "public static class MatchPair {\n    Set<String> matches = new HashSet<String>();\n    Set<String> unmatches = new HashSet<String>();\n    private volatile boolean freezed = false;\n\n    public MatchPair() {\n    }\n\n    public MatchPair(Set<String> matches, Set<String> unmatches) {\n        if (matches == null || unmatches == null) {\n            throw new IllegalArgumentException(\"argument of MatchPair is null!\");\n        }\n\n        this.matches = matches;\n        this.unmatches = unmatches;\n    }\n\n    public Set<String> getMatches() {\n        return matches;\n    }\n\n    public Set<String> getUnmatches() {\n        return unmatches;\n    }\n\n    public MatchPair copy() {\n        MatchPair ret = new MatchPair();\n        ret.matches.addAll(matches);\n        ret.unmatches.addAll(unmatches);\n        return ret;\n    }\n\n    void freeze() {\n        if (freezed) return;\n        synchronized (this) {\n            if (freezed) return;\n            matches = Collections.unmodifiableSet(matches);\n            unmatches = Collections.unmodifiableSet(unmatches);\n        }\n    }\n\n    public boolean containeValue(String value) {\n        return matches.contains(value) || unmatches.contains(value);\n    }\n\n    /**\n     * Whether a given value is matched by the {@link MatchPair}.\n     * return {@code false}, if\n     * <ol>\n     * <li>value is in unmatches\n     * <li>matches is not null, but value is not in matches.\n     * </ol>\n     * otherwise, return<code>true</code>\u3002\n     */\n    public boolean pass(String sample) {\n        if (unmatches.contains(sample)) return false;\n        if (matches.isEmpty()) return true;\n        return matches.contains(sample);\n    }\n\n    @Override\n    public String toString() {\n        return String.format(\"{matches=%s,unmatches=%s}\", matches.toString(), unmatches.toString());\n    }\n\n    // Automatic generation with Eclipse\n    @Override\n    public int hashCode() {\n        final int prime = 31;\n        int result = 1;\n        result = prime * result + ((matches == null) ? 0 : matches.hashCode());\n        result = prime * result + ((unmatches == null) ? 0 : unmatches.hashCode());\n        return result;\n    }\n\n    // Automatic generation with Eclipse\n    @Override\n    public boolean equals(Object obj) {\n        if (this == obj)\n            return true;\n        if (obj == null)\n            return false;\n        if (getClass() != obj.getClass())\n            return false;\n        MatchPair other = (MatchPair) obj;\n        if (matches == null) {\n            if (other.matches != null)\n                return false;\n        } else if (!matches.equals(other.matches))\n            return false;\n        if (unmatches == null) {\n            if (other.unmatches != null)\n                return false;\n        } else if (!unmatches.equals(other.unmatches))\n            return false;\n        return true;\n    }\n}",
+        "package": "package org.apache.dubbo.admin.common.util;",
+        "tree_path": "RouteRule.MatchPair",
+        "name": "MatchPair",
+        "modifiers": "public static",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n    Set<String> matches = new HashSet<String>();\n    Set<String> unmatches = new HashSet<String>();\n    private volatile boolean freezed = false;\n\n    public MatchPair() {\n    }\n\n    public MatchPair(Set<String> matches, Set<String> unmatches) {\n        if (matches == null || unmatches == null) {\n            throw new IllegalArgumentException(\"argument of MatchPair is null!\");\n        }\n\n        this.matches = matches;\n        this.unmatches = unmatches;\n    }\n\n    public Set<String> getMatches() {\n        return matches;\n    }\n\n    public Set<String> getUnmatches() {\n        return unmatches;\n    }\n\n    public MatchPair copy() {\n        MatchPair ret = new MatchPair();\n        ret.matches.addAll(matches);\n        ret.unmatches.addAll(unmatches);\n        return ret;\n    }\n\n    void freeze() {\n        if (freezed) return;\n        synchronized (this) {\n            if (freezed) return;\n            matches = Collections.unmodifiableSet(matches);\n            unmatches = Collections.unmodifiableSet(unmatches);\n        }\n    }\n\n    public boolean containeValue(String value) {\n        return matches.contains(value) || unmatches.contains(value);\n    }\n\n    /**\n     * Whether a given value is matched by the {@link MatchPair}.\n     * return {@code false}, if\n     * <ol>\n     * <li>value is in unmatches\n     * <li>matches is not null, but value is not in matches.\n     * </ol>\n     * otherwise, return<code>true</code>\u3002\n     */\n    public boolean pass(String sample) {\n        if (unmatches.contains(sample)) return false;\n        if (matches.isEmpty()) return true;\n        return matches.contains(sample);\n    }\n\n    @Override\n    public String toString() {\n        return String.format(\"{matches=%s,unmatches=%s}\", matches.toString(), unmatches.toString());\n    }\n\n    // Automatic generation with Eclipse\n    @Override\n    public int hashCode() {\n        final int prime = 31;\n        int result = 1;\n        result = prime * result + ((matches == null) ? 0 : matches.hashCode());\n        result = prime * result + ((unmatches == null) ? 0 : unmatches.hashCode());\n        return result;\n    }\n\n    // Automatic generation with Eclipse\n    @Override\n    public boolean equals(Object obj) {\n        if (this == obj)\n            return true;\n        if (obj == null)\n            return false;\n        if (getClass() != obj.getClass())\n            return false;\n        MatchPair other = (MatchPair) obj;\n        if (matches == null) {\n            if (other.matches != null)\n                return false;\n        } else if (!matches.equals(other.matches))\n            return false;\n        if (unmatches == null) {\n            if (other.unmatches != null)\n                return false;\n        } else if (!unmatches.equals(other.unmatches))\n            return false;\n        return true;\n    }\n}",
+        "start_point": {
+            "row": 464,
+            "column": 4
+        },
+        "end_point": {
+            "row": 561,
+            "column": 5
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "public MatchPair() {\n}",
+                "name": "MatchPair",
+                "modifiers": "public",
+                "parameters": [],
+                "body": "{\n}",
+                "constructor": true,
+                "start_point": {
+                    "row": 469,
+                    "column": 8
+                },
+                "end_point": {
+                    "row": 470,
+                    "column": 9
+                }
+            },
+            {
+                "definition": "public MatchPair(Set<String> matches, Set<String> unmatches) {\n    if (matches == null || unmatches == null) {\n        throw new IllegalArgumentException(\"argument of MatchPair is null!\");\n    }\n\n    this.matches = matches;\n    this.unmatches = unmatches;\n}",
+                "name": "MatchPair",
+                "modifiers": "public",
+                "parameters": [
+                    {
+                        "type": "Set<String>",
+                        "name": "matches"
+                    },
+                    {
+                        "type": "Set<String>",
+                        "name": "unmatches"
+                    }
+                ],
+                "body": "{\n    if (matches == null || unmatches == null) {\n        throw new IllegalArgumentException(\"argument of MatchPair is null!\");\n    }\n\n    this.matches = matches;\n    this.unmatches = unmatches;\n}",
+                "constructor": true,
+                "start_point": {
+                    "row": 472,
+                    "column": 8
+                },
+                "end_point": {
+                    "row": 479,
+                    "column": 9
+                }
+            },
+            {
+                "definition": "public Set<String> getMatches() {\n    return matches;\n}",
+                "name": "getMatches",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return matches;\n}",
+                "start_point": {
+                    "row": 481,
+                    "column": 8
+                },
+                "end_point": {
+                    "row": 483,
+                    "column": 9
+                }
+            },
+            {
+                "definition": "public Set<String> getUnmatches() {\n    return unmatches;\n}",
+                "name": "getUnmatches",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return unmatches;\n}",
+                "start_point": {
+                    "row": 485,
+                    "column": 8
+                },
+                "end_point": {
+                    "row": 487,
+                    "column": 9
+                }
+            },
+            {
+                "definition": "public MatchPair copy() {\n    MatchPair ret = new MatchPair();\n    ret.matches.addAll(matches);\n    ret.unmatches.addAll(unmatches);\n    return ret;\n}",
+                "name": "copy",
+                "modifiers": "public",
+                "return_type": "MatchPair",
+                "parameters": [],
+                "body": "{\n    MatchPair ret = new MatchPair();\n    ret.matches.addAll(matches);\n    ret.unmatches.addAll(unmatches);\n    return ret;\n}",
+                "start_point": {
+                    "row": 489,
+                    "column": 8
+                },
+                "end_point": {
+                    "row": 494,
+                    "column": 9
+                }
+            },
+            {
+                "definition": "void freeze() {\n    if (freezed) return;\n    synchronized (this) {\n        if (freezed) return;\n        matches = Collections.unmodifiableSet(matches);\n        unmatches = Collections.unmodifiableSet(unmatches);\n    }\n}",
+                "name": "freeze",
+                "modifiers": null,
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    if (freezed) return;\n    synchronized (this) {\n        if (freezed) return;\n        matches = Collections.unmodifiableSet(matches);\n        unmatches = Collections.unmodifiableSet(unmatches);\n    }\n}",
+                "start_point": {
+                    "row": 496,
+                    "column": 8
+                },
+                "end_point": {
+                    "row": 503,
+                    "column": 9
+                }
+            },
+            {
+                "definition": "public boolean containeValue(String value) {\n    return matches.contains(value) || unmatches.contains(value);\n}",
+                "name": "containeValue",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "value"
+                    }
+                ],
+                "body": "{\n    return matches.contains(value) || unmatches.contains(value);\n}",
+                "start_point": {
+                    "row": 505,
+                    "column": 8
+                },
+                "end_point": {
+                    "row": 507,
+                    "column": 9
+                }
+            },
+            {
+                "definition": "public boolean pass(String sample) {\n    if (unmatches.contains(sample)) return false;\n    if (matches.isEmpty()) return true;\n    return matches.contains(sample);\n}",
+                "name": "pass",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "sample"
+                    }
+                ],
+                "body": "{\n    if (unmatches.contains(sample)) return false;\n    if (matches.isEmpty()) return true;\n    return matches.contains(sample);\n}",
+                "start_point": {
+                    "row": 518,
+                    "column": 8
+                },
+                "end_point": {
+                    "row": 522,
+                    "column": 9
+                }
+            },
+            {
+                "definition": "@Override\npublic String toString() {\n    return String.format(\"{matches=%s,unmatches=%s}\", matches.toString(), unmatches.toString());\n}",
+                "name": "toString",
+                "modifiers": "@Override\n        public",
+                "return_type": "String",
+                "parameters": [],
+                "body": "{\n    return String.format(\"{matches=%s,unmatches=%s}\", matches.toString(), unmatches.toString());\n}",
+                "start_point": {
+                    "row": 524,
+                    "column": 8
+                },
+                "end_point": {
+                    "row": 527,
+                    "column": 9
+                }
+            },
+            {
+                "definition": "@Override\npublic int hashCode() {\n    final int prime = 31;\n    int result = 1;\n    result = prime * result + ((matches == null) ? 0 : matches.hashCode());\n    result = prime * result + ((unmatches == null) ? 0 : unmatches.hashCode());\n    return result;\n}",
+                "name": "hashCode",
+                "modifiers": "@Override\n        public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    final int prime = 31;\n    int result = 1;\n    result = prime * result + ((matches == null) ? 0 : matches.hashCode());\n    result = prime * result + ((unmatches == null) ? 0 : unmatches.hashCode());\n    return result;\n}",
+                "start_point": {
+                    "row": 530,
+                    "column": 8
+                },
+                "end_point": {
+                    "row": 537,
+                    "column": 9
+                }
+            },
+            {
+                "definition": "@Override\npublic boolean equals(Object obj) {\n    if (this == obj)\n        return true;\n    if (obj == null)\n        return false;\n    if (getClass() != obj.getClass())\n        return false;\n    MatchPair other = (MatchPair) obj;\n    if (matches == null) {\n        if (other.matches != null)\n            return false;\n    } else if (!matches.equals(other.matches))\n        return false;\n    if (unmatches == null) {\n        if (other.unmatches != null)\n            return false;\n    } else if (!unmatches.equals(other.unmatches))\n        return false;\n    return true;\n}",
+                "name": "equals",
+                "modifiers": "@Override\n        public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Object",
+                        "name": "obj"
+                    }
+                ],
+                "body": "{\n    if (this == obj)\n        return true;\n    if (obj == null)\n        return false;\n    if (getClass() != obj.getClass())\n        return false;\n    MatchPair other = (MatchPair) obj;\n    if (matches == null) {\n        if (other.matches != null)\n            return false;\n    } else if (!matches.equals(other.matches))\n        return false;\n    if (unmatches == null) {\n        if (other.unmatches != null)\n            return false;\n    } else if (!unmatches.equals(other.unmatches))\n        return false;\n    return true;\n}",
+                "start_point": {
+                    "row": 540,
+                    "column": 8
+                },
+                "end_point": {
+                    "row": 560,
+                    "column": 9
+                }
+            }
+        ]
+    }
+]

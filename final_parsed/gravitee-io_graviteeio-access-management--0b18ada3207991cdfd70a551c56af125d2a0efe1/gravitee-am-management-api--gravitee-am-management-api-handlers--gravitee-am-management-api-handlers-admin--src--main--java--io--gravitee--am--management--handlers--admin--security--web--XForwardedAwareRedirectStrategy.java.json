@@ -1,0 +1,100 @@
+[
+    {
+        "rev_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-admin/src/main/java/io/gravitee/am/management/handlers/admin/security/web/XForwardedAwareRedirectStrategy.java",
+        "definition": "public class XForwardedAwareRedirectStrategy implements RedirectStrategy {\n\n    private final Logger logger = LoggerFactory.getLogger(XForwardedAwareRedirectStrategy.class);\n\n    private boolean contextRelative;\n\n    @Override\n    public void sendRedirect(HttpServletRequest request, HttpServletResponse response, String url) throws IOException {\n        String redirectUrl = calculateRedirectUrl(request.getContextPath(), url);\n\n        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(redirectUrl);\n\n        String scheme = request.getHeader(HttpHeaders.X_FORWARDED_PROTO);\n        if (scheme != null && !scheme.isEmpty()) {\n            builder.scheme(scheme);\n        }\n\n        String host = request.getHeader(HttpHeaders.X_FORWARDED_HOST);\n        if (host != null && !host.isEmpty()) {\n            if (host.contains(\":\")) {\n                // Forwarded host contains both host and port\n                String [] parts = host.split(\":\");\n                builder.host(parts[0]);\n                builder.port(parts[1]);\n            } else {\n                builder.host(host);\n            }\n        }\n\n        redirectUrl = response.encodeRedirectURL(builder.build(false).toUriString());\n\n        if (logger.isDebugEnabled()) {\n            logger.debug(\"Redirecting to '{}'\", redirectUrl);\n        }\n\n        response.sendRedirect(redirectUrl);\n    }\n\n    private String calculateRedirectUrl(String contextPath, String url) {\n        if (!UrlUtils.isAbsoluteUrl(url)) {\n            if (contextRelative) {\n                return url;\n            } else {\n                return contextPath + url;\n            }\n        }\n\n        // Full URL, including http(s)://\n\n        if (!contextRelative) {\n            return url;\n        }\n\n        // Calculate the relative URL from the fully qualified URL, minus the last\n        // occurrence of the scheme and base context.\n        url = url.substring(url.lastIndexOf(\"://\") + 3); // strip off scheme\n        url = url.substring(url.indexOf(contextPath) + contextPath.length());\n\n        if (url.length() > 1 && url.charAt(0) == '/') {\n            url = url.substring(1);\n        }\n\n        return url;\n    }\n\n    /**\n     * If <tt>true</tt>, causes any redirection URLs to be calculated minus the protocol\n     * and context path (defaults to <tt>false</tt>).\n     */\n    public void setContextRelative(boolean useRelativeContext) {\n        this.contextRelative = useRelativeContext;\n    }\n\n}",
+        "package": "package io.gravitee.am.management.handlers.admin.security.web;",
+        "tree_path": "XForwardedAwareRedirectStrategy",
+        "name": "XForwardedAwareRedirectStrategy",
+        "modifiers": "public",
+        "superclass": null,
+        "super_interfaces": "implements RedirectStrategy",
+        "body": "{\n\n    private final Logger logger = LoggerFactory.getLogger(XForwardedAwareRedirectStrategy.class);\n\n    private boolean contextRelative;\n\n    @Override\n    public void sendRedirect(HttpServletRequest request, HttpServletResponse response, String url) throws IOException {\n        String redirectUrl = calculateRedirectUrl(request.getContextPath(), url);\n\n        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(redirectUrl);\n\n        String scheme = request.getHeader(HttpHeaders.X_FORWARDED_PROTO);\n        if (scheme != null && !scheme.isEmpty()) {\n            builder.scheme(scheme);\n        }\n\n        String host = request.getHeader(HttpHeaders.X_FORWARDED_HOST);\n        if (host != null && !host.isEmpty()) {\n            if (host.contains(\":\")) {\n                // Forwarded host contains both host and port\n                String [] parts = host.split(\":\");\n                builder.host(parts[0]);\n                builder.port(parts[1]);\n            } else {\n                builder.host(host);\n            }\n        }\n\n        redirectUrl = response.encodeRedirectURL(builder.build(false).toUriString());\n\n        if (logger.isDebugEnabled()) {\n            logger.debug(\"Redirecting to '{}'\", redirectUrl);\n        }\n\n        response.sendRedirect(redirectUrl);\n    }\n\n    private String calculateRedirectUrl(String contextPath, String url) {\n        if (!UrlUtils.isAbsoluteUrl(url)) {\n            if (contextRelative) {\n                return url;\n            } else {\n                return contextPath + url;\n            }\n        }\n\n        // Full URL, including http(s)://\n\n        if (!contextRelative) {\n            return url;\n        }\n\n        // Calculate the relative URL from the fully qualified URL, minus the last\n        // occurrence of the scheme and base context.\n        url = url.substring(url.lastIndexOf(\"://\") + 3); // strip off scheme\n        url = url.substring(url.indexOf(contextPath) + contextPath.length());\n\n        if (url.length() > 1 && url.charAt(0) == '/') {\n            url = url.substring(1);\n        }\n\n        return url;\n    }\n\n    /**\n     * If <tt>true</tt>, causes any redirection URLs to be calculated minus the protocol\n     * and context path (defaults to <tt>false</tt>).\n     */\n    public void setContextRelative(boolean useRelativeContext) {\n        this.contextRelative = useRelativeContext;\n    }\n\n}",
+        "start_point": {
+            "row": 32,
+            "column": 0
+        },
+        "end_point": {
+            "row": 105,
+            "column": 1
+        },
+        "file_mode": "Renamed-Modified",
+        "map_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-oauth2/src/main/java/io/gravitee/am/management/handlers/oauth2/security/web/XForwardedAwareRedirectStrategy.java",
+        "methods": [
+            {
+                "definition": "@Override\npublic void sendRedirect(HttpServletRequest request, HttpServletResponse response, String url) throws IOException {\n    String redirectUrl = calculateRedirectUrl(request.getContextPath(), url);\n\n    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(redirectUrl);\n\n    String scheme = request.getHeader(HttpHeaders.X_FORWARDED_PROTO);\n    if (scheme != null && !scheme.isEmpty()) {\n        builder.scheme(scheme);\n    }\n\n    String host = request.getHeader(HttpHeaders.X_FORWARDED_HOST);\n    if (host != null && !host.isEmpty()) {\n        if (host.contains(\":\")) {\n            // Forwarded host contains both host and port\n            String [] parts = host.split(\":\");\n            builder.host(parts[0]);\n            builder.port(parts[1]);\n        } else {\n            builder.host(host);\n        }\n    }\n\n    redirectUrl = response.encodeRedirectURL(builder.build(false).toUriString());\n\n    if (logger.isDebugEnabled()) {\n        logger.debug(\"Redirecting to '{}'\", redirectUrl);\n    }\n\n    response.sendRedirect(redirectUrl);\n}",
+                "name": "sendRedirect",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "HttpServletRequest",
+                        "name": "request"
+                    },
+                    {
+                        "type": "HttpServletResponse",
+                        "name": "response"
+                    },
+                    {
+                        "type": "String",
+                        "name": "url"
+                    }
+                ],
+                "body": "{\n    String redirectUrl = calculateRedirectUrl(request.getContextPath(), url);\n\n    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(redirectUrl);\n\n    String scheme = request.getHeader(HttpHeaders.X_FORWARDED_PROTO);\n    if (scheme != null && !scheme.isEmpty()) {\n        builder.scheme(scheme);\n    }\n\n    String host = request.getHeader(HttpHeaders.X_FORWARDED_HOST);\n    if (host != null && !host.isEmpty()) {\n        if (host.contains(\":\")) {\n            // Forwarded host contains both host and port\n            String [] parts = host.split(\":\");\n            builder.host(parts[0]);\n            builder.port(parts[1]);\n        } else {\n            builder.host(host);\n        }\n    }\n\n    redirectUrl = response.encodeRedirectURL(builder.build(false).toUriString());\n\n    if (logger.isDebugEnabled()) {\n        logger.debug(\"Redirecting to '{}'\", redirectUrl);\n    }\n\n    response.sendRedirect(redirectUrl);\n}",
+                "start_point": {
+                    "row": 38,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 68,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "private String calculateRedirectUrl(String contextPath, String url) {\n    if (!UrlUtils.isAbsoluteUrl(url)) {\n        if (contextRelative) {\n            return url;\n        } else {\n            return contextPath + url;\n        }\n    }\n\n    // Full URL, including http(s)://\n\n    if (!contextRelative) {\n        return url;\n    }\n\n    // Calculate the relative URL from the fully qualified URL, minus the last\n    // occurrence of the scheme and base context.\n    url = url.substring(url.lastIndexOf(\"://\") + 3); // strip off scheme\n    url = url.substring(url.indexOf(contextPath) + contextPath.length());\n\n    if (url.length() > 1 && url.charAt(0) == '/') {\n        url = url.substring(1);\n    }\n\n    return url;\n}",
+                "name": "calculateRedirectUrl",
+                "modifiers": "private",
+                "return_type": "String",
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "contextPath"
+                    },
+                    {
+                        "type": "String",
+                        "name": "url"
+                    }
+                ],
+                "body": "{\n    if (!UrlUtils.isAbsoluteUrl(url)) {\n        if (contextRelative) {\n            return url;\n        } else {\n            return contextPath + url;\n        }\n    }\n\n    // Full URL, including http(s)://\n\n    if (!contextRelative) {\n        return url;\n    }\n\n    // Calculate the relative URL from the fully qualified URL, minus the last\n    // occurrence of the scheme and base context.\n    url = url.substring(url.lastIndexOf(\"://\") + 3); // strip off scheme\n    url = url.substring(url.indexOf(contextPath) + contextPath.length());\n\n    if (url.length() > 1 && url.charAt(0) == '/') {\n        url = url.substring(1);\n    }\n\n    return url;\n}",
+                "start_point": {
+                    "row": 70,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 95,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public void setContextRelative(boolean useRelativeContext) {\n    this.contextRelative = useRelativeContext;\n}",
+                "name": "setContextRelative",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "name": "useRelativeContext"
+                    }
+                ],
+                "body": "{\n    this.contextRelative = useRelativeContext;\n}",
+                "start_point": {
+                    "row": 101,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 103,
+                    "column": 5
+                }
+            }
+        ]
+    }
+]

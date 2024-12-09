@@ -1,0 +1,57 @@
+[
+    {
+        "rev_path": "gravitee-am-management-api/gravitee-am-management-api-service/src/main/java/io/gravitee/am/management/service/impl/upgrades/DeployAdminDomainUpgrader.java",
+        "definition": "@Component\npublic class DeployAdminDomainUpgrader implements Upgrader, Ordered {\n\n    private static final Logger logger = LoggerFactory.getLogger(DeployAdminDomainUpgrader.class);\n    private final static String ADMIN_DOMAIN = \"admin\";\n\n    @Autowired\n    private DomainService domainService;\n\n    @Autowired\n    private EventManager eventManager;\n\n    @Override\n    public boolean upgrade() {\n        logger.info(\"Deploying registered {} domain\", ADMIN_DOMAIN);\n        try {\n            // TODO Async call\n            Domain adminDomain = domainService.findById(ADMIN_DOMAIN).blockingGet();\n            eventManager.publishEvent(DomainEvent.DEPLOY, adminDomain);\n            return true;\n        } catch (DomainNotFoundException dnfe) {\n            logger.error(\"Failed to find admin domain\", dnfe);\n            throw new IllegalStateException(\"Failed to deploy admin domain\", dnfe);\n        }\n    }\n\n    @Override\n    public int getOrder() {\n        return 170;\n    }\n}",
+        "package": "package io.gravitee.am.management.service.impl.upgrades;",
+        "tree_path": "DeployAdminDomainUpgrader",
+        "name": "DeployAdminDomainUpgrader",
+        "modifiers": "@Component\npublic",
+        "superclass": null,
+        "super_interfaces": "implements Upgrader, Ordered",
+        "body": "{\n\n    private static final Logger logger = LoggerFactory.getLogger(DeployAdminDomainUpgrader.class);\n    private final static String ADMIN_DOMAIN = \"admin\";\n\n    @Autowired\n    private DomainService domainService;\n\n    @Autowired\n    private EventManager eventManager;\n\n    @Override\n    public boolean upgrade() {\n        logger.info(\"Deploying registered {} domain\", ADMIN_DOMAIN);\n        try {\n            // TODO Async call\n            Domain adminDomain = domainService.findById(ADMIN_DOMAIN).blockingGet();\n            eventManager.publishEvent(DomainEvent.DEPLOY, adminDomain);\n            return true;\n        } catch (DomainNotFoundException dnfe) {\n            logger.error(\"Failed to find admin domain\", dnfe);\n            throw new IllegalStateException(\"Failed to deploy admin domain\", dnfe);\n        }\n    }\n\n    @Override\n    public int getOrder() {\n        return 170;\n    }\n}",
+        "start_point": {
+            "row": 32,
+            "column": 0
+        },
+        "end_point": {
+            "row": 62,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "@Override\npublic boolean upgrade() {\n    logger.info(\"Deploying registered {} domain\", ADMIN_DOMAIN);\n    try {\n        // TODO Async call\n        Domain adminDomain = domainService.findById(ADMIN_DOMAIN).blockingGet();\n        eventManager.publishEvent(DomainEvent.DEPLOY, adminDomain);\n        return true;\n    } catch (DomainNotFoundException dnfe) {\n        logger.error(\"Failed to find admin domain\", dnfe);\n        throw new IllegalStateException(\"Failed to deploy admin domain\", dnfe);\n    }\n}",
+                "name": "upgrade",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    logger.info(\"Deploying registered {} domain\", ADMIN_DOMAIN);\n    try {\n        // TODO Async call\n        Domain adminDomain = domainService.findById(ADMIN_DOMAIN).blockingGet();\n        eventManager.publishEvent(DomainEvent.DEPLOY, adminDomain);\n        return true;\n    } catch (DomainNotFoundException dnfe) {\n        logger.error(\"Failed to find admin domain\", dnfe);\n        throw new IllegalStateException(\"Failed to deploy admin domain\", dnfe);\n    }\n}",
+                "start_point": {
+                    "row": 44,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 56,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@Override\npublic int getOrder() {\n    return 170;\n}",
+                "name": "getOrder",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return 170;\n}",
+                "start_point": {
+                    "row": 58,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 61,
+                    "column": 5
+                }
+            }
+        ]
+    }
+]
