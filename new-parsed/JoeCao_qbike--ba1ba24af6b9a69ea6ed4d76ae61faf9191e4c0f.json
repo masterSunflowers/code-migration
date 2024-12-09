@@ -1,0 +1,463 @@
+[
+    {
+        "rev_path": "intention/src/main/java/club/newtech/qbike/intention/controller/RibbonHystrixController.java",
+        "definition": "@RestController\npublic class RibbonHystrixController {\n    @Autowired\n    private UserRibbonHystrixApi userRibbonHystrixApi;\n    @Autowired\n    private IntentionService intentionService;\n\n    @GetMapping(\"/ribbon/{id}\")\n    public Customer findById(@PathVariable Integer id) {\n        return this.userRibbonHystrixApi.findById(id);\n    }\n\n    @PostMapping(\"/intentions/place\")\n    public void place(String userId, String myPoint, String dest) {\n        intentionService.placeIntention(userId, myPoint, dest);\n    }\n}",
+        "package": "package club.newtech.qbike.intention.controller;",
+        "tree_path": "RibbonHystrixController",
+        "name": "RibbonHystrixController",
+        "modifiers": "@RestController\npublic",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n    @Autowired\n    private UserRibbonHystrixApi userRibbonHystrixApi;\n    @Autowired\n    private IntentionService intentionService;\n\n    @GetMapping(\"/ribbon/{id}\")\n    public Customer findById(@PathVariable Integer id) {\n        return this.userRibbonHystrixApi.findById(id);\n    }\n\n    @PostMapping(\"/intentions/place\")\n    public void place(String userId, String myPoint, String dest) {\n        intentionService.placeIntention(userId, myPoint, dest);\n    }\n}",
+        "start_point": {
+            "row": 11,
+            "column": 0
+        },
+        "end_point": {
+            "row": 27,
+            "column": 1
+        },
+        "file_mode": "Added",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "@GetMapping(\"/ribbon/{id}\")\npublic Customer findById(@PathVariable Integer id) {\n    return this.userRibbonHystrixApi.findById(id);\n}",
+                "name": "findById",
+                "modifiers": "@GetMapping(\"/ribbon/{id}\")\n    public",
+                "return_type": "Customer",
+                "parameters": [
+                    {
+                        "type": "@PathVariable",
+                        "name": "Integer"
+                    }
+                ],
+                "body": "{\n    return this.userRibbonHystrixApi.findById(id);\n}",
+                "start_point": {
+                    "row": 18,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 21,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "@PostMapping(\"/intentions/place\")\npublic void place(String userId, String myPoint, String dest) {\n    intentionService.placeIntention(userId, myPoint, dest);\n}",
+                "name": "place",
+                "modifiers": "@PostMapping(\"/intentions/place\")\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "userId"
+                    },
+                    {
+                        "type": "String",
+                        "name": "myPoint"
+                    },
+                    {
+                        "type": "String",
+                        "name": "dest"
+                    }
+                ],
+                "body": "{\n    intentionService.placeIntention(userId, myPoint, dest);\n}",
+                "start_point": {
+                    "row": 23,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 26,
+                    "column": 5
+                }
+            }
+        ]
+    },
+    {
+        "rev_path": "intention/src/main/java/club/newtech/qbike/intention/domain/core/root/Intention.java",
+        "definition": "@Data\n@ToString\n@Accessors(fluent = false, chain = true)\n@Entity\npublic class Intention {\n    @Id\n    @GeneratedValue(strategy = GenerationType.IDENTITY)\n    private int mid;\n    private String startPoint;\n    private String destPoint;\n    @Embedded\n    private Customer customer;\n    @Enumerated(value = STRING)\n    @Column(length = 32, nullable = false)\n    private Status status;\n}",
+        "package": "package club.newtech.qbike.intention.domain.core.root;",
+        "tree_path": "Intention",
+        "name": "Intention",
+        "modifiers": "@Data\n@ToString\n@Accessors(fluent = false, chain = true)\n@Entity\npublic",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n    @Id\n    @GeneratedValue(strategy = GenerationType.IDENTITY)\n    private int mid;\n    private String startPoint;\n    private String destPoint;\n    @Embedded\n    private Customer customer;\n    @Enumerated(value = STRING)\n    @Column(length = 32, nullable = false)\n    private Status status;\n}",
+        "start_point": {
+            "row": 12,
+            "column": 0
+        },
+        "end_point": {
+            "row": 27,
+            "column": 1
+        },
+        "file_mode": "Added",
+        "map_path": null,
+        "methods": []
+    },
+    {
+        "rev_path": "intention/src/main/java/club/newtech/qbike/intention/domain/core/vo/Customer.java",
+        "definition": "@Embeddable\n@Data\npublic class Customer {\n    private int id;\n    private String name;\n    private String mobile;\n}",
+        "package": "package club.newtech.qbike.intention.domain.core.vo;",
+        "tree_path": "Customer",
+        "name": "Customer",
+        "modifiers": "@Embeddable\n@Data\npublic",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n    private int id;\n    private String name;\n    private String mobile;\n}",
+        "start_point": {
+            "row": 6,
+            "column": 0
+        },
+        "end_point": {
+            "row": 12,
+            "column": 1
+        },
+        "file_mode": "Added",
+        "map_path": null,
+        "methods": []
+    },
+    {
+        "rev_path": "intention/src/main/java/club/newtech/qbike/intention/domain/service/IntentionService.java",
+        "definition": "@Service\npublic class IntentionService {\n    @Autowired\n    IntentionRepository intentionRepository;\n    @Autowired\n    UserRibbonHystrixApi userApi;\n\n    public void placeIntention(String userId, String myPoint, String destPoint) {\n        Customer customer = userApi.findById(Integer.parseInt(userId));\n        Intention intention = new Intention()\n                .setDestPoint(destPoint)\n                .setStartPoint(myPoint)\n                .setCustomer(customer);\n        intentionRepository.save(intention);\n\n    }\n\n}",
+        "package": "package club.newtech.qbike.intention.domain.service;",
+        "tree_path": "IntentionService",
+        "name": "IntentionService",
+        "modifiers": "@Service\npublic",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n    @Autowired\n    IntentionRepository intentionRepository;\n    @Autowired\n    UserRibbonHystrixApi userApi;\n\n    public void placeIntention(String userId, String myPoint, String destPoint) {\n        Customer customer = userApi.findById(Integer.parseInt(userId));\n        Intention intention = new Intention()\n                .setDestPoint(destPoint)\n                .setStartPoint(myPoint)\n                .setCustomer(customer);\n        intentionRepository.save(intention);\n\n    }\n\n}",
+        "start_point": {
+            "row": 9,
+            "column": 0
+        },
+        "end_point": {
+            "row": 26,
+            "column": 1
+        },
+        "file_mode": "Added",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "public void placeIntention(String userId, String myPoint, String destPoint) {\n    Customer customer = userApi.findById(Integer.parseInt(userId));\n    Intention intention = new Intention()\n            .setDestPoint(destPoint)\n            .setStartPoint(myPoint)\n            .setCustomer(customer);\n    intentionRepository.save(intention);\n\n}",
+                "name": "placeIntention",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "userId"
+                    },
+                    {
+                        "type": "String",
+                        "name": "myPoint"
+                    },
+                    {
+                        "type": "String",
+                        "name": "destPoint"
+                    }
+                ],
+                "body": "{\n    Customer customer = userApi.findById(Integer.parseInt(userId));\n    Intention intention = new Intention()\n            .setDestPoint(destPoint)\n            .setStartPoint(myPoint)\n            .setCustomer(customer);\n    intentionRepository.save(intention);\n\n}",
+                "start_point": {
+                    "row": 16,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 24,
+                    "column": 5
+                }
+            }
+        ]
+    },
+    {
+        "rev_path": "intention/src/main/java/club/newtech/qbike/intention/infrastructure/UserRibbonHystrixApi.java",
+        "definition": "@Service\npublic class UserRibbonHystrixApi {\n    private static final Logger LOGGER = LoggerFactory.getLogger(UserRibbonHystrixApi.class);\n    @Autowired\n    private RestTemplate restTemplate;\n\n    /**\n     * \u4f7f\u7528@HystrixCommand\u6ce8\u89e3\u6307\u5b9a\u5f53\u8be5\u65b9\u6cd5\u53d1\u751f\u5f02\u5e38\u65f6\u8c03\u7528\u7684\u65b9\u6cd5\n     *\n     * @param id id\n     * @return \u901a\u8fc7id\u67e5\u8be2\u5230\u7684\u7528\u6237\n     */\n    @HystrixCommand(fallbackMethod = \"fallback\")\n    public Customer findById(Integer id) {\n        return this.restTemplate.getForObject(\"http://QBIKE-UC/users/\" + id, Customer.class);\n    }\n\n    /**\n     * hystrix fallback\u65b9\u6cd5\n     *\n     * @param id id\n     * @return \u9ed8\u8ba4\u7684\u7528\u6237\n     */\n    public Customer fallback(Integer id) {\n        UserRibbonHystrixApi.LOGGER.info(\"\u5f02\u5e38\u53d1\u751f\uff0c\u8fdb\u5165fallback\u65b9\u6cd5\uff0c\u63a5\u6536\u7684\u53c2\u6570\uff1aid = {}\", id);\n        Customer customer = new Customer();\n        customer.setId(-1);\n        customer.setName(\"default username\");\n        customer.setMobile(\"0000\");\n        return customer;\n    }\n}",
+        "package": "package club.newtech.qbike.intention.infrastructure;",
+        "tree_path": "UserRibbonHystrixApi",
+        "name": "UserRibbonHystrixApi",
+        "modifiers": "@Service\npublic",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n    private static final Logger LOGGER = LoggerFactory.getLogger(UserRibbonHystrixApi.class);\n    @Autowired\n    private RestTemplate restTemplate;\n\n    /**\n     * \u4f7f\u7528@HystrixCommand\u6ce8\u89e3\u6307\u5b9a\u5f53\u8be5\u65b9\u6cd5\u53d1\u751f\u5f02\u5e38\u65f6\u8c03\u7528\u7684\u65b9\u6cd5\n     *\n     * @param id id\n     * @return \u901a\u8fc7id\u67e5\u8be2\u5230\u7684\u7528\u6237\n     */\n    @HystrixCommand(fallbackMethod = \"fallback\")\n    public Customer findById(Integer id) {\n        return this.restTemplate.getForObject(\"http://QBIKE-UC/users/\" + id, Customer.class);\n    }\n\n    /**\n     * hystrix fallback\u65b9\u6cd5\n     *\n     * @param id id\n     * @return \u9ed8\u8ba4\u7684\u7528\u6237\n     */\n    public Customer fallback(Integer id) {\n        UserRibbonHystrixApi.LOGGER.info(\"\u5f02\u5e38\u53d1\u751f\uff0c\u8fdb\u5165fallback\u65b9\u6cd5\uff0c\u63a5\u6536\u7684\u53c2\u6570\uff1aid = {}\", id);\n        Customer customer = new Customer();\n        customer.setId(-1);\n        customer.setName(\"default username\");\n        customer.setMobile(\"0000\");\n        return customer;\n    }\n}",
+        "start_point": {
+            "row": 10,
+            "column": 0
+        },
+        "end_point": {
+            "row": 41,
+            "column": 1
+        },
+        "file_mode": "Added",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "@HystrixCommand(fallbackMethod = \"fallback\")\npublic Customer findById(Integer id) {\n    return this.restTemplate.getForObject(\"http://QBIKE-UC/users/\" + id, Customer.class);\n}",
+                "name": "findById",
+                "modifiers": "@HystrixCommand(fallbackMethod = \"fallback\")\n    public",
+                "return_type": "Customer",
+                "parameters": [
+                    {
+                        "type": "Integer",
+                        "name": "id"
+                    }
+                ],
+                "body": "{\n    return this.restTemplate.getForObject(\"http://QBIKE-UC/users/\" + id, Customer.class);\n}",
+                "start_point": {
+                    "row": 22,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 25,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public Customer fallback(Integer id) {\n    UserRibbonHystrixApi.LOGGER.info(\"\u5f02\u5e38\u53d1\u751f\uff0c\u8fdb\u5165fallback\u65b9\u6cd5\uff0c\u63a5\u6536\u7684\u53c2\u6570\uff1aid = {}\", id);\n    Customer customer = new Customer();\n    customer.setId(-1);\n    customer.setName(\"default username\");\n    customer.setMobile(\"0000\");\n    return customer;\n}",
+                "name": "fallback",
+                "modifiers": "public",
+                "return_type": "Customer",
+                "parameters": [
+                    {
+                        "type": "Integer",
+                        "name": "id"
+                    }
+                ],
+                "body": "{\n    UserRibbonHystrixApi.LOGGER.info(\"\u5f02\u5e38\u53d1\u751f\uff0c\u8fdb\u5165fallback\u65b9\u6cd5\uff0c\u63a5\u6536\u7684\u53c2\u6570\uff1aid = {}\", id);\n    Customer customer = new Customer();\n    customer.setId(-1);\n    customer.setName(\"default username\");\n    customer.setMobile(\"0000\");\n    return customer;\n}",
+                "start_point": {
+                    "row": 33,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 40,
+                    "column": 5
+                }
+            }
+        ]
+    },
+    {
+        "rev_path": "trip/src/main/java/club/newtech/qbike/trip/controller/TripController.java",
+        "definition": "@RestController\npublic class TripController {\n    @Autowired\n    TripService tripService;\n\n    @PostMapping(\"/trips/updatePostion\")\n    public void positionUpdate(Integer driverId, String position) {\n        tripService.updatePosition(driverId, position);\n    }\n}",
+        "package": "package club.newtech.qbike.trip.controller;",
+        "tree_path": "TripController",
+        "name": "TripController",
+        "modifiers": "@RestController\npublic",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n    @Autowired\n    TripService tripService;\n\n    @PostMapping(\"/trips/updatePostion\")\n    public void positionUpdate(Integer driverId, String position) {\n        tripService.updatePosition(driverId, position);\n    }\n}",
+        "start_point": {
+            "row": 7,
+            "column": 0
+        },
+        "end_point": {
+            "row": 16,
+            "column": 1
+        },
+        "file_mode": "Added",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "@PostMapping(\"/trips/updatePostion\")\npublic void positionUpdate(Integer driverId, String position) {\n    tripService.updatePosition(driverId, position);\n}",
+                "name": "positionUpdate",
+                "modifiers": "@PostMapping(\"/trips/updatePostion\")\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Integer",
+                        "name": "driverId"
+                    },
+                    {
+                        "type": "String",
+                        "name": "position"
+                    }
+                ],
+                "body": "{\n    tripService.updatePosition(driverId, position);\n}",
+                "start_point": {
+                    "row": 12,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 15,
+                    "column": 5
+                }
+            }
+        ]
+    },
+    {
+        "rev_path": "trip/src/main/java/club/newtech/qbike/trip/domain/core/root/Trip.java",
+        "definition": "@Data\n@ToString\n@Accessors(fluent = false, chain = true)\n@Entity\npublic class Trip {\n    @Id\n    @GeneratedValue(strategy = GenerationType.IDENTITY)\n    private int tid;\n    private String myPostion;\n    @Enumerated(value = STRING)\n    @Column(length = 32, nullable = false)\n    private Status status;\n    @Embedded\n    private Driver driver;\n\n}",
+        "package": "package club.newtech.qbike.trip.domain.core.root;",
+        "tree_path": "Trip",
+        "name": "Trip",
+        "modifiers": "@Data\n@ToString\n@Accessors(fluent = false, chain = true)\n@Entity\npublic",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n    @Id\n    @GeneratedValue(strategy = GenerationType.IDENTITY)\n    private int tid;\n    private String myPostion;\n    @Enumerated(value = STRING)\n    @Column(length = 32, nullable = false)\n    private Status status;\n    @Embedded\n    private Driver driver;\n\n}",
+        "start_point": {
+            "row": 12,
+            "column": 0
+        },
+        "end_point": {
+            "row": 27,
+            "column": 1
+        },
+        "file_mode": "Added",
+        "map_path": null,
+        "methods": []
+    },
+    {
+        "rev_path": "trip/src/main/java/club/newtech/qbike/trip/domain/service/TripService.java",
+        "definition": "@Service\n@Transactional\npublic class TripService {\n    @Autowired\n    TripRepository tripRepository;\n    @Autowired\n    UserRibbonHystrixApi userService;\n\n    public void updatePosition(Integer driverId, String postion) {\n        Trip trip = tripRepository.findOne(driverId);\n        if (trip != null) {\n            tripRepository.save(trip);\n        } else {\n            Driver driver = userService.findById(driverId);\n            trip = new Trip().setDriver(driver).setMyPostion(postion).setStatus(Status.ONLINE);\n            tripRepository.save(trip);\n        }\n\n    }\n}",
+        "package": "package club.newtech.qbike.trip.domain.service;",
+        "tree_path": "TripService",
+        "name": "TripService",
+        "modifiers": "@Service\n@Transactional\npublic",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n    @Autowired\n    TripRepository tripRepository;\n    @Autowired\n    UserRibbonHystrixApi userService;\n\n    public void updatePosition(Integer driverId, String postion) {\n        Trip trip = tripRepository.findOne(driverId);\n        if (trip != null) {\n            tripRepository.save(trip);\n        } else {\n            Driver driver = userService.findById(driverId);\n            trip = new Trip().setDriver(driver).setMyPostion(postion).setStatus(Status.ONLINE);\n            tripRepository.save(trip);\n        }\n\n    }\n}",
+        "start_point": {
+            "row": 11,
+            "column": 0
+        },
+        "end_point": {
+            "row": 30,
+            "column": 1
+        },
+        "file_mode": "Added",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "public void updatePosition(Integer driverId, String postion) {\n    Trip trip = tripRepository.findOne(driverId);\n    if (trip != null) {\n        tripRepository.save(trip);\n    } else {\n        Driver driver = userService.findById(driverId);\n        trip = new Trip().setDriver(driver).setMyPostion(postion).setStatus(Status.ONLINE);\n        tripRepository.save(trip);\n    }\n\n}",
+                "name": "updatePosition",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Integer",
+                        "name": "driverId"
+                    },
+                    {
+                        "type": "String",
+                        "name": "postion"
+                    }
+                ],
+                "body": "{\n    Trip trip = tripRepository.findOne(driverId);\n    if (trip != null) {\n        tripRepository.save(trip);\n    } else {\n        Driver driver = userService.findById(driverId);\n        trip = new Trip().setDriver(driver).setMyPostion(postion).setStatus(Status.ONLINE);\n        tripRepository.save(trip);\n    }\n\n}",
+                "start_point": {
+                    "row": 19,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 29,
+                    "column": 5
+                }
+            }
+        ]
+    },
+    {
+        "rev_path": "uc/src/main/java/club/newtech/qbike/uc/domain/root/User.java",
+        "definition": "@Entity\n@Table(name=\"T_USER\")\n@Data\npublic class User {\n    @Id\n    @GeneratedValue(strategy = GenerationType.IDENTITY)\n    private int id;\n    @Column(length = 64)\n    private String name;\n    @Column(length = 64, nullable = false)\n    private String mobile;\n\n    @Enumerated(value = STRING)\n    @Column(length = 32, nullable = false)\n    private Type type;\n\n}",
+        "package": "package club.newtech.qbike.uc.domain.root;",
+        "tree_path": "User",
+        "name": "User",
+        "modifiers": "@Entity\n@Table(name=\"T_USER\")\n@Data\npublic",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n    @Id\n    @GeneratedValue(strategy = GenerationType.IDENTITY)\n    private int id;\n    @Column(length = 64)\n    private String name;\n    @Column(length = 64, nullable = false)\n    private String mobile;\n\n    @Enumerated(value = STRING)\n    @Column(length = 32, nullable = false)\n    private Type type;\n\n}",
+        "start_point": {
+            "row": 9,
+            "column": 0
+        },
+        "end_point": {
+            "row": 25,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": []
+    },
+    {
+        "rev_path": "trip/src/main/java/club/newtech/qbike/trip/domain/core/vo/Driver.java",
+        "definition": "@Embeddable\n@Data\npublic class Driver {\n    private int id;\n    private String name;\n    private String mobile;\n}",
+        "package": "package club.newtech.qbike.trip.domain.core.vo;",
+        "tree_path": "Driver",
+        "name": "Driver",
+        "modifiers": "@Embeddable\n@Data\npublic",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n    private int id;\n    private String name;\n    private String mobile;\n}",
+        "start_point": {
+            "row": 6,
+            "column": 0
+        },
+        "end_point": {
+            "row": 12,
+            "column": 1
+        },
+        "file_mode": "Renamed",
+        "map_path": "intention/src/main/java/club/newtech/qbike/domain/core/vo/User.java",
+        "methods": []
+    },
+    {
+        "rev_path": "trip/src/main/java/club/newtech/qbike/trip/infrastructure/UserRibbonHystrixApi.java",
+        "definition": "@Service\npublic class UserRibbonHystrixApi {\n    private static final Logger LOGGER = LoggerFactory.getLogger(UserRibbonHystrixApi.class);\n    @Autowired\n    private RestTemplate restTemplate;\n\n    /**\n     * \u4f7f\u7528@HystrixCommand\u6ce8\u89e3\u6307\u5b9a\u5f53\u8be5\u65b9\u6cd5\u53d1\u751f\u5f02\u5e38\u65f6\u8c03\u7528\u7684\u65b9\u6cd5\n     *\n     * @param id id\n     * @return \u901a\u8fc7id\u67e5\u8be2\u5230\u7684\u7528\u6237\n     */\n    @HystrixCommand(fallbackMethod = \"fallback\")\n    public Driver findById(Integer id) {\n        return this.restTemplate.getForObject(\"http://QBIKE-UC/users/\" + id, Driver.class);\n    }\n\n    /**\n     * hystrix fallback\u65b9\u6cd5\n     *\n     * @param id id\n     * @return \u9ed8\u8ba4\u7684\u7528\u6237\n     */\n    public Driver fallback(Integer id) {\n        UserRibbonHystrixApi.LOGGER.info(\"\u5f02\u5e38\u53d1\u751f\uff0c\u8fdb\u5165fallback\u65b9\u6cd5\uff0c\u63a5\u6536\u7684\u53c2\u6570\uff1aid = {}\", id);\n        Driver driver = new Driver();\n        driver.setId(-1);\n        driver.setName(\"default driver\");\n        driver.setMobile(\"0000\");\n        return driver;\n    }\n}",
+        "package": "package club.newtech.qbike.trip.infrastructure;",
+        "tree_path": "UserRibbonHystrixApi",
+        "name": "UserRibbonHystrixApi",
+        "modifiers": "@Service\npublic",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n    private static final Logger LOGGER = LoggerFactory.getLogger(UserRibbonHystrixApi.class);\n    @Autowired\n    private RestTemplate restTemplate;\n\n    /**\n     * \u4f7f\u7528@HystrixCommand\u6ce8\u89e3\u6307\u5b9a\u5f53\u8be5\u65b9\u6cd5\u53d1\u751f\u5f02\u5e38\u65f6\u8c03\u7528\u7684\u65b9\u6cd5\n     *\n     * @param id id\n     * @return \u901a\u8fc7id\u67e5\u8be2\u5230\u7684\u7528\u6237\n     */\n    @HystrixCommand(fallbackMethod = \"fallback\")\n    public Driver findById(Integer id) {\n        return this.restTemplate.getForObject(\"http://QBIKE-UC/users/\" + id, Driver.class);\n    }\n\n    /**\n     * hystrix fallback\u65b9\u6cd5\n     *\n     * @param id id\n     * @return \u9ed8\u8ba4\u7684\u7528\u6237\n     */\n    public Driver fallback(Integer id) {\n        UserRibbonHystrixApi.LOGGER.info(\"\u5f02\u5e38\u53d1\u751f\uff0c\u8fdb\u5165fallback\u65b9\u6cd5\uff0c\u63a5\u6536\u7684\u53c2\u6570\uff1aid = {}\", id);\n        Driver driver = new Driver();\n        driver.setId(-1);\n        driver.setName(\"default driver\");\n        driver.setMobile(\"0000\");\n        return driver;\n    }\n}",
+        "start_point": {
+            "row": 10,
+            "column": 0
+        },
+        "end_point": {
+            "row": 41,
+            "column": 1
+        },
+        "file_mode": "Renamed",
+        "map_path": "intention/src/main/java/club/newtech/qbike/domain/core/service/UserRibbonHystrixService.java",
+        "methods": [
+            {
+                "definition": "@HystrixCommand(fallbackMethod = \"fallback\")\npublic Driver findById(Integer id) {\n    return this.restTemplate.getForObject(\"http://QBIKE-UC/users/\" + id, Driver.class);\n}",
+                "name": "findById",
+                "modifiers": "@HystrixCommand(fallbackMethod = \"fallback\")\n    public",
+                "return_type": "Driver",
+                "parameters": [
+                    {
+                        "type": "Integer",
+                        "name": "id"
+                    }
+                ],
+                "body": "{\n    return this.restTemplate.getForObject(\"http://QBIKE-UC/users/\" + id, Driver.class);\n}",
+                "start_point": {
+                    "row": 22,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 25,
+                    "column": 5
+                }
+            },
+            {
+                "definition": "public Driver fallback(Integer id) {\n    UserRibbonHystrixApi.LOGGER.info(\"\u5f02\u5e38\u53d1\u751f\uff0c\u8fdb\u5165fallback\u65b9\u6cd5\uff0c\u63a5\u6536\u7684\u53c2\u6570\uff1aid = {}\", id);\n    Driver driver = new Driver();\n    driver.setId(-1);\n    driver.setName(\"default driver\");\n    driver.setMobile(\"0000\");\n    return driver;\n}",
+                "name": "fallback",
+                "modifiers": "public",
+                "return_type": "Driver",
+                "parameters": [
+                    {
+                        "type": "Integer",
+                        "name": "id"
+                    }
+                ],
+                "body": "{\n    UserRibbonHystrixApi.LOGGER.info(\"\u5f02\u5e38\u53d1\u751f\uff0c\u8fdb\u5165fallback\u65b9\u6cd5\uff0c\u63a5\u6536\u7684\u53c2\u6570\uff1aid = {}\", id);\n    Driver driver = new Driver();\n    driver.setId(-1);\n    driver.setName(\"default driver\");\n    driver.setMobile(\"0000\");\n    return driver;\n}",
+                "start_point": {
+                    "row": 33,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 40,
+                    "column": 5
+                }
+            }
+        ]
+    }
+]
