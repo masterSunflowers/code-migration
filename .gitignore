@@ -2,3 +2,4 @@ scripts
 parsed
 parsed_tmp
 **/__pycache__
+**/*.ipynb
