@@ -459,6 +459,35 @@ check.describe()
 
 # # Check file change
 
+# In[1]:
+
+
+import pandas as pd
+
+df = pd.read_csv("processed2.csv")
+df.head()
+
+
+# In[ ]:
+
+
+# import subprocess
+# def read_file_in_commit(repo_dir, rev_path, commit_hash):
+    
+
+
+# In[ ]:
+
+
+# for i in range(len(df)):
+#     diff_files = df["diff_files"].iloc[i]    
+#     if pd.isna(diff_files):
+#         continue
+#     diff_files = eval(diff_files)
+#     if diff_files["Renamed"]:
+        
+
+
 # In[ ]:
 
 
