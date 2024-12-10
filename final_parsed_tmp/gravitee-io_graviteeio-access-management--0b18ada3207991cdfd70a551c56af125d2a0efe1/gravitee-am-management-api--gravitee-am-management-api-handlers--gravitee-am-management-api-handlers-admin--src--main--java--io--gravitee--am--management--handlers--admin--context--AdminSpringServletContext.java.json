@@ -158,7 +158,9 @@
                     "column": 5
                 }
             }
-        ]
+        ],
+        "class_mode": "Renamed-Modified",
+        "map_tree_path": "OAuth2SpringServletContext"
     },
     {
         "rev_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-admin/src/main/java/io/gravitee/am/management/handlers/admin/context/AdminSpringServletContext.java",
@@ -218,6 +220,8 @@
                     "column": 9
                 }
             }
-        ]
+        ],
+        "class_mode": "Renamed-Modified",
+        "map_tree_path": "OAuth2SpringServletContext.Builder"
     }
 ]

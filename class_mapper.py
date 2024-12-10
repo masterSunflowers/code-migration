@@ -3,9 +3,11 @@ import os
 import json
 import pandas as pd
 from tqdm import tqdm
+from difflib import SequenceMatcher
 # import subprocess
 
 # repos_storage = "/drive1/phatnt/zTrans/data/repos"
+
 
 # def read_file_in_commit(repo_name, rev_path, commit_hash):
 #     repo_dir = os.path.join(repos_storage, repo_name)
@@ -20,18 +22,24 @@ from tqdm import tqdm
 #     except subprocess.CalledProcessError:
 #         return None
 #     return res.decode("utf-8")
-def similarity(code1, code2):
-    return 0.5
+def get_similarity_index(code1, code2):
+    # Calculate similarity ratio using SequenceMatcher
+    similarity = SequenceMatcher(None, code1, code2).ratio()
+    # Convert to percentage and round to 2 decimal places
+    return round(similarity * 100, 2)
 
-def annotate_class(parsed_class, repo, prev_commit, cur_commit, file_path, mode, threshold: int = 0.5):
+
+def annotate_class(
+    parsed_class, repo, prev_commit, cur_commit, file_path, mode, threshold: int = 0.5
+):
     if mode == "Modified":
         old = file_path
         new = file_path
     elif mode == "Renamed-Modified":
-        old, new = file_path
+        old, new, _ = file_path
     else:
         raise ValueError(f"Unknown mode: {mode}")
-    
+
     output_prev = os.path.join(parsed_class, repo + "--" + prev_commit)
     output_cur = os.path.join(parsed_class, repo + "--" + cur_commit)
     old_file_name = os.path.normpath(old).replace(os.sep, "--") + ".json"
@@ -40,10 +48,10 @@ def annotate_class(parsed_class, repo, prev_commit, cur_commit, file_path, mode,
         old_data = json.load(f)
     with open(os.path.join(output_cur, new_file_name), "r") as f:
         new_data = json.load(f)
-        
+
     for aclass in old_data:
         mapped = False
-        for bclass in old_data:
+        for bclass in new_data:
             if aclass["tree_path"] == bclass["tree_path"]:
                 mapped = True
                 if aclass["definition"] == bclass["definition"]:
@@ -55,27 +63,44 @@ def annotate_class(parsed_class, repo, prev_commit, cur_commit, file_path, mode,
                     break
         if mapped:
             continue
-        
+
         # Check for rename
         max_similarity = 0
         best_match = None
-        for bclass in old_data:
-            if similarity(aclass["definition"], bclass["definition"]) > max_similarity:
-                max_similarity = similarity(aclass["definition"], bclass["definition"])
+        for bclass in new_data:
+            if (
+                get_similarity_index(aclass["definition"], bclass["definition"])
+                > max_similarity
+            ):
+                max_similarity = get_similarity_index(
+                    aclass["definition"], bclass["definition"]
+                )
                 best_match = bclass
-        if max_similarity > 0.5:
-            aclass["class_mode"] = "Renamed"
-            best_match["class_mode"] = "Renamed"
+        if max_similarity == 100:
+            aclass["class_mode"] = "Renamed-Unchanged"
+            best_match["class_mode"] = "Renamed-Unchanged"
+            aclass["map_tree_path"] = best_match["tree_path"]
+            best_match["map_tree_path"] = aclass["tree_path"]
+            continue
+        elif max_similarity > threshold:
+            aclass["class_mode"] = "Renamed-Modified"
+            best_match["class_mode"] = "Renamed-Modified"
             aclass["map_tree_path"] = best_match["tree_path"]
             best_match["map_tree_path"] = aclass["tree_path"]
             continue
     for aclass in old_data:
         if "class_mode" not in aclass:
             aclass["class_mode"] = "Deleted"
-    
+
     for bclass in new_data:
         if "class_mode" not in bclass:
             bclass["class_mode"] = "Added"
+
+    with open(os.path.join(output_prev, old_file_name), "w") as f:
+        json.dump(old_data, f, indent=4)
+    with open(os.path.join(output_cur, new_file_name), "w") as f:
+        json.dump(new_data, f, indent=4)
+
 
 def main(args):
     df = pd.read_csv(args.input)
@@ -92,7 +117,7 @@ def main(args):
                             row["endCommit"],
                             item,
                             mode,
-                        )                   
+                        )
 
 
 if __name__ == "__main__":

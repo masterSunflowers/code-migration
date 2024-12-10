@@ -68,6 +68,8 @@
                     "column": 3
                 }
             }
-        ]
+        ],
+        "class_mode": "Renamed-Modified",
+        "map_tree_path": "KafkaOffsetMetricsAppTest.TestConfig"
     }
 ]

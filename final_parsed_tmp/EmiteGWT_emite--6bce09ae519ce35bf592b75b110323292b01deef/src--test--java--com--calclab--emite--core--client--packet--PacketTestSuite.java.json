@@ -230,7 +230,8 @@
                     "column": 5
                 }
             }
-        ]
+        ],
+        "class_mode": "Unchanged"
     },
     {
         "rev_path": "src/test/java/com/calclab/emite/core/client/packet/PacketTestSuite.java",
@@ -496,6 +497,7 @@
                     "column": 2
                 }
             }
-        ]
+        ],
+        "class_mode": "Unchanged"
     }
 ]

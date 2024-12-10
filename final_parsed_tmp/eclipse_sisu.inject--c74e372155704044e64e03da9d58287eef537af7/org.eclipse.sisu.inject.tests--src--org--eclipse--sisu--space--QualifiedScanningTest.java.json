@@ -164,7 +164,8 @@
                     "column": 5
                 }
             }
-        ]
+        ],
+        "class_mode": "Modified"
     },
     {
         "rev_path": "org.eclipse.sisu.inject.tests/src/org/eclipse/sisu/space/QualifiedScanningTest.java",
@@ -186,7 +187,8 @@
         },
         "file_mode": "Modified",
         "map_path": null,
-        "methods": []
+        "methods": [],
+        "class_mode": "Unchanged"
     },
     {
         "rev_path": "org.eclipse.sisu.inject.tests/src/org/eclipse/sisu/space/QualifiedScanningTest.java",
@@ -208,7 +210,8 @@
         },
         "file_mode": "Modified",
         "map_path": null,
-        "methods": []
+        "methods": [],
+        "class_mode": "Unchanged"
     },
     {
         "rev_path": "org.eclipse.sisu.inject.tests/src/org/eclipse/sisu/space/QualifiedScanningTest.java",
@@ -230,7 +233,8 @@
         },
         "file_mode": "Modified",
         "map_path": null,
-        "methods": []
+        "methods": [],
+        "class_mode": "Unchanged"
     },
     {
         "rev_path": "org.eclipse.sisu.inject.tests/src/org/eclipse/sisu/space/QualifiedScanningTest.java",
@@ -252,7 +256,8 @@
         },
         "file_mode": "Modified",
         "map_path": null,
-        "methods": []
+        "methods": [],
+        "class_mode": "Unchanged"
     },
     {
         "rev_path": "org.eclipse.sisu.inject.tests/src/org/eclipse/sisu/space/QualifiedScanningTest.java",
@@ -274,7 +279,8 @@
         },
         "file_mode": "Modified",
         "map_path": null,
-        "methods": []
+        "methods": [],
+        "class_mode": "Unchanged"
     },
     {
         "rev_path": "org.eclipse.sisu.inject.tests/src/org/eclipse/sisu/space/QualifiedScanningTest.java",
@@ -296,7 +302,8 @@
         },
         "file_mode": "Modified",
         "map_path": null,
-        "methods": []
+        "methods": [],
+        "class_mode": "Unchanged"
     },
     {
         "rev_path": "org.eclipse.sisu.inject.tests/src/org/eclipse/sisu/space/QualifiedScanningTest.java",
@@ -348,6 +355,7 @@
                     "column": 9
                 }
             }
-        ]
+        ],
+        "class_mode": "Unchanged"
     }
 ]

@@ -73,7 +73,8 @@
                     "column": 3
                 }
             }
-        ]
+        ],
+        "class_mode": "Modified"
     },
     {
         "rev_path": "monitoring/kafka-offset-metrics/src/test/java/com/hotels/road/kafka/offset/metrics/KafkaOffsetMetricsAppTest.java",
@@ -128,6 +129,8 @@
                     "column": 5
                 }
             }
-        ]
+        ],
+        "class_mode": "Renamed-Modified",
+        "map_tree_path": "KafkaOffsetMetricsAppTest"
     }
 ]

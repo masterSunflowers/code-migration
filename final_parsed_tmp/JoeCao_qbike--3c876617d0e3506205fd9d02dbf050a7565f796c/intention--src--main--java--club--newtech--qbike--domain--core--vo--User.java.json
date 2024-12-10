@@ -19,6 +19,8 @@
         },
         "file_mode": "Renamed-Modified",
         "map_path": "trip/src/main/java/club/newtech/qbike/trip/domain/core/vo/Driver.java",
-        "methods": []
+        "methods": [],
+        "class_mode": "Renamed-Modified",
+        "map_tree_path": "Driver"
     }
 ]

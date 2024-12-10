@@ -152,7 +152,8 @@
                     "column": 5
                 }
             }
-        ]
+        ],
+        "class_mode": "Modified"
     },
     {
         "rev_path": "src/test/java/com/calclab/emite/xtesting/services/HttpConnector.java",
@@ -191,6 +192,7 @@
                     "column": 2
                 }
             }
-        ]
+        ],
+        "class_mode": "Unchanged"
     }
 ]

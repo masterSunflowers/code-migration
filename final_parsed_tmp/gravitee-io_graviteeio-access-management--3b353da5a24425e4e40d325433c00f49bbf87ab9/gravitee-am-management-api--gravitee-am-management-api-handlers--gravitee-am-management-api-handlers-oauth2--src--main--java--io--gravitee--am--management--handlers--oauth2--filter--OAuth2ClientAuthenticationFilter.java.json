@@ -182,7 +182,8 @@
                     "column": 5
                 }
             }
-        ]
+        ],
+        "class_mode": "Modified"
     },
     {
         "rev_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-oauth2/src/main/java/io/gravitee/am/management/handlers/oauth2/filter/OAuth2ClientAuthenticationFilter.java",
@@ -226,6 +227,7 @@
                     "column": 9
                 }
             }
-        ]
+        ],
+        "class_mode": "Unchanged"
     }
 ]

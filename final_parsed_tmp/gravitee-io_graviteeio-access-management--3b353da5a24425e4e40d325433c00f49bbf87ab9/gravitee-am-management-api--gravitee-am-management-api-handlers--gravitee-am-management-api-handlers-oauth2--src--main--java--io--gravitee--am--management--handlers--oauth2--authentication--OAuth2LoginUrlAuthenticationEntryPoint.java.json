@@ -99,6 +99,8 @@
                     "column": 5
                 }
             }
-        ]
+        ],
+        "class_mode": "Renamed-Modified",
+        "map_tree_path": "LoginUrlAuthenticationEntryPoint"
     }
 ]

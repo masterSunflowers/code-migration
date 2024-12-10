@@ -19,6 +19,8 @@
         },
         "file_mode": "Renamed-Modified",
         "map_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-oauth2/src/main/java/io/gravitee/am/management/handlers/oauth2/CustomAuthorizationServerEndpointsConfiguration.java",
-        "methods": []
+        "methods": [],
+        "class_mode": "Renamed-Modified",
+        "map_tree_path": "CustomAuthorizationServerEndpointsConfiguration"
     }
 ]
