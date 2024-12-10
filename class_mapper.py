@@ -60,7 +60,7 @@ def annotate_class(
                 else:
                     aclass["class_mode"] = "Modified"
                     bclass["class_mode"] = "Modified"
-                    break
+                break
         if mapped:
             continue
 
