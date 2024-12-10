@@ -107,12 +107,12 @@ def read_file_in_commit(repo_dir, rev_path, commit_hash):
 
 #==============================================================================
 
-repo_dir = "/drive1/phatnt/zTrans/data/repos/HotelsDotCom_data-highway"
-prev_commit = "7f175375b3c193309094dd8308b77af61d40e57e"
-cur_commit = "d79ebc0c4b87d08e45489bdb0a49a1d2124b8439"
+repo_dir = "/drive1/phatnt/zTrans/data/repos/apache_dubbo-admin"
+prev_commit = "80013ffc38b3d737bd891a2b574ef75a93450bd9"
+cur_commit = "995e06b547cb7554c99deb3129fca19b2c35aa8b"
 
-old_file_path = "monitoring/kafka-offset-metrics/src/test/java/com/hotels/road/kafka/offset/metrics/KafkaOffsetMetricsAppTest.java"
-new_file_path = "monitoring/kafka-offset-metrics/src/test/java/com/hotels/road/kafka/offset/metrics/KafkaOffsetMetricsAppTest.java"
+old_file_path = "dubbo-admin-backend/src/main/java/org/apache/dubbo/admin/service/impl/OverrideServiceImpl.java"
+new_file_path = "dubbo-admin-backend/src/main/java/org/apache/dubbo/admin/service/impl/OverrideServiceImpl.java"
 
 print(read_file_in_commit(repo_dir, old_file_path, prev_commit))
 print("=" * 100)
