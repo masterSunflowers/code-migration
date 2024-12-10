@@ -1,0 +1,50 @@
+[
+    {
+        "repo_name": "daydreamdev_seconds-kill",
+        "commit": "c4fa2a2b35c9e3d6b8b3b59c34113c65456d5620",
+        "rev_path": "src/main/java/com/daydreamdev/secondskill/SecondsKillApplication.java",
+        "definition": "@SpringBootApplication\n@EnableTransactionManagement\npublic class SecondsKillApplication {\n\t\n\t/**\n\t * @author G.Fukang\n\t * @date: 6/7 20:49\n\t */\n\tpublic static void main(String[] args) {\n\t\tSpringApplication.run(SecondsKillApplication.class, args);\n\t}\n\n}",
+        "package": "package com.daydreamdev.secondskill;",
+        "tree_path": "SecondsKillApplication",
+        "name": "SecondsKillApplication",
+        "modifiers": "@SpringBootApplication\n@EnableTransactionManagement\npublic",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n\t\n\t/**\n\t * @author G.Fukang\n\t * @date: 6/7 20:49\n\t */\n\tpublic static void main(String[] args) {\n\t\tSpringApplication.run(SecondsKillApplication.class, args);\n\t}\n\n}",
+        "start_point": {
+            "row": 6,
+            "column": 0
+        },
+        "end_point": {
+            "row": 18,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "public static void main(String[] args) {\n\tSpringApplication.run(SecondsKillApplication.class, args);\n}",
+                "name": "main",
+                "modifiers": "public static",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String[]",
+                        "name": "args"
+                    }
+                ],
+                "body": "{\n\tSpringApplication.run(SecondsKillApplication.class, args);\n}",
+                "start_point": {
+                    "row": 14,
+                    "column": 1
+                },
+                "end_point": {
+                    "row": 16,
+                    "column": 2
+                },
+                "method_mode": "Modified"
+            }
+        ],
+        "class_mode": "Modified"
+    }
+]

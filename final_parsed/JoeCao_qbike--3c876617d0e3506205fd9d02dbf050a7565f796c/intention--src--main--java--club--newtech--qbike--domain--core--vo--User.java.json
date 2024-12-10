@@ -1,5 +1,7 @@
 [
     {
+        "repo_name": "JoeCao_qbike",
+        "commit": "3c876617d0e3506205fd9d02dbf050a7565f796c",
         "rev_path": "intention/src/main/java/club/newtech/qbike/domain/core/vo/User.java",
         "definition": "@Embeddable\n@Data\npublic class User {\n    private int id;\n    private String name;\n    private String mobile;\n}",
         "package": "package club.newtech.qbike.domain.core.vo;",

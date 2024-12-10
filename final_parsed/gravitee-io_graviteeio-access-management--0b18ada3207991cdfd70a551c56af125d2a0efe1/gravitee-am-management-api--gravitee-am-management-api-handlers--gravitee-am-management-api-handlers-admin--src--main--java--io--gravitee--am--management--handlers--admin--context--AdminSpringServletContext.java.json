@@ -1,5 +1,7 @@
 [
     {
+        "repo_name": "gravitee-io_graviteeio-access-management",
+        "commit": "0b18ada3207991cdfd70a551c56af125d2a0efe1",
         "rev_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-admin/src/main/java/io/gravitee/am/management/handlers/admin/context/AdminSpringServletContext.java",
         "definition": "public class AdminSpringServletContext extends SpringServletContext<Domain> {\n\n    private final Domain domain;\n\n    private AdminSpringServletContext(Domain domain) {\n        this.domain = domain;\n    }\n\n    @Override\n    public List<Servlet> servlets() {\n        return Collections.singletonList(new DispatcherServlet(applicationContext()));\n    }\n\n    @Override\n    public List<Filter> filters() {\n        return Collections.singletonList(new DelegatingFilterProxy(\"springSecurityFilterChain\"));\n    }\n\n    @Override\n    public List<EventListener> listeners() {\n        return Collections.singletonList(new AdminContextLoaderListener(applicationContext()));\n    }\n\n    @Override\n    public Domain deployable() {\n        return domain;\n    }\n\n    @Override\n    protected Set<Class<?>> annotatedClasses() {\n        return new HashSet<>(Arrays.asList(AdminConfiguration.class));\n    }\n\n    @Override\n    protected Set<? extends BeanFactoryPostProcessor> beanFactoryPostProcessors() {\n        return Collections.singleton(new AdminDomainBeanFactoryPostProcessor((Domain) deployable()));\n    }\n\n    static Builder create(Domain domain) {\n        return new Builder(domain);\n    }\n\n    static class Builder {\n\n        private final Domain domain;\n\n        private Builder(Domain domain) {\n            this.domain = domain;\n        }\n\n        SpringServletContext<Domain> build() {\n            return new AdminSpringServletContext(domain);\n        }\n    }\n}",
         "package": "package io.gravitee.am.management.handlers.admin.context;",
@@ -161,6 +163,8 @@
         ]
     },
     {
+        "repo_name": "gravitee-io_graviteeio-access-management",
+        "commit": "0b18ada3207991cdfd70a551c56af125d2a0efe1",
         "rev_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-admin/src/main/java/io/gravitee/am/management/handlers/admin/context/AdminSpringServletContext.java",
         "definition": "static class Builder {\n\n    private final Domain domain;\n\n    private Builder(Domain domain) {\n        this.domain = domain;\n    }\n\n    SpringServletContext<Domain> build() {\n        return new AdminSpringServletContext(domain);\n    }\n}",
         "package": "package io.gravitee.am.management.handlers.admin.context;",

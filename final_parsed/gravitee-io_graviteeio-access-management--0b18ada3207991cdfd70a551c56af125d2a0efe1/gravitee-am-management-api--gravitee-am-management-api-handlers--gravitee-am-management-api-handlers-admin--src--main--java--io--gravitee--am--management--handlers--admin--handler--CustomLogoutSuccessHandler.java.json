@@ -1,5 +1,7 @@
 [
     {
+        "repo_name": "gravitee-io_graviteeio-access-management",
+        "commit": "0b18ada3207991cdfd70a551c56af125d2a0efe1",
         "rev_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-admin/src/main/java/io/gravitee/am/management/handlers/admin/handler/CustomLogoutSuccessHandler.java",
         "definition": "public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {\n\n    private static final String LOGOUT_URL_PARAMETER = \"target_url\";\n\n    @Override\n    protected String determineTargetUrl(HttpServletRequest request, HttpServletResponse response) {\n        String logoutRedirectUrl = request.getParameter(LOGOUT_URL_PARAMETER);\n        if (logoutRedirectUrl != null && !logoutRedirectUrl.isEmpty()) {\n            setTargetUrlParameter(LOGOUT_URL_PARAMETER);\n        }\n        return super.determineTargetUrl(request, response);\n    }\n}",
         "package": "package io.gravitee.am.management.handlers.admin.handler;",

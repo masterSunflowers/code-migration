@@ -1,0 +1,89 @@
+[
+    {
+        "repo_name": "HotelsDotCom_data-highway",
+        "commit": "d79ebc0c4b87d08e45489bdb0a49a1d2124b8439",
+        "rev_path": "monitoring/kafka-offset-metrics/src/main/java/com/hotels/road/kafka/offset/metrics/KafkaOffsetMetricsApp.java",
+        "definition": "@SpringBootApplication\n@EnableScheduling\npublic class KafkaOffsetMetricsApp {\n  @Bean\n  AdminClient adminClient(@Value(\"${kafka.bootstrapServers}\") String bootstrapServers) {\n    Properties properties = new Properties();\n    properties.setProperty(\"bootstrap.servers\", bootstrapServers);\n    return AdminClient.create(properties);\n  }\n\n  @Bean\n  Supplier<String> hostnameSupplier() {\n    return () -> {\n      try {\n        return InetAddress.getLocalHost().getHostName();\n      } catch (UnknownHostException e) {\n        throw new RuntimeException(e);\n      }\n    };\n  }\n\n  public static void main(String[] args) {\n    DataHighwayApplication.run(KafkaOffsetMetricsApp.class, args);\n  }\n}",
+        "package": "package com.hotels.road.kafka.offset.metrics;",
+        "tree_path": "KafkaOffsetMetricsApp",
+        "name": "KafkaOffsetMetricsApp",
+        "modifiers": "@SpringBootApplication\n@EnableScheduling\npublic",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n  @Bean\n  AdminClient adminClient(@Value(\"${kafka.bootstrapServers}\") String bootstrapServers) {\n    Properties properties = new Properties();\n    properties.setProperty(\"bootstrap.servers\", bootstrapServers);\n    return AdminClient.create(properties);\n  }\n\n  @Bean\n  Supplier<String> hostnameSupplier() {\n    return () -> {\n      try {\n        return InetAddress.getLocalHost().getHostName();\n      } catch (UnknownHostException e) {\n        throw new RuntimeException(e);\n      }\n    };\n  }\n\n  public static void main(String[] args) {\n    DataHighwayApplication.run(KafkaOffsetMetricsApp.class, args);\n  }\n}",
+        "start_point": {
+            "row": 31,
+            "column": 0
+        },
+        "end_point": {
+            "row": 55,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "@Bean\nAdminClient adminClient(@Value(\"${kafka.bootstrapServers}\") String bootstrapServers) {\n  Properties properties = new Properties();\n  properties.setProperty(\"bootstrap.servers\", bootstrapServers);\n  return AdminClient.create(properties);\n}",
+                "name": "adminClient",
+                "modifiers": "@Bean",
+                "return_type": "AdminClient",
+                "parameters": [
+                    {
+                        "type": "@Value(\"${kafka.bootstrapServers}\")",
+                        "name": "String"
+                    }
+                ],
+                "body": "{\n  Properties properties = new Properties();\n  properties.setProperty(\"bootstrap.servers\", bootstrapServers);\n  return AdminClient.create(properties);\n}",
+                "start_point": {
+                    "row": 34,
+                    "column": 2
+                },
+                "end_point": {
+                    "row": 39,
+                    "column": 3
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Bean\nSupplier<String> hostnameSupplier() {\n  return () -> {\n    try {\n      return InetAddress.getLocalHost().getHostName();\n    } catch (UnknownHostException e) {\n      throw new RuntimeException(e);\n    }\n  };\n}",
+                "name": "hostnameSupplier",
+                "modifiers": "@Bean",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n  return () -> {\n    try {\n      return InetAddress.getLocalHost().getHostName();\n    } catch (UnknownHostException e) {\n      throw new RuntimeException(e);\n    }\n  };\n}",
+                "start_point": {
+                    "row": 41,
+                    "column": 2
+                },
+                "end_point": {
+                    "row": 50,
+                    "column": 3
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public static void main(String[] args) {\n  DataHighwayApplication.run(KafkaOffsetMetricsApp.class, args);\n}",
+                "name": "main",
+                "modifiers": "public static",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String[]",
+                        "name": "args"
+                    }
+                ],
+                "body": "{\n  DataHighwayApplication.run(KafkaOffsetMetricsApp.class, args);\n}",
+                "start_point": {
+                    "row": 52,
+                    "column": 2
+                },
+                "end_point": {
+                    "row": 54,
+                    "column": 3
+                },
+                "method_mode": "Unchanged"
+            }
+        ],
+        "class_mode": "Modified"
+    }
+]

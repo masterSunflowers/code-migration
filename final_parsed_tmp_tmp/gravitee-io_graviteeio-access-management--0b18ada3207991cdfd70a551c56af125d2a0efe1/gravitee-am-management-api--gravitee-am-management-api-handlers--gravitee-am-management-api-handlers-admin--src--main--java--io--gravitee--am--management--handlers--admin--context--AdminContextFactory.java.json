@@ -1,0 +1,95 @@
+[
+    {
+        "repo_name": "gravitee-io_graviteeio-access-management",
+        "commit": "0b18ada3207991cdfd70a551c56af125d2a0efe1",
+        "rev_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-admin/src/main/java/io/gravitee/am/management/handlers/admin/context/AdminContextFactory.java",
+        "definition": "public class AdminContextFactory implements ServletContextFactory<Domain>, ApplicationContextAware {\n\n    private ApplicationContext applicationContext;\n\n    @Override\n    public boolean canHandle(Domain domain) {\n        return domain != null;\n    }\n\n    @Override\n    public ServletContext<Domain> create(Domain domain) {\n        SpringServletContext servletContext = AdminSpringServletContext.create(domain).build();\n        servletContext.setRootApplicationContext(applicationContext);\n\n        return servletContext;\n    }\n\n    @Override\n    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {\n        this.applicationContext = applicationContext;\n    }\n}",
+        "package": "package io.gravitee.am.management.handlers.admin.context;",
+        "tree_path": "AdminContextFactory",
+        "name": "AdminContextFactory",
+        "modifiers": "public",
+        "superclass": null,
+        "super_interfaces": "implements ServletContextFactory<Domain>, ApplicationContextAware",
+        "body": "{\n\n    private ApplicationContext applicationContext;\n\n    @Override\n    public boolean canHandle(Domain domain) {\n        return domain != null;\n    }\n\n    @Override\n    public ServletContext<Domain> create(Domain domain) {\n        SpringServletContext servletContext = AdminSpringServletContext.create(domain).build();\n        servletContext.setRootApplicationContext(applicationContext);\n\n        return servletContext;\n    }\n\n    @Override\n    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {\n        this.applicationContext = applicationContext;\n    }\n}",
+        "start_point": {
+            "row": 29,
+            "column": 0
+        },
+        "end_point": {
+            "row": 50,
+            "column": 1
+        },
+        "file_mode": "Renamed-Modified",
+        "map_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-oauth2/src/main/java/io/gravitee/am/management/handlers/oauth2/context/OAuth2ContextFactory.java",
+        "methods": [
+            {
+                "definition": "@Override\npublic boolean canHandle(Domain domain) {\n    return domain != null;\n}",
+                "name": "canHandle",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Domain",
+                        "name": "domain"
+                    }
+                ],
+                "body": "{\n    return domain != null;\n}",
+                "start_point": {
+                    "row": 33,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 36,
+                    "column": 5
+                },
+                "method_mode": "Modified"
+            },
+            {
+                "definition": "@Override\npublic ServletContext<Domain> create(Domain domain) {\n    SpringServletContext servletContext = AdminSpringServletContext.create(domain).build();\n    servletContext.setRootApplicationContext(applicationContext);\n\n    return servletContext;\n}",
+                "name": "create",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Domain",
+                        "name": "domain"
+                    }
+                ],
+                "body": "{\n    SpringServletContext servletContext = AdminSpringServletContext.create(domain).build();\n    servletContext.setRootApplicationContext(applicationContext);\n\n    return servletContext;\n}",
+                "start_point": {
+                    "row": 38,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 44,
+                    "column": 5
+                },
+                "method_mode": "Modified"
+            },
+            {
+                "definition": "@Override\npublic void setApplicationContext(ApplicationContext applicationContext) throws BeansException {\n    this.applicationContext = applicationContext;\n}",
+                "name": "setApplicationContext",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "ApplicationContext",
+                        "name": "applicationContext"
+                    }
+                ],
+                "body": "{\n    this.applicationContext = applicationContext;\n}",
+                "start_point": {
+                    "row": 46,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 49,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            }
+        ],
+        "class_mode": "Renamed-Modified",
+        "map_tree_path": "OAuth2ContextFactory"
+    }
+]

@@ -1,5 +1,7 @@
 [
     {
+        "repo_name": "daydreamdev_seconds-kill",
+        "commit": "897cdc8a63731ca1403e6b186c767a4ee909fa2f",
         "rev_path": "src/main/java/com/daydreamdev/secondskill/SecondsKillApplication.java",
         "definition": "@Slf4j\n@SpringBootApplication\n@EnableTransactionManagement\n@EnableKafka\n@ComponentScan(\"com.daydreamdev.secondskill\")\npublic class SecondsKillApplication {\n\n    /**\n     * @author G.Fukang\n     * @date: 6/7 20:49\n     */\n    public static void main(String[] args) {\n        SpringApplication.run(SecondsKillApplication.class, args);\n/*\t\tnew SpringApplicationBuilder(SecondsKillApplication.class).\n\t\t\t\tlisteners(new ApplicationPidFileWriter())\n\t\t\t\t.run(args);\n\t\tConsumer consumer = SpringBeanFactory.getBean(Consumer.class);\n\t\tnew Thread(consumer, \"\u6d88\u8d39\u8005\").start();\n\t\tlog.info(\"\u6d88\u8d39\u8005\u7ebf\u7a0b\u542f\u52a8\u6210\u529f!\");*/\n    }\n\n}",
         "package": "package com.daydreamdev.secondskill;",

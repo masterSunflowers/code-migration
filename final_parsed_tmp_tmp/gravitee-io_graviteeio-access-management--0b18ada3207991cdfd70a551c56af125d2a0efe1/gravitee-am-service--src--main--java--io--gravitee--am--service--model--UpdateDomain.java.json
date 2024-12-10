@@ -1,0 +1,262 @@
+[
+    {
+        "repo_name": "gravitee-io_graviteeio-access-management",
+        "commit": "0b18ada3207991cdfd70a551c56af125d2a0efe1",
+        "rev_path": "gravitee-am-service/src/main/java/io/gravitee/am/service/model/UpdateDomain.java",
+        "definition": "public class UpdateDomain {\n\n    /**\n     * Domain name.\n     */\n    @NotNull\n    private String name;\n\n    /**\n     * Domain description.\n     */\n    private String description;\n\n    /**\n     * Domain enabled.\n     */\n    @NotNull\n    private boolean enabled;\n\n    /**\n     * Domain HTTP path.\n     */\n    private String path;\n\n    private Set<String> identities;\n\n    private Set<String> oauth2Identities;\n\n    public String getName() {\n        return name;\n    }\n\n    public void setName(String name) {\n        this.name = name;\n    }\n\n    public String getDescription() {\n        return description;\n    }\n\n    public void setDescription(String description) {\n        this.description = description;\n    }\n\n    public boolean isEnabled() {\n        return enabled;\n    }\n\n    public void setEnabled(boolean enabled) {\n        this.enabled = enabled;\n    }\n\n    public String getPath() {\n        return path;\n    }\n\n    public void setPath(String path) {\n        this.path = path;\n    }\n\n    public Set<String> getIdentities() {\n        return identities;\n    }\n\n    public void setIdentities(Set<String> identities) {\n        this.identities = identities;\n    }\n\n    public Set<String> getOauth2Identities() {\n        return oauth2Identities;\n    }\n\n    public void setOauth2Identities(Set<String> oauth2Identities) {\n        this.oauth2Identities = oauth2Identities;\n    }\n}",
+        "package": "package io.gravitee.am.service.model;",
+        "tree_path": "UpdateDomain",
+        "name": "UpdateDomain",
+        "modifiers": "public",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n\n    /**\n     * Domain name.\n     */\n    @NotNull\n    private String name;\n\n    /**\n     * Domain description.\n     */\n    private String description;\n\n    /**\n     * Domain enabled.\n     */\n    @NotNull\n    private boolean enabled;\n\n    /**\n     * Domain HTTP path.\n     */\n    private String path;\n\n    private Set<String> identities;\n\n    private Set<String> oauth2Identities;\n\n    public String getName() {\n        return name;\n    }\n\n    public void setName(String name) {\n        this.name = name;\n    }\n\n    public String getDescription() {\n        return description;\n    }\n\n    public void setDescription(String description) {\n        this.description = description;\n    }\n\n    public boolean isEnabled() {\n        return enabled;\n    }\n\n    public void setEnabled(boolean enabled) {\n        this.enabled = enabled;\n    }\n\n    public String getPath() {\n        return path;\n    }\n\n    public void setPath(String path) {\n        this.path = path;\n    }\n\n    public Set<String> getIdentities() {\n        return identities;\n    }\n\n    public void setIdentities(Set<String> identities) {\n        this.identities = identities;\n    }\n\n    public Set<String> getOauth2Identities() {\n        return oauth2Identities;\n    }\n\n    public void setOauth2Identities(Set<String> oauth2Identities) {\n        this.oauth2Identities = oauth2Identities;\n    }\n}",
+        "start_point": {
+            "row": 24,
+            "column": 0
+        },
+        "end_point": {
+            "row": 99,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "public String getName() {\n    return name;\n}",
+                "name": "getName",
+                "modifiers": "public",
+                "return_type": "String",
+                "parameters": [],
+                "body": "{\n    return name;\n}",
+                "start_point": {
+                    "row": 52,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 54,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void setName(String name) {\n    this.name = name;\n}",
+                "name": "setName",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "name"
+                    }
+                ],
+                "body": "{\n    this.name = name;\n}",
+                "start_point": {
+                    "row": 56,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 58,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public String getDescription() {\n    return description;\n}",
+                "name": "getDescription",
+                "modifiers": "public",
+                "return_type": "String",
+                "parameters": [],
+                "body": "{\n    return description;\n}",
+                "start_point": {
+                    "row": 60,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 62,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void setDescription(String description) {\n    this.description = description;\n}",
+                "name": "setDescription",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "description"
+                    }
+                ],
+                "body": "{\n    this.description = description;\n}",
+                "start_point": {
+                    "row": 64,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 66,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public boolean isEnabled() {\n    return enabled;\n}",
+                "name": "isEnabled",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return enabled;\n}",
+                "start_point": {
+                    "row": 68,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 70,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void setEnabled(boolean enabled) {\n    this.enabled = enabled;\n}",
+                "name": "setEnabled",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "name": "enabled"
+                    }
+                ],
+                "body": "{\n    this.enabled = enabled;\n}",
+                "start_point": {
+                    "row": 72,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 74,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public String getPath() {\n    return path;\n}",
+                "name": "getPath",
+                "modifiers": "public",
+                "return_type": "String",
+                "parameters": [],
+                "body": "{\n    return path;\n}",
+                "start_point": {
+                    "row": 76,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 78,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void setPath(String path) {\n    this.path = path;\n}",
+                "name": "setPath",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "path"
+                    }
+                ],
+                "body": "{\n    this.path = path;\n}",
+                "start_point": {
+                    "row": 80,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 82,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public Set<String> getIdentities() {\n    return identities;\n}",
+                "name": "getIdentities",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return identities;\n}",
+                "start_point": {
+                    "row": 84,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 86,
+                    "column": 5
+                },
+                "method_mode": "Added"
+            },
+            {
+                "definition": "public void setIdentities(Set<String> identities) {\n    this.identities = identities;\n}",
+                "name": "setIdentities",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Set<String>",
+                        "name": "identities"
+                    }
+                ],
+                "body": "{\n    this.identities = identities;\n}",
+                "start_point": {
+                    "row": 88,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 90,
+                    "column": 5
+                },
+                "method_mode": "Added"
+            },
+            {
+                "definition": "public Set<String> getOauth2Identities() {\n    return oauth2Identities;\n}",
+                "name": "getOauth2Identities",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return oauth2Identities;\n}",
+                "start_point": {
+                    "row": 92,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 94,
+                    "column": 5
+                },
+                "method_mode": "Added"
+            },
+            {
+                "definition": "public void setOauth2Identities(Set<String> oauth2Identities) {\n    this.oauth2Identities = oauth2Identities;\n}",
+                "name": "setOauth2Identities",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Set<String>",
+                        "name": "oauth2Identities"
+                    }
+                ],
+                "body": "{\n    this.oauth2Identities = oauth2Identities;\n}",
+                "start_point": {
+                    "row": 96,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 98,
+                    "column": 5
+                },
+                "method_mode": "Added"
+            }
+        ],
+        "class_mode": "Modified"
+    }
+]

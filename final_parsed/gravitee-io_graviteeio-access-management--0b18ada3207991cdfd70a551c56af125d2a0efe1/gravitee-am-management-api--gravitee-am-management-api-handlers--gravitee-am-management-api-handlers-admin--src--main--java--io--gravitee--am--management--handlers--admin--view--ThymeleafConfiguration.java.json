@@ -1,5 +1,7 @@
 [
     {
+        "repo_name": "gravitee-io_graviteeio-access-management",
+        "commit": "0b18ada3207991cdfd70a551c56af125d2a0efe1",
         "rev_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-admin/src/main/java/io/gravitee/am/management/handlers/admin/view/ThymeleafConfiguration.java",
         "definition": "@Configuration\npublic class ThymeleafConfiguration {\n\n    @Bean\n    public ThymeleafTemplateResolverFactory getTemplateResolver() {\n        return new ThymeleafTemplateResolverFactory();\n    }\n\n    @Bean\n    public TemplateEngine getTemplateEngine(ITemplateResolver templateResolver) {\n        SpringTemplateEngine templateEngine = new SpringTemplateEngine();\n        templateEngine.setEnableSpringELCompiler(true);\n        templateEngine.setTemplateResolver(templateResolver);\n        return templateEngine;\n    }\n\n    @Bean\n    public ViewResolver getViewResolver(TemplateEngine templateEngine) {\n        ThymeleafViewResolver viewResolver = new ThymeleafViewResolver();\n        viewResolver.setTemplateEngine(templateEngine);\n        viewResolver.setCharacterEncoding(\"UTF-8\");\n        return viewResolver;\n    }\n}",
         "package": "package io.gravitee.am.management.handlers.admin.view;",

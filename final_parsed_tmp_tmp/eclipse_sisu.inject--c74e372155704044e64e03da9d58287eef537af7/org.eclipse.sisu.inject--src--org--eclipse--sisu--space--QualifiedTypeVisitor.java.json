@@ -1,0 +1,201 @@
+[
+    {
+        "repo_name": "eclipse_sisu.inject",
+        "commit": "c74e372155704044e64e03da9d58287eef537af7",
+        "rev_path": "org.eclipse.sisu.inject/src/org/eclipse/sisu/space/QualifiedTypeVisitor.java",
+        "definition": "public final class QualifiedTypeVisitor\n    extends EmptyClassVisitor\n    implements ClassSpaceVisitor\n{\n    // ----------------------------------------------------------------------\n    // Implementation fields\n    // ----------------------------------------------------------------------\n\n    private final QualifierCache qualifierCache = new QualifierCache();\n\n    private final QualifiedTypeListener listener;\n\n    private ClassSpace space;\n\n    private URL location;\n\n    private String source;\n\n    private String clazzName;\n\n    private boolean qualified;\n\n    // ----------------------------------------------------------------------\n    // Constructors\n    // ----------------------------------------------------------------------\n\n    public QualifiedTypeVisitor( final QualifiedTypeListener listener )\n    {\n        this.listener = listener;\n    }\n\n    // ----------------------------------------------------------------------\n    // Public methods\n    // ----------------------------------------------------------------------\n\n    public static boolean verify( final ClassSpace space, final Class<?>... specification )\n    {\n        for ( final Class<?> expectedClazz : specification )\n        {\n            try\n            {\n                final Class<?> spaceClazz = space.loadClass( expectedClazz.getName() );\n                if ( spaceClazz != expectedClazz )\n                {\n                    Logs.warn( \"Inconsistent ClassLoader for: {} in: {}\", expectedClazz, space );\n                    Logs.warn( \"Expected: {} saw: {}\", expectedClazz.getClassLoader(), spaceClazz.getClassLoader() );\n                }\n            }\n            catch ( final TypeNotPresentException e )\n            {\n                if ( expectedClazz.isAnnotation() )\n                {\n                    Logs.trace( \"Potential problem: {} is not visible from: {}\", expectedClazz, space );\n                }\n            }\n        }\n        return true;\n    }\n\n    public void visit( final ClassSpace _space )\n    {\n        space = _space;\n        source = null;\n\n        if ( Logs.TRACE_ENABLED )\n        {\n            verify( _space, Qualifier.class, Module.class );\n        }\n    }\n\n    public ClassVisitor visitClass( final URL url )\n    {\n        location = url;\n        clazzName = null;\n        qualified = false;\n\n        return this;\n    }\n\n    @Override\n    public void visit( final int version, final int access, final String name, final String signature,\n                       final String superName, final String[] interfaces )\n    {\n        if ( ( access & ( Opcodes.ACC_INTERFACE | Opcodes.ACC_ABSTRACT | Opcodes.ACC_SYNTHETIC ) ) == 0 )\n        {\n            clazzName = name; // concrete type\n        }\n    }\n\n    @Override\n    public AnnotationVisitor visitAnnotation( final String desc, final boolean visible )\n    {\n        if ( null != clazzName )\n        {\n            qualified = qualified || qualifierCache.qualify( space, desc );\n        }\n        return null;\n    }\n\n    @Override\n    public void visitEnd()\n    {\n        if ( qualified )\n        {\n            qualified = false; // we might be called twice (once per-class, once per-space)\n\n            // compressed record of class location\n            final String path = location.getPath();\n            if ( null == source || !path.startsWith( source ) )\n            {\n                final int i = path.indexOf( clazzName );\n                source = i <= 0 ? path : path.substring( 0, i );\n            }\n\n            listener.hear( null, space.loadClass( clazzName.replace( '/', '.' ) ), source );\n        }\n    }\n}",
+        "package": "package org.eclipse.sisu.space;",
+        "tree_path": "QualifiedTypeVisitor",
+        "name": "QualifiedTypeVisitor",
+        "modifiers": "public final",
+        "superclass": "extends EmptyClassVisitor",
+        "super_interfaces": "implements ClassSpaceVisitor",
+        "body": "{\n    // ----------------------------------------------------------------------\n    // Implementation fields\n    // ----------------------------------------------------------------------\n\n    private final QualifierCache qualifierCache = new QualifierCache();\n\n    private final QualifiedTypeListener listener;\n\n    private ClassSpace space;\n\n    private URL location;\n\n    private String source;\n\n    private String clazzName;\n\n    private boolean qualified;\n\n    // ----------------------------------------------------------------------\n    // Constructors\n    // ----------------------------------------------------------------------\n\n    public QualifiedTypeVisitor( final QualifiedTypeListener listener )\n    {\n        this.listener = listener;\n    }\n\n    // ----------------------------------------------------------------------\n    // Public methods\n    // ----------------------------------------------------------------------\n\n    public static boolean verify( final ClassSpace space, final Class<?>... specification )\n    {\n        for ( final Class<?> expectedClazz : specification )\n        {\n            try\n            {\n                final Class<?> spaceClazz = space.loadClass( expectedClazz.getName() );\n                if ( spaceClazz != expectedClazz )\n                {\n                    Logs.warn( \"Inconsistent ClassLoader for: {} in: {}\", expectedClazz, space );\n                    Logs.warn( \"Expected: {} saw: {}\", expectedClazz.getClassLoader(), spaceClazz.getClassLoader() );\n                }\n            }\n            catch ( final TypeNotPresentException e )\n            {\n                if ( expectedClazz.isAnnotation() )\n                {\n                    Logs.trace( \"Potential problem: {} is not visible from: {}\", expectedClazz, space );\n                }\n            }\n        }\n        return true;\n    }\n\n    public void visit( final ClassSpace _space )\n    {\n        space = _space;\n        source = null;\n\n        if ( Logs.TRACE_ENABLED )\n        {\n            verify( _space, Qualifier.class, Module.class );\n        }\n    }\n\n    public ClassVisitor visitClass( final URL url )\n    {\n        location = url;\n        clazzName = null;\n        qualified = false;\n\n        return this;\n    }\n\n    @Override\n    public void visit( final int version, final int access, final String name, final String signature,\n                       final String superName, final String[] interfaces )\n    {\n        if ( ( access & ( Opcodes.ACC_INTERFACE | Opcodes.ACC_ABSTRACT | Opcodes.ACC_SYNTHETIC ) ) == 0 )\n        {\n            clazzName = name; // concrete type\n        }\n    }\n\n    @Override\n    public AnnotationVisitor visitAnnotation( final String desc, final boolean visible )\n    {\n        if ( null != clazzName )\n        {\n            qualified = qualified || qualifierCache.qualify( space, desc );\n        }\n        return null;\n    }\n\n    @Override\n    public void visitEnd()\n    {\n        if ( qualified )\n        {\n            qualified = false; // we might be called twice (once per-class, once per-space)\n\n            // compressed record of class location\n            final String path = location.getPath();\n            if ( null == source || !path.startsWith( source ) )\n            {\n                final int i = path.indexOf( clazzName );\n                source = i <= 0 ? path : path.substring( 0, i );\n            }\n\n            listener.hear( null, space.loadClass( clazzName.replace( '/', '.' ) ), source );\n        }\n    }\n}",
+        "start_point": {
+            "row": 26,
+            "column": 0
+        },
+        "end_point": {
+            "row": 143,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "public QualifiedTypeVisitor( final QualifiedTypeListener listener )\n{\n    this.listener = listener;\n}",
+                "name": "QualifiedTypeVisitor",
+                "modifiers": "public",
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "QualifiedTypeListener"
+                    }
+                ],
+                "body": "{\n    this.listener = listener;\n}",
+                "constructor": true,
+                "start_point": {
+                    "row": 52,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 55,
+                    "column": 5
+                },
+                "method_mode": "Modified"
+            },
+            {
+                "definition": "public static boolean verify( final ClassSpace space, final Class<?>... specification )\n{\n    for ( final Class<?> expectedClazz : specification )\n    {\n        try\n        {\n            final Class<?> spaceClazz = space.loadClass( expectedClazz.getName() );\n            if ( spaceClazz != expectedClazz )\n            {\n                Logs.warn( \"Inconsistent ClassLoader for: {} in: {}\", expectedClazz, space );\n                Logs.warn( \"Expected: {} saw: {}\", expectedClazz.getClassLoader(), spaceClazz.getClassLoader() );\n            }\n        }\n        catch ( final TypeNotPresentException e )\n        {\n            if ( expectedClazz.isAnnotation() )\n            {\n                Logs.trace( \"Potential problem: {} is not visible from: {}\", expectedClazz, space );\n            }\n        }\n    }\n    return true;\n}",
+                "name": "verify",
+                "modifiers": "public static",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "ClassSpace"
+                    }
+                ],
+                "body": "{\n    for ( final Class<?> expectedClazz : specification )\n    {\n        try\n        {\n            final Class<?> spaceClazz = space.loadClass( expectedClazz.getName() );\n            if ( spaceClazz != expectedClazz )\n            {\n                Logs.warn( \"Inconsistent ClassLoader for: {} in: {}\", expectedClazz, space );\n                Logs.warn( \"Expected: {} saw: {}\", expectedClazz.getClassLoader(), spaceClazz.getClassLoader() );\n            }\n        }\n        catch ( final TypeNotPresentException e )\n        {\n            if ( expectedClazz.isAnnotation() )\n            {\n                Logs.trace( \"Potential problem: {} is not visible from: {}\", expectedClazz, space );\n            }\n        }\n    }\n    return true;\n}",
+                "start_point": {
+                    "row": 61,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 83,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void visit( final ClassSpace _space )\n{\n    space = _space;\n    source = null;\n\n    if ( Logs.TRACE_ENABLED )\n    {\n        verify( _space, Qualifier.class, Module.class );\n    }\n}",
+                "name": "visit",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "ClassSpace"
+                    }
+                ],
+                "body": "{\n    space = _space;\n    source = null;\n\n    if ( Logs.TRACE_ENABLED )\n    {\n        verify( _space, Qualifier.class, Module.class );\n    }\n}",
+                "start_point": {
+                    "row": 85,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 94,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public ClassVisitor visitClass( final URL url )\n{\n    location = url;\n    clazzName = null;\n    qualified = false;\n\n    return this;\n}",
+                "name": "visitClass",
+                "modifiers": "public",
+                "return_type": "ClassVisitor",
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "URL"
+                    }
+                ],
+                "body": "{\n    location = url;\n    clazzName = null;\n    qualified = false;\n\n    return this;\n}",
+                "start_point": {
+                    "row": 96,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 103,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\npublic void visit( final int version, final int access, final String name, final String signature,\n                   final String superName, final String[] interfaces )\n{\n    if ( ( access & ( Opcodes.ACC_INTERFACE | Opcodes.ACC_ABSTRACT | Opcodes.ACC_SYNTHETIC ) ) == 0 )\n    {\n        clazzName = name; // concrete type\n    }\n}",
+                "name": "visit",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "int"
+                    },
+                    {
+                        "type": "final",
+                        "name": "int"
+                    },
+                    {
+                        "type": "final",
+                        "name": "String"
+                    },
+                    {
+                        "type": "final",
+                        "name": "String"
+                    },
+                    {
+                        "type": "final",
+                        "name": "String"
+                    },
+                    {
+                        "type": "final",
+                        "name": "String[]"
+                    }
+                ],
+                "body": "{\n    if ( ( access & ( Opcodes.ACC_INTERFACE | Opcodes.ACC_ABSTRACT | Opcodes.ACC_SYNTHETIC ) ) == 0 )\n    {\n        clazzName = name; // concrete type\n    }\n}",
+                "start_point": {
+                    "row": 105,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 113,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\npublic AnnotationVisitor visitAnnotation( final String desc, final boolean visible )\n{\n    if ( null != clazzName )\n    {\n        qualified = qualified || qualifierCache.qualify( space, desc );\n    }\n    return null;\n}",
+                "name": "visitAnnotation",
+                "modifiers": "@Override\n    public",
+                "return_type": "AnnotationVisitor",
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "String"
+                    },
+                    {
+                        "type": "final",
+                        "name": "boolean"
+                    }
+                ],
+                "body": "{\n    if ( null != clazzName )\n    {\n        qualified = qualified || qualifierCache.qualify( space, desc );\n    }\n    return null;\n}",
+                "start_point": {
+                    "row": 115,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 123,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\npublic void visitEnd()\n{\n    if ( qualified )\n    {\n        qualified = false; // we might be called twice (once per-class, once per-space)\n\n        // compressed record of class location\n        final String path = location.getPath();\n        if ( null == source || !path.startsWith( source ) )\n        {\n            final int i = path.indexOf( clazzName );\n            source = i <= 0 ? path : path.substring( 0, i );\n        }\n\n        listener.hear( null, space.loadClass( clazzName.replace( '/', '.' ) ), source );\n    }\n}",
+                "name": "visitEnd",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    if ( qualified )\n    {\n        qualified = false; // we might be called twice (once per-class, once per-space)\n\n        // compressed record of class location\n        final String path = location.getPath();\n        if ( null == source || !path.startsWith( source ) )\n        {\n            final int i = path.indexOf( clazzName );\n            source = i <= 0 ? path : path.substring( 0, i );\n        }\n\n        listener.hear( null, space.loadClass( clazzName.replace( '/', '.' ) ), source );\n    }\n}",
+                "start_point": {
+                    "row": 125,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 142,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            }
+        ],
+        "class_mode": "Modified"
+    }
+]

@@ -1,0 +1,62 @@
+[
+    {
+        "repo_name": "wso2_ballerina-message-broker",
+        "commit": "01a74c93a09157b00179bb2bb10acb8a2771bb9d",
+        "rev_path": "modules/integration/src/test/java/org/wso2/messaging/integration/util/DbUtils.java",
+        "definition": "public class DbUtils {\n\n    private static final String DATABASE_URL = \"jdbc:h2:mem:mbDB;DB_CLOSE_DELAY=-1\";\n\n    private static final String path = \"../launcher/src/main/resources/dbscripts/h2-mb.sql\";\n\n    public static DataSource getDataSource() {\n\n        HikariConfig hikariDataSourceConfig = new HikariConfig();\n        hikariDataSourceConfig.setJdbcUrl(DATABASE_URL);\n        hikariDataSourceConfig.setAutoCommit(false);\n        return new HikariDataSource(hikariDataSourceConfig);\n    }\n\n    public static void setupDB() throws SQLException, IOException {\n\n        Connection connection = DriverManager.getConnection(DATABASE_URL + \";create=true\");\n\n        ScriptRunner scriptRunner = new ScriptRunner(connection, true, true);\n        scriptRunner.runScript(new BufferedReader(new FileReader(path)));\n\n        connection.close();\n    }\n}",
+        "package": "package org.wso2.messaging.integration.util;",
+        "tree_path": "DbUtils",
+        "name": "DbUtils",
+        "modifiers": "public",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n\n    private static final String DATABASE_URL = \"jdbc:h2:mem:mbDB;DB_CLOSE_DELAY=-1\";\n\n    private static final String path = \"../launcher/src/main/resources/dbscripts/h2-mb.sql\";\n\n    public static DataSource getDataSource() {\n\n        HikariConfig hikariDataSourceConfig = new HikariConfig();\n        hikariDataSourceConfig.setJdbcUrl(DATABASE_URL);\n        hikariDataSourceConfig.setAutoCommit(false);\n        return new HikariDataSource(hikariDataSourceConfig);\n    }\n\n    public static void setupDB() throws SQLException, IOException {\n\n        Connection connection = DriverManager.getConnection(DATABASE_URL + \";create=true\");\n\n        ScriptRunner scriptRunner = new ScriptRunner(connection, true, true);\n        scriptRunner.runScript(new BufferedReader(new FileReader(path)));\n\n        connection.close();\n    }\n}",
+        "start_point": {
+            "row": 33,
+            "column": 0
+        },
+        "end_point": {
+            "row": 56,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "public static DataSource getDataSource() {\n\n    HikariConfig hikariDataSourceConfig = new HikariConfig();\n    hikariDataSourceConfig.setJdbcUrl(DATABASE_URL);\n    hikariDataSourceConfig.setAutoCommit(false);\n    return new HikariDataSource(hikariDataSourceConfig);\n}",
+                "name": "getDataSource",
+                "modifiers": "public static",
+                "return_type": "DataSource",
+                "parameters": [],
+                "body": "{\n\n    HikariConfig hikariDataSourceConfig = new HikariConfig();\n    hikariDataSourceConfig.setJdbcUrl(DATABASE_URL);\n    hikariDataSourceConfig.setAutoCommit(false);\n    return new HikariDataSource(hikariDataSourceConfig);\n}",
+                "start_point": {
+                    "row": 39,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 45,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public static void setupDB() throws SQLException, IOException {\n\n    Connection connection = DriverManager.getConnection(DATABASE_URL + \";create=true\");\n\n    ScriptRunner scriptRunner = new ScriptRunner(connection, true, true);\n    scriptRunner.runScript(new BufferedReader(new FileReader(path)));\n\n    connection.close();\n}",
+                "name": "setupDB",
+                "modifiers": "public static",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n\n    Connection connection = DriverManager.getConnection(DATABASE_URL + \";create=true\");\n\n    ScriptRunner scriptRunner = new ScriptRunner(connection, true, true);\n    scriptRunner.runScript(new BufferedReader(new FileReader(path)));\n\n    connection.close();\n}",
+                "start_point": {
+                    "row": 47,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 55,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            }
+        ],
+        "class_mode": "Modified"
+    }
+]

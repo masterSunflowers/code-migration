@@ -1,5 +1,7 @@
 [
     {
+        "repo_name": "gravitee-io_graviteeio-access-management",
+        "commit": "0b18ada3207991cdfd70a551c56af125d2a0efe1",
         "rev_path": "gravitee-am-management-api/gravitee-am-management-api-service/src/main/java/io/gravitee/am/management/service/impl/upgrades/DeployAdminDomainUpgrader.java",
         "definition": "@Component\npublic class DeployAdminDomainUpgrader implements Upgrader, Ordered {\n\n    private static final Logger logger = LoggerFactory.getLogger(DeployAdminDomainUpgrader.class);\n    private final static String ADMIN_DOMAIN = \"admin\";\n\n    @Autowired\n    private DomainService domainService;\n\n    @Autowired\n    private EventManager eventManager;\n\n    @Override\n    public boolean upgrade() {\n        logger.info(\"Deploying registered {} domain\", ADMIN_DOMAIN);\n        domainService.findById(ADMIN_DOMAIN)\n                .switchIfEmpty(Maybe.error(new DomainNotFoundException(ADMIN_DOMAIN)))\n                .subscribe(\n                        adminDomain -> eventManager.publishEvent(DomainEvent.DEPLOY, adminDomain),\n                        error -> {\n                            logger.error(\"Failed to find admin domain\", error);\n                            throw new IllegalStateException(\"Failed to deploy admin domain\", error);\n                        }\n                );\n        return true;\n    }\n\n    @Override\n    public int getOrder() {\n        return 170;\n    }\n}",
         "package": "package io.gravitee.am.management.service.impl.upgrades;",

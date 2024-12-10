@@ -1,5 +1,7 @@
 [
     {
+        "repo_name": "JoeCao_qbike",
+        "commit": "ba1ba24af6b9a69ea6ed4d76ae61faf9191e4c0f",
         "rev_path": "trip/src/main/java/club/newtech/qbike/trip/domain/core/vo/Driver.java",
         "definition": "@Embeddable\n@Data\npublic class Driver {\n    private int id;\n    private String name;\n    private String mobile;\n}",
         "package": "package club.newtech.qbike.trip.domain.core.vo;",

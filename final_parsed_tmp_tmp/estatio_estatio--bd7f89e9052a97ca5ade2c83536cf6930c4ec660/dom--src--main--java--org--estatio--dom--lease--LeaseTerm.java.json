@@ -1,0 +1,1312 @@
+[
+    {
+        "repo_name": "estatio_estatio",
+        "commit": "bd7f89e9052a97ca5ade2c83536cf6930c4ec660",
+        "rev_path": "dom/src/main/java/org/estatio/dom/lease/LeaseTerm.java",
+        "definition": "@javax.jdo.annotations.PersistenceCapable(identityType = IdentityType.DATASTORE)\n@javax.jdo.annotations.Inheritance(strategy = InheritanceStrategy.NEW_TABLE)\n@javax.jdo.annotations.DatastoreIdentity(\n        strategy = IdGeneratorStrategy.IDENTITY,\n        column = \"id\")\n@javax.jdo.annotations.Version(\n        strategy = VersionStrategy.VERSION_NUMBER,\n        column = \"version\")\n@javax.jdo.annotations.Discriminator(\n        strategy = DiscriminatorStrategy.CLASS_NAME,\n        column = \"discriminator\")\n@javax.jdo.annotations.Indices({\n        @javax.jdo.annotations.Index(\n                name = \"LeaseTerm_leaseItem_startDate_IDX\",\n                members = { \"leaseItem\", \"startDate\" }) })\n@javax.jdo.annotations.Queries({\n        @javax.jdo.annotations.Query(\n                name = \"findByStatusAndActiveDate\", language = \"JDOQL\",\n                value = \"SELECT \"\n                        + \"FROM org.estatio.dom.lease.LeaseTerm \"\n                        + \"WHERE status == :status \"\n                        + \"   && startDate <= :date \"\n                        + \"   && (endDate == null || endDate >= :date)\"),\n        @javax.jdo.annotations.Query(\n                name = \"findByLeaseItemAndSequence\", language = \"JDOQL\",\n                value = \"SELECT \"\n                        + \"FROM org.estatio.dom.lease.LeaseTerm \"\n                        + \"WHERE leaseItem == :leaseItem \"\n                        + \"   && sequence == :sequence\"),\n        @javax.jdo.annotations.Query(\n                name = \"findByLeaseItemAndStartDate\", language = \"JDOQL\",\n                value = \"SELECT \"\n                        + \"FROM org.estatio.dom.lease.LeaseTerm \"\n                        + \"WHERE leaseItem == :leaseItem \"\n                        + \"   && startDate == :startDate\"),\n        @javax.jdo.annotations.Query(\n                name = \"findByLeaseItemAndEndDate\", language = \"JDOQL\",\n                value = \"SELECT \"\n                        + \"FROM org.estatio.dom.lease.LeaseTerm \"\n                        + \"WHERE leaseItem == :leaseItem \"\n                        + \"   && endDate == :endDate\")\n})\n@Bookmarkable(BookmarkPolicy.AS_CHILD)\npublic abstract class LeaseTerm\n        extends EstatioMutableObject<LeaseTerm>\n        implements WithIntervalMutable<LeaseTerm>, Chained<LeaseTerm>, WithSequence {\n\n    public LeaseTerm() {\n        // TODO: the integration tests fail if this is made DESCending.\n        super(\"leaseItem, sequence, startDate\");\n    }\n\n    // //////////////////////////////////////\n\n    @javax.jdo.annotations.Persistent\n    private LeaseItem leaseItem;\n\n    @javax.jdo.annotations.Column(name = \"leaseItemId\", allowsNull = \"false\")\n    @Hidden(where = Where.REFERENCES_PARENT)\n    @Disabled\n    @Title(sequence = \"1\", append = \":\")\n    public LeaseItem getLeaseItem() {\n        return leaseItem;\n    }\n\n    public void setLeaseItem(final LeaseItem leaseItem) {\n        this.leaseItem = leaseItem;\n    }\n\n    // //////////////////////////////////////\n\n    private BigInteger sequence;\n\n    @Hidden\n    @Optional\n    public BigInteger getSequence() {\n        return sequence;\n    }\n\n    public void setSequence(final BigInteger sequence) {\n        this.sequence = sequence;\n    }\n\n    // //////////////////////////////////////\n\n    @javax.jdo.annotations.Persistent\n    private LocalDate startDate;\n\n    @Title(sequence = \"2\", append = \"-\")\n    @Optional\n    @Disabled\n    @Override\n    public LocalDate getStartDate() {\n        return startDate;\n    }\n\n    @Override\n    public void setStartDate(final LocalDate startDate) {\n        this.startDate = startDate;\n    }\n\n    public void modifyStartDate(final LocalDate startDate) {\n        LocalDate currentStartDate = getStartDate();\n        if (startDate != null && !startDate.equals(currentStartDate)) {\n            setStartDate(startDate);\n        }\n        if (getPrevious() != null) {\n            getPrevious().modifyEndDate(getInterval().endDateFromStartDate());\n        }\n    }\n\n    public void clearStartDate() {\n        LocalDate currentStartDate = getStartDate();\n        if (currentStartDate == null) {\n            return;\n        }\n        setStartDate(null);\n        // TODO: shouldn't there be some logic reciprocal to that in\n        // modifyStartDate ?\n    }\n\n    // //////////////////////////////////////\n\n    @javax.jdo.annotations.Persistent\n    private LocalDate endDate;\n\n    @Title(sequence = \"3\")\n    @Disabled\n    @Optional\n    public LocalDate getEndDate() {\n        return endDate;\n    }\n\n    public void setEndDate(final LocalDate endDate) {\n        this.endDate = endDate;\n    }\n\n    public void modifyEndDate(final LocalDate endDate) {\n        LocalDate currentEndDate = getEndDate();\n        if (endDate == null && currentEndDate == null || endDate.equals(currentEndDate)) {\n            return;\n        }\n        setEndDate(endDate);\n    }\n\n    public void clearEndDate() {\n        LocalDate currentEndDate = getEndDate();\n        if (currentEndDate == null) {\n            return;\n        }\n        setEndDate(null);\n    }\n\n    // //////////////////////////////////////\n\n    private WithIntervalMutable.Helper<LeaseTerm> changeDates = new WithIntervalMutable.Helper<LeaseTerm>(this);\n\n    WithIntervalMutable.Helper<LeaseTerm> getChangeDates() {\n        return changeDates;\n    }\n\n    @ActionSemantics(Of.IDEMPOTENT)\n    @Override\n    public LeaseTerm changeDates(\n            final @Named(\"Start Date\") @Optional LocalDate startDate,\n            final @Named(\"End Date\") @Optional LocalDate endDate) {\n        return getChangeDates().changeDates(startDate, endDate);\n    }\n\n    public String disableChangeDates(\n            final LocalDate startDate,\n            final LocalDate endDate) {\n        return null;\n    }\n\n    @Override\n    public LocalDate default0ChangeDates() {\n        return getChangeDates().default0ChangeDates();\n    }\n\n    @Override\n    public LocalDate default1ChangeDates() {\n        return getChangeDates().default1ChangeDates();\n    }\n\n    @Override\n    public String validateChangeDates(\n            final LocalDate startDate,\n            final LocalDate endDate) {\n        return getChangeDates().validateChangeDates(startDate, endDate);\n    }\n\n    // //////////////////////////////////////\n\n    @Programmatic\n    @Override\n    public LocalDateInterval getInterval() {\n        return LocalDateInterval.including(getStartDate(), getEndDate());\n    }\n\n    @Programmatic\n    public LocalDateInterval getEffectiveInterval() {\n        return getInterval().overlap(getLeaseItem().getEffectiveInterval());\n    }\n\n    // //////////////////////////////////////\n\n    public boolean isCurrent() {\n        return isActiveOn(getClockService().now());\n    }\n\n    @Programmatic\n    public boolean isActiveOn(final LocalDate localDate) {\n        LocalDateInterval effectiveInterval = getEffectiveInterval();\n        if (effectiveInterval == null) {\n            return false;\n        }\n        return effectiveInterval.contains(localDate);\n    }\n\n    // //////////////////////////////////////\n\n    private LeaseTermStatus status;\n\n    @javax.jdo.annotations.Column(allowsNull = \"false\", length = JdoColumnLength.STATUS_ENUM)\n    @Disabled\n    public LeaseTermStatus getStatus() {\n        return status;\n    }\n\n    public void setStatus(final LeaseTermStatus status) {\n        this.status = status;\n    }\n\n    public void created() {\n        setStatus(LeaseTermStatus.NEW);\n    }\n\n    // //////////////////////////////////////\n\n    private LeaseTermFrequency frequency;\n\n    @javax.jdo.annotations.Column(allowsNull = \"false\", length = JdoColumnLength.LEASE_TERM_FREQUENCY_ENUM)\n    public LeaseTermFrequency getFrequency() {\n        return frequency;\n    }\n\n    public void setFrequency(final LeaseTermFrequency frequency) {\n        this.frequency = frequency;\n    }\n\n    // //////////////////////////////////////\n\n    public BigDecimal getTrialValue() {\n        return null;\n    }\n\n    // //////////////////////////////////////\n\n    public BigDecimal getApprovedValue() {\n        return null;\n    }\n\n    // //////////////////////////////////////\n\n    @javax.jdo.annotations.Column(name = \"previousLeaseTermId\")\n    @javax.jdo.annotations.Persistent(mappedBy = \"next\")\n    private LeaseTerm previous;\n\n    @Named(\"Previous Term\")\n    @Hidden(where = Where.ALL_TABLES)\n    @Optional\n    @Override\n    public LeaseTerm getPrevious() {\n        return previous;\n    }\n\n    public void setPrevious(final LeaseTerm previous) {\n        this.previous = previous;\n    }\n\n    public void modifyPrevious(final LeaseTerm previous) {\n        LeaseTerm currentPrevious = getPrevious();\n        if (previous == null || previous.equals(currentPrevious)) {\n            return;\n        }\n        clearPrevious();\n        previous.setNext(this);\n        setPrevious(previous);\n    }\n\n    public void clearPrevious() {\n        LeaseTerm currentPrevious = getPrevious();\n        if (currentPrevious == null) {\n            return;\n        }\n        currentPrevious.setNext(null);\n        setPrevious(null);\n    }\n\n    // //////////////////////////////////////\n\n    @javax.jdo.annotations.Column(name = \"nextLeaseTermId\")\n    private LeaseTerm next;\n\n    @Hidden(where = Where.ALL_TABLES)\n    @Named(\"Next Term\")\n    @Optional\n    @Override\n    public LeaseTerm getNext() {\n        return next;\n    }\n\n    public void setNext(final LeaseTerm next) {\n        this.next = next;\n    }\n\n    public void modifyNext(final LeaseTerm next) {\n        LeaseTerm currentNext = getNext();\n        if (next == null || next.equals(currentNext)) {\n            return;\n        }\n        if (currentNext != null) {\n            currentNext.clearPrevious();\n        }\n        next.modifyPrevious(this);\n    }\n\n    public void clearNext() {\n        LeaseTerm currentNext = getNext();\n        if (currentNext == null) {\n            return;\n        }\n        currentNext.clearPrevious();\n    }\n\n    // //////////////////////////////////////\n\n    @Persistent(mappedBy = \"leaseTerm\")\n    private SortedSet<InvoiceItemForLease> invoiceItems = new TreeSet<InvoiceItemForLease>();\n\n    @Render(Type.EAGERLY)\n    public SortedSet<InvoiceItemForLease> getInvoiceItems() {\n        return invoiceItems;\n    }\n\n    public void setInvoiceItems(final SortedSet<InvoiceItemForLease> invoiceItems) {\n        this.invoiceItems = invoiceItems;\n    }\n\n    public void addToInvoiceItems(final InvoiceItemForLease invoiceItem) {\n        if (invoiceItem == null || getInvoiceItems().contains(invoiceItem)) {\n            return;\n        }\n        invoiceItem.clearLeaseTerm();\n        invoiceItem.setLeaseTerm(this);\n        getInvoiceItems().add(invoiceItem);\n    }\n\n    public void removeFromInvoiceItems(final InvoiceItemForLease invoiceItem) {\n        if (invoiceItem == null || !getInvoiceItems().contains(invoiceItem)) {\n            return;\n        }\n        invoiceItem.setLeaseTerm(null);\n        getInvoiceItems().remove(invoiceItem);\n    }\n\n    // //////////////////////////////////////\n\n    @Programmatic\n    @Prototype\n    public void remove() {\n        if (getNext() != null) {\n            getNext().remove();\n        }\n        if (this.getInvoiceItems().size() == 0) {\n            // TODO: Disabled, see EST-273\n            // this.modifyPrevious(null);\n            // getContainer().remove(this);\n        }\n    }\n\n    @Programmatic\n    public void removeUnapprovedInvoiceItemsForDate(final LocalDate startDate, final LocalDate dueDate) {\n        for (InvoiceItemForLease invoiceItem : getInvoiceItems()) {\n            Invoice invoice = invoiceItem.getInvoice();\n            if ((invoice == null || invoice.getStatus().equals(InvoiceStatus.NEW)) &&\n                    startDate.equals(invoiceItem.getStartDate()) &&\n                    dueDate.equals(invoiceItem.getDueDate())) {\n                invoiceItem.setInvoice(null);\n                invoiceItem.clearLeaseTerm();\n                getContainer().flush();\n                remove(invoiceItem);\n            }\n        }\n    }\n\n    @Programmatic\n    public InvoiceItemForLease findOrCreateUnapprovedInvoiceItemFor(\n            final LocalDate startDate,\n            final LocalDate dueDate) {\n        InvoiceItemForLease ii = findUnapprovedInvoiceItemFor(startDate, dueDate);\n        if (ii == null) {\n            ii = invoiceItemsForLease.newInvoiceItem(this, startDate, dueDate);\n        }\n        return ii;\n    }\n\n    @Programmatic\n    public InvoiceItemForLease findUnapprovedInvoiceItemFor(\n            final LocalDate startDate,\n            final LocalDate dueDate) {\n        for (InvoiceItemForLease invoiceItem : getInvoiceItems()) {\n            Invoice invoice = invoiceItem.getInvoice();\n            if ((invoice == null || invoice.getStatus().equals(InvoiceStatus.NEW)) &&\n                    this.equals(invoiceItem.getLeaseTerm()) &&\n                    startDate.equals(invoiceItem.getStartDate()) &&\n                    dueDate.equals(invoiceItem.getDueDate())) {\n                return invoiceItem;\n            }\n        }\n        return null;\n    }\n\n    @Programmatic\n    public BigDecimal invoicedValueFor(final LocalDate startDate) {\n        BigDecimal invoicedValue = new BigDecimal(0);\n        for (InvoiceItemForLease invoiceItem : getInvoiceItems()) {\n            Invoice invoice = invoiceItem.getInvoice();\n            if (invoice == null || invoice.getStatus() == InvoiceStatus.NEW ||\n                    invoiceItem.getStartDate() == null ||\n                    invoiceItem.getStartDate().compareTo(startDate) != 0) {\n                continue;\n            }\n            invoicedValue = invoicedValue.add(invoiceItem.getNetAmount());\n        }\n        return invoicedValue;\n    }\n\n    // //////////////////////////////////////\n\n    @Programmatic\n    public LeaseTerm calculate(\n            final @Named(\"Period Start Date\") LocalDate startDate,\n            final @Named(\"Due Date\") LocalDate dueDate) {\n        return calculate(startDate, null, dueDate, InvoiceRunType.NORMAL_RUN);\n    }\n\n    public LeaseTerm calculate(\n            final @Named(\"Period start Date\") LocalDate startDate,\n            final @Named(\"Period end Date\") @Optional LocalDate endDate,\n            final @Named(\"Due Date\") LocalDate dueDate,\n            final @Named(\"Run Type\") InvoiceRunType runType) {\n        invoiceCalculationService.calculateAndInvoice(\n                this, startDate, endDate, dueDate, getLeaseItem().getInvoicingFrequency(), runType);\n        return this;\n    }\n\n    // //////////////////////////////////////\n\n    @Bulk\n    public LeaseTerm verify() {\n        verifyUntil(getClockService().now());\n        return this;\n    }\n\n    @Programmatic\n    public void verifyUntil(final LocalDate date) {\n        update();\n        // convenience code to automatically create terms but not for terms who\n        // have a start date after today\n        LeaseTerm nextTerm = getNext();\n        if (nextTerm == null && getNextStartDate().compareTo(date) <= 0) {\n            nextTerm = createNext(getNextStartDate());\n        }\n        if (nextTerm != null) {\n            nextTerm.verifyUntil(date);\n        }\n    }\n\n    private LocalDate getNextStartDate() {\n        LocalDate nextStartDate = getInterval().endDateExcluding();\n        if (nextStartDate == null) {\n            return getFrequency().nextDate(getStartDate());\n        }\n        return nextStartDate;\n    }\n\n    // //////////////////////////////////////\n\n    public LeaseTerm createNext(\n            final @Named(\"Start date\") LocalDate nextStartDate) {\n        LeaseTerm nextTerm = getNext();\n        if (nextTerm != null) {\n            return nextTerm;\n        }\n        // Don't create terms after termination date\n        LocalDate terminationDate = getLeaseItem().getLease().getTerminationDate();\n        if (terminationDate != null &&\n                terminationDate.isBefore(nextStartDate)) {\n            return null;\n        }\n        // Ok, we need to create a term\n        nextTerm = terms.newLeaseTerm(getLeaseItem(), this, nextStartDate);\n        nextTerm.initialize();\n        nextTerm.modifyStartDate(nextStartDate);\n        nextTerm.update();\n        return nextTerm;\n    }\n    \n\n    // //////////////////////////////////////\n\n    protected void initialize() {\n        setStatus(LeaseTermStatus.NEW);\n        LeaseTerm previousTerm = getPrevious();\n        BigInteger sequence = BigInteger.ONE;\n        if (previousTerm != null) {\n            sequence = previousTerm.getSequence().add(BigInteger.ONE);\n            setFrequency(previousTerm.getFrequency());\n        }\n        setSequence(sequence);\n    }\n\n    @Programmatic\n    protected void update() {\n        // terminate the last term\n        LocalDate terminationDate = getLeaseItem().getLease().getTerminationDate();\n        if (terminationDate != null && getNext() == null) {\n            if (getEndDate() == null || getEndDate().compareTo(terminationDate) > 0) {\n                setEndDate(terminationDate);\n            }\n        }\n        // Get the end date from the next start date\n        if (getEndDate() == null && getNext() != null) {\n            modifyEndDate(getNext().getInterval().endDateFromStartDate());\n        }\n\n    }\n\n    // //////////////////////////////////////\n\n    @Programmatic\n    public void copyValuesTo(final LeaseTerm target) {\n        target.setStartDate(getStartDate());\n        target.setEndDate(getEndDate());\n        target.setStatus(getStatus());\n        target.setFrequency(getFrequency());\n    }\n\n    // //////////////////////////////////////\n\n    @Bulk\n    @ActionSemantics(Of.IDEMPOTENT)\n    public LeaseTerm approve() {\n        if (!getStatus().isApproved()) {\n            setStatus(LeaseTermStatus.APPROVED);\n        }\n        return this;\n    }\n\n    // //////////////////////////////////////\n\n    @Programmatic\n    public BigDecimal valueForDate(final LocalDate dueDate) {\n        return getTrialValue();\n    }\n\n    @Programmatic\n    BigDecimal valueForPeriod(\n            final LocalDate periodStartDate,\n            final LocalDate dueDate,\n            final InvoicingFrequency frequency) {\n        return invoiceCalculationService.calculateSumForAllPeriods(this, periodStartDate, dueDate, frequency);\n    }\n    \n    // //////////////////////////////////////\n    \n    @Override\n    public String toString(){\n        return getInterval().toString()+ \" / \";\n    }\n    \n\n    // //////////////////////////////////////\n\n    private InvoiceItemsForLease invoiceItemsForLease;\n\n    public final void injectInvoiceItemsForLease(final InvoiceItemsForLease invoiceItemsForLease) {\n        this.invoiceItemsForLease = invoiceItemsForLease;\n    }\n\n    private InvoiceCalculationService invoiceCalculationService;\n\n    public final void injectInvoiceCalculationService(final InvoiceCalculationService invoiceCalculationService) {\n        this.invoiceCalculationService = invoiceCalculationService;\n    }\n    \n    private LeaseTerms terms;\n    \n    public final void injectLeaseTerms(final LeaseTerms terms) {\n        this.terms = terms;\n    }\n\n}",
+        "package": "package org.estatio.dom.lease;",
+        "tree_path": "LeaseTerm",
+        "name": "LeaseTerm",
+        "modifiers": "@javax.jdo.annotations.PersistenceCapable(identityType = IdentityType.DATASTORE)\n@javax.jdo.annotations.Inheritance(strategy = InheritanceStrategy.NEW_TABLE)\n@javax.jdo.annotations.DatastoreIdentity(\n        strategy = IdGeneratorStrategy.IDENTITY,\n        column = \"id\")\n@javax.jdo.annotations.Version(\n        strategy = VersionStrategy.VERSION_NUMBER,\n        column = \"version\")\n@javax.jdo.annotations.Discriminator(\n        strategy = DiscriminatorStrategy.CLASS_NAME,\n        column = \"discriminator\")\n@javax.jdo.annotations.Indices({\n        @javax.jdo.annotations.Index(\n                name = \"LeaseTerm_leaseItem_startDate_IDX\",\n                members = { \"leaseItem\", \"startDate\" }) })\n@javax.jdo.annotations.Queries({\n        @javax.jdo.annotations.Query(\n                name = \"findByStatusAndActiveDate\", language = \"JDOQL\",\n                value = \"SELECT \"\n                        + \"FROM org.estatio.dom.lease.LeaseTerm \"\n                        + \"WHERE status == :status \"\n                        + \"   && startDate <= :date \"\n                        + \"   && (endDate == null || endDate >= :date)\"),\n        @javax.jdo.annotations.Query(\n                name = \"findByLeaseItemAndSequence\", language = \"JDOQL\",\n                value = \"SELECT \"\n                        + \"FROM org.estatio.dom.lease.LeaseTerm \"\n                        + \"WHERE leaseItem == :leaseItem \"\n                        + \"   && sequence == :sequence\"),\n        @javax.jdo.annotations.Query(\n                name = \"findByLeaseItemAndStartDate\", language = \"JDOQL\",\n                value = \"SELECT \"\n                        + \"FROM org.estatio.dom.lease.LeaseTerm \"\n                        + \"WHERE leaseItem == :leaseItem \"\n                        + \"   && startDate == :startDate\"),\n        @javax.jdo.annotations.Query(\n                name = \"findByLeaseItemAndEndDate\", language = \"JDOQL\",\n                value = \"SELECT \"\n                        + \"FROM org.estatio.dom.lease.LeaseTerm \"\n                        + \"WHERE leaseItem == :leaseItem \"\n                        + \"   && endDate == :endDate\")\n})\n@Bookmarkable(BookmarkPolicy.AS_CHILD)\npublic abstract",
+        "superclass": "extends EstatioMutableObject<LeaseTerm>",
+        "super_interfaces": "implements WithIntervalMutable<LeaseTerm>, Chained<LeaseTerm>, WithSequence",
+        "body": "{\n\n    public LeaseTerm() {\n        // TODO: the integration tests fail if this is made DESCending.\n        super(\"leaseItem, sequence, startDate\");\n    }\n\n    // //////////////////////////////////////\n\n    @javax.jdo.annotations.Persistent\n    private LeaseItem leaseItem;\n\n    @javax.jdo.annotations.Column(name = \"leaseItemId\", allowsNull = \"false\")\n    @Hidden(where = Where.REFERENCES_PARENT)\n    @Disabled\n    @Title(sequence = \"1\", append = \":\")\n    public LeaseItem getLeaseItem() {\n        return leaseItem;\n    }\n\n    public void setLeaseItem(final LeaseItem leaseItem) {\n        this.leaseItem = leaseItem;\n    }\n\n    // //////////////////////////////////////\n\n    private BigInteger sequence;\n\n    @Hidden\n    @Optional\n    public BigInteger getSequence() {\n        return sequence;\n    }\n\n    public void setSequence(final BigInteger sequence) {\n        this.sequence = sequence;\n    }\n\n    // //////////////////////////////////////\n\n    @javax.jdo.annotations.Persistent\n    private LocalDate startDate;\n\n    @Title(sequence = \"2\", append = \"-\")\n    @Optional\n    @Disabled\n    @Override\n    public LocalDate getStartDate() {\n        return startDate;\n    }\n\n    @Override\n    public void setStartDate(final LocalDate startDate) {\n        this.startDate = startDate;\n    }\n\n    public void modifyStartDate(final LocalDate startDate) {\n        LocalDate currentStartDate = getStartDate();\n        if (startDate != null && !startDate.equals(currentStartDate)) {\n            setStartDate(startDate);\n        }\n        if (getPrevious() != null) {\n            getPrevious().modifyEndDate(getInterval().endDateFromStartDate());\n        }\n    }\n\n    public void clearStartDate() {\n        LocalDate currentStartDate = getStartDate();\n        if (currentStartDate == null) {\n            return;\n        }\n        setStartDate(null);\n        // TODO: shouldn't there be some logic reciprocal to that in\n        // modifyStartDate ?\n    }\n\n    // //////////////////////////////////////\n\n    @javax.jdo.annotations.Persistent\n    private LocalDate endDate;\n\n    @Title(sequence = \"3\")\n    @Disabled\n    @Optional\n    public LocalDate getEndDate() {\n        return endDate;\n    }\n\n    public void setEndDate(final LocalDate endDate) {\n        this.endDate = endDate;\n    }\n\n    public void modifyEndDate(final LocalDate endDate) {\n        LocalDate currentEndDate = getEndDate();\n        if (endDate == null && currentEndDate == null || endDate.equals(currentEndDate)) {\n            return;\n        }\n        setEndDate(endDate);\n    }\n\n    public void clearEndDate() {\n        LocalDate currentEndDate = getEndDate();\n        if (currentEndDate == null) {\n            return;\n        }\n        setEndDate(null);\n    }\n\n    // //////////////////////////////////////\n\n    private WithIntervalMutable.Helper<LeaseTerm> changeDates = new WithIntervalMutable.Helper<LeaseTerm>(this);\n\n    WithIntervalMutable.Helper<LeaseTerm> getChangeDates() {\n        return changeDates;\n    }\n\n    @ActionSemantics(Of.IDEMPOTENT)\n    @Override\n    public LeaseTerm changeDates(\n            final @Named(\"Start Date\") @Optional LocalDate startDate,\n            final @Named(\"End Date\") @Optional LocalDate endDate) {\n        return getChangeDates().changeDates(startDate, endDate);\n    }\n\n    public String disableChangeDates(\n            final LocalDate startDate,\n            final LocalDate endDate) {\n        return null;\n    }\n\n    @Override\n    public LocalDate default0ChangeDates() {\n        return getChangeDates().default0ChangeDates();\n    }\n\n    @Override\n    public LocalDate default1ChangeDates() {\n        return getChangeDates().default1ChangeDates();\n    }\n\n    @Override\n    public String validateChangeDates(\n            final LocalDate startDate,\n            final LocalDate endDate) {\n        return getChangeDates().validateChangeDates(startDate, endDate);\n    }\n\n    // //////////////////////////////////////\n\n    @Programmatic\n    @Override\n    public LocalDateInterval getInterval() {\n        return LocalDateInterval.including(getStartDate(), getEndDate());\n    }\n\n    @Programmatic\n    public LocalDateInterval getEffectiveInterval() {\n        return getInterval().overlap(getLeaseItem().getEffectiveInterval());\n    }\n\n    // //////////////////////////////////////\n\n    public boolean isCurrent() {\n        return isActiveOn(getClockService().now());\n    }\n\n    @Programmatic\n    public boolean isActiveOn(final LocalDate localDate) {\n        LocalDateInterval effectiveInterval = getEffectiveInterval();\n        if (effectiveInterval == null) {\n            return false;\n        }\n        return effectiveInterval.contains(localDate);\n    }\n\n    // //////////////////////////////////////\n\n    private LeaseTermStatus status;\n\n    @javax.jdo.annotations.Column(allowsNull = \"false\", length = JdoColumnLength.STATUS_ENUM)\n    @Disabled\n    public LeaseTermStatus getStatus() {\n        return status;\n    }\n\n    public void setStatus(final LeaseTermStatus status) {\n        this.status = status;\n    }\n\n    public void created() {\n        setStatus(LeaseTermStatus.NEW);\n    }\n\n    // //////////////////////////////////////\n\n    private LeaseTermFrequency frequency;\n\n    @javax.jdo.annotations.Column(allowsNull = \"false\", length = JdoColumnLength.LEASE_TERM_FREQUENCY_ENUM)\n    public LeaseTermFrequency getFrequency() {\n        return frequency;\n    }\n\n    public void setFrequency(final LeaseTermFrequency frequency) {\n        this.frequency = frequency;\n    }\n\n    // //////////////////////////////////////\n\n    public BigDecimal getTrialValue() {\n        return null;\n    }\n\n    // //////////////////////////////////////\n\n    public BigDecimal getApprovedValue() {\n        return null;\n    }\n\n    // //////////////////////////////////////\n\n    @javax.jdo.annotations.Column(name = \"previousLeaseTermId\")\n    @javax.jdo.annotations.Persistent(mappedBy = \"next\")\n    private LeaseTerm previous;\n\n    @Named(\"Previous Term\")\n    @Hidden(where = Where.ALL_TABLES)\n    @Optional\n    @Override\n    public LeaseTerm getPrevious() {\n        return previous;\n    }\n\n    public void setPrevious(final LeaseTerm previous) {\n        this.previous = previous;\n    }\n\n    public void modifyPrevious(final LeaseTerm previous) {\n        LeaseTerm currentPrevious = getPrevious();\n        if (previous == null || previous.equals(currentPrevious)) {\n            return;\n        }\n        clearPrevious();\n        previous.setNext(this);\n        setPrevious(previous);\n    }\n\n    public void clearPrevious() {\n        LeaseTerm currentPrevious = getPrevious();\n        if (currentPrevious == null) {\n            return;\n        }\n        currentPrevious.setNext(null);\n        setPrevious(null);\n    }\n\n    // //////////////////////////////////////\n\n    @javax.jdo.annotations.Column(name = \"nextLeaseTermId\")\n    private LeaseTerm next;\n\n    @Hidden(where = Where.ALL_TABLES)\n    @Named(\"Next Term\")\n    @Optional\n    @Override\n    public LeaseTerm getNext() {\n        return next;\n    }\n\n    public void setNext(final LeaseTerm next) {\n        this.next = next;\n    }\n\n    public void modifyNext(final LeaseTerm next) {\n        LeaseTerm currentNext = getNext();\n        if (next == null || next.equals(currentNext)) {\n            return;\n        }\n        if (currentNext != null) {\n            currentNext.clearPrevious();\n        }\n        next.modifyPrevious(this);\n    }\n\n    public void clearNext() {\n        LeaseTerm currentNext = getNext();\n        if (currentNext == null) {\n            return;\n        }\n        currentNext.clearPrevious();\n    }\n\n    // //////////////////////////////////////\n\n    @Persistent(mappedBy = \"leaseTerm\")\n    private SortedSet<InvoiceItemForLease> invoiceItems = new TreeSet<InvoiceItemForLease>();\n\n    @Render(Type.EAGERLY)\n    public SortedSet<InvoiceItemForLease> getInvoiceItems() {\n        return invoiceItems;\n    }\n\n    public void setInvoiceItems(final SortedSet<InvoiceItemForLease> invoiceItems) {\n        this.invoiceItems = invoiceItems;\n    }\n\n    public void addToInvoiceItems(final InvoiceItemForLease invoiceItem) {\n        if (invoiceItem == null || getInvoiceItems().contains(invoiceItem)) {\n            return;\n        }\n        invoiceItem.clearLeaseTerm();\n        invoiceItem.setLeaseTerm(this);\n        getInvoiceItems().add(invoiceItem);\n    }\n\n    public void removeFromInvoiceItems(final InvoiceItemForLease invoiceItem) {\n        if (invoiceItem == null || !getInvoiceItems().contains(invoiceItem)) {\n            return;\n        }\n        invoiceItem.setLeaseTerm(null);\n        getInvoiceItems().remove(invoiceItem);\n    }\n\n    // //////////////////////////////////////\n\n    @Programmatic\n    @Prototype\n    public void remove() {\n        if (getNext() != null) {\n            getNext().remove();\n        }\n        if (this.getInvoiceItems().size() == 0) {\n            // TODO: Disabled, see EST-273\n            // this.modifyPrevious(null);\n            // getContainer().remove(this);\n        }\n    }\n\n    @Programmatic\n    public void removeUnapprovedInvoiceItemsForDate(final LocalDate startDate, final LocalDate dueDate) {\n        for (InvoiceItemForLease invoiceItem : getInvoiceItems()) {\n            Invoice invoice = invoiceItem.getInvoice();\n            if ((invoice == null || invoice.getStatus().equals(InvoiceStatus.NEW)) &&\n                    startDate.equals(invoiceItem.getStartDate()) &&\n                    dueDate.equals(invoiceItem.getDueDate())) {\n                invoiceItem.setInvoice(null);\n                invoiceItem.clearLeaseTerm();\n                getContainer().flush();\n                remove(invoiceItem);\n            }\n        }\n    }\n\n    @Programmatic\n    public InvoiceItemForLease findOrCreateUnapprovedInvoiceItemFor(\n            final LocalDate startDate,\n            final LocalDate dueDate) {\n        InvoiceItemForLease ii = findUnapprovedInvoiceItemFor(startDate, dueDate);\n        if (ii == null) {\n            ii = invoiceItemsForLease.newInvoiceItem(this, startDate, dueDate);\n        }\n        return ii;\n    }\n\n    @Programmatic\n    public InvoiceItemForLease findUnapprovedInvoiceItemFor(\n            final LocalDate startDate,\n            final LocalDate dueDate) {\n        for (InvoiceItemForLease invoiceItem : getInvoiceItems()) {\n            Invoice invoice = invoiceItem.getInvoice();\n            if ((invoice == null || invoice.getStatus().equals(InvoiceStatus.NEW)) &&\n                    this.equals(invoiceItem.getLeaseTerm()) &&\n                    startDate.equals(invoiceItem.getStartDate()) &&\n                    dueDate.equals(invoiceItem.getDueDate())) {\n                return invoiceItem;\n            }\n        }\n        return null;\n    }\n\n    @Programmatic\n    public BigDecimal invoicedValueFor(final LocalDate startDate) {\n        BigDecimal invoicedValue = new BigDecimal(0);\n        for (InvoiceItemForLease invoiceItem : getInvoiceItems()) {\n            Invoice invoice = invoiceItem.getInvoice();\n            if (invoice == null || invoice.getStatus() == InvoiceStatus.NEW ||\n                    invoiceItem.getStartDate() == null ||\n                    invoiceItem.getStartDate().compareTo(startDate) != 0) {\n                continue;\n            }\n            invoicedValue = invoicedValue.add(invoiceItem.getNetAmount());\n        }\n        return invoicedValue;\n    }\n\n    // //////////////////////////////////////\n\n    @Programmatic\n    public LeaseTerm calculate(\n            final @Named(\"Period Start Date\") LocalDate startDate,\n            final @Named(\"Due Date\") LocalDate dueDate) {\n        return calculate(startDate, null, dueDate, InvoiceRunType.NORMAL_RUN);\n    }\n\n    public LeaseTerm calculate(\n            final @Named(\"Period start Date\") LocalDate startDate,\n            final @Named(\"Period end Date\") @Optional LocalDate endDate,\n            final @Named(\"Due Date\") LocalDate dueDate,\n            final @Named(\"Run Type\") InvoiceRunType runType) {\n        invoiceCalculationService.calculateAndInvoice(\n                this, startDate, endDate, dueDate, getLeaseItem().getInvoicingFrequency(), runType);\n        return this;\n    }\n\n    // //////////////////////////////////////\n\n    @Bulk\n    public LeaseTerm verify() {\n        verifyUntil(getClockService().now());\n        return this;\n    }\n\n    @Programmatic\n    public void verifyUntil(final LocalDate date) {\n        update();\n        // convenience code to automatically create terms but not for terms who\n        // have a start date after today\n        LeaseTerm nextTerm = getNext();\n        if (nextTerm == null && getNextStartDate().compareTo(date) <= 0) {\n            nextTerm = createNext(getNextStartDate());\n        }\n        if (nextTerm != null) {\n            nextTerm.verifyUntil(date);\n        }\n    }\n\n    private LocalDate getNextStartDate() {\n        LocalDate nextStartDate = getInterval().endDateExcluding();\n        if (nextStartDate == null) {\n            return getFrequency().nextDate(getStartDate());\n        }\n        return nextStartDate;\n    }\n\n    // //////////////////////////////////////\n\n    public LeaseTerm createNext(\n            final @Named(\"Start date\") LocalDate nextStartDate) {\n        LeaseTerm nextTerm = getNext();\n        if (nextTerm != null) {\n            return nextTerm;\n        }\n        // Don't create terms after termination date\n        LocalDate terminationDate = getLeaseItem().getLease().getTerminationDate();\n        if (terminationDate != null &&\n                terminationDate.isBefore(nextStartDate)) {\n            return null;\n        }\n        // Ok, we need to create a term\n        nextTerm = terms.newLeaseTerm(getLeaseItem(), this, nextStartDate);\n        nextTerm.initialize();\n        nextTerm.modifyStartDate(nextStartDate);\n        nextTerm.update();\n        return nextTerm;\n    }\n    \n\n    // //////////////////////////////////////\n\n    protected void initialize() {\n        setStatus(LeaseTermStatus.NEW);\n        LeaseTerm previousTerm = getPrevious();\n        BigInteger sequence = BigInteger.ONE;\n        if (previousTerm != null) {\n            sequence = previousTerm.getSequence().add(BigInteger.ONE);\n            setFrequency(previousTerm.getFrequency());\n        }\n        setSequence(sequence);\n    }\n\n    @Programmatic\n    protected void update() {\n        // terminate the last term\n        LocalDate terminationDate = getLeaseItem().getLease().getTerminationDate();\n        if (terminationDate != null && getNext() == null) {\n            if (getEndDate() == null || getEndDate().compareTo(terminationDate) > 0) {\n                setEndDate(terminationDate);\n            }\n        }\n        // Get the end date from the next start date\n        if (getEndDate() == null && getNext() != null) {\n            modifyEndDate(getNext().getInterval().endDateFromStartDate());\n        }\n\n    }\n\n    // //////////////////////////////////////\n\n    @Programmatic\n    public void copyValuesTo(final LeaseTerm target) {\n        target.setStartDate(getStartDate());\n        target.setEndDate(getEndDate());\n        target.setStatus(getStatus());\n        target.setFrequency(getFrequency());\n    }\n\n    // //////////////////////////////////////\n\n    @Bulk\n    @ActionSemantics(Of.IDEMPOTENT)\n    public LeaseTerm approve() {\n        if (!getStatus().isApproved()) {\n            setStatus(LeaseTermStatus.APPROVED);\n        }\n        return this;\n    }\n\n    // //////////////////////////////////////\n\n    @Programmatic\n    public BigDecimal valueForDate(final LocalDate dueDate) {\n        return getTrialValue();\n    }\n\n    @Programmatic\n    BigDecimal valueForPeriod(\n            final LocalDate periodStartDate,\n            final LocalDate dueDate,\n            final InvoicingFrequency frequency) {\n        return invoiceCalculationService.calculateSumForAllPeriods(this, periodStartDate, dueDate, frequency);\n    }\n    \n    // //////////////////////////////////////\n    \n    @Override\n    public String toString(){\n        return getInterval().toString()+ \" / \";\n    }\n    \n\n    // //////////////////////////////////////\n\n    private InvoiceItemsForLease invoiceItemsForLease;\n\n    public final void injectInvoiceItemsForLease(final InvoiceItemsForLease invoiceItemsForLease) {\n        this.invoiceItemsForLease = invoiceItemsForLease;\n    }\n\n    private InvoiceCalculationService invoiceCalculationService;\n\n    public final void injectInvoiceCalculationService(final InvoiceCalculationService invoiceCalculationService) {\n        this.invoiceCalculationService = invoiceCalculationService;\n    }\n    \n    private LeaseTerms terms;\n    \n    public final void injectLeaseTerms(final LeaseTerms terms) {\n        this.terms = terms;\n    }\n\n}",
+        "start_point": {
+            "row": 63,
+            "column": 0
+        },
+        "end_point": {
+            "row": 667,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "public LeaseTerm() {\n    // TODO: the integration tests fail if this is made DESCending.\n    super(\"leaseItem, sequence, startDate\");\n}",
+                "name": "LeaseTerm",
+                "modifiers": "public",
+                "parameters": [],
+                "body": "{\n    // TODO: the integration tests fail if this is made DESCending.\n    super(\"leaseItem, sequence, startDate\");\n}",
+                "constructor": true,
+                "start_point": {
+                    "row": 110,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 113,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@javax.jdo.annotations.Column(name = \"leaseItemId\", allowsNull = \"false\")\n@Hidden(where = Where.REFERENCES_PARENT)\n@Disabled\n@Title(sequence = \"1\", append = \":\")\npublic LeaseItem getLeaseItem() {\n    return leaseItem;\n}",
+                "name": "getLeaseItem",
+                "modifiers": "@javax.jdo.annotations.Column(name = \"leaseItemId\", allowsNull = \"false\")\n    @Hidden(where = Where.REFERENCES_PARENT)\n    @Disabled\n    @Title(sequence = \"1\", append = \":\")\n    public",
+                "return_type": "LeaseItem",
+                "parameters": [],
+                "body": "{\n    return leaseItem;\n}",
+                "start_point": {
+                    "row": 120,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 126,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void setLeaseItem(final LeaseItem leaseItem) {\n    this.leaseItem = leaseItem;\n}",
+                "name": "setLeaseItem",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LeaseItem"
+                    }
+                ],
+                "body": "{\n    this.leaseItem = leaseItem;\n}",
+                "start_point": {
+                    "row": 128,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 130,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Hidden\n@Optional\npublic BigInteger getSequence() {\n    return sequence;\n}",
+                "name": "getSequence",
+                "modifiers": "@Hidden\n    @Optional\n    public",
+                "return_type": "BigInteger",
+                "parameters": [],
+                "body": "{\n    return sequence;\n}",
+                "start_point": {
+                    "row": 136,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 140,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void setSequence(final BigInteger sequence) {\n    this.sequence = sequence;\n}",
+                "name": "setSequence",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "BigInteger"
+                    }
+                ],
+                "body": "{\n    this.sequence = sequence;\n}",
+                "start_point": {
+                    "row": 142,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 144,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Title(sequence = \"2\", append = \"-\")\n@Optional\n@Disabled\n@Override\npublic LocalDate getStartDate() {\n    return startDate;\n}",
+                "name": "getStartDate",
+                "modifiers": "@Title(sequence = \"2\", append = \"-\")\n    @Optional\n    @Disabled\n    @Override\n    public",
+                "return_type": "LocalDate",
+                "parameters": [],
+                "body": "{\n    return startDate;\n}",
+                "start_point": {
+                    "row": 151,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 157,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\npublic void setStartDate(final LocalDate startDate) {\n    this.startDate = startDate;\n}",
+                "name": "setStartDate",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    this.startDate = startDate;\n}",
+                "start_point": {
+                    "row": 159,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 162,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void modifyStartDate(final LocalDate startDate) {\n    LocalDate currentStartDate = getStartDate();\n    if (startDate != null && !startDate.equals(currentStartDate)) {\n        setStartDate(startDate);\n    }\n    if (getPrevious() != null) {\n        getPrevious().modifyEndDate(getInterval().endDateFromStartDate());\n    }\n}",
+                "name": "modifyStartDate",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    LocalDate currentStartDate = getStartDate();\n    if (startDate != null && !startDate.equals(currentStartDate)) {\n        setStartDate(startDate);\n    }\n    if (getPrevious() != null) {\n        getPrevious().modifyEndDate(getInterval().endDateFromStartDate());\n    }\n}",
+                "start_point": {
+                    "row": 164,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 172,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void clearStartDate() {\n    LocalDate currentStartDate = getStartDate();\n    if (currentStartDate == null) {\n        return;\n    }\n    setStartDate(null);\n    // TODO: shouldn't there be some logic reciprocal to that in\n    // modifyStartDate ?\n}",
+                "name": "clearStartDate",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    LocalDate currentStartDate = getStartDate();\n    if (currentStartDate == null) {\n        return;\n    }\n    setStartDate(null);\n    // TODO: shouldn't there be some logic reciprocal to that in\n    // modifyStartDate ?\n}",
+                "start_point": {
+                    "row": 174,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 182,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Title(sequence = \"3\")\n@Disabled\n@Optional\npublic LocalDate getEndDate() {\n    return endDate;\n}",
+                "name": "getEndDate",
+                "modifiers": "@Title(sequence = \"3\")\n    @Disabled\n    @Optional\n    public",
+                "return_type": "LocalDate",
+                "parameters": [],
+                "body": "{\n    return endDate;\n}",
+                "start_point": {
+                    "row": 189,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 194,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void setEndDate(final LocalDate endDate) {\n    this.endDate = endDate;\n}",
+                "name": "setEndDate",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    this.endDate = endDate;\n}",
+                "start_point": {
+                    "row": 196,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 198,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void modifyEndDate(final LocalDate endDate) {\n    LocalDate currentEndDate = getEndDate();\n    if (endDate == null && currentEndDate == null || endDate.equals(currentEndDate)) {\n        return;\n    }\n    setEndDate(endDate);\n}",
+                "name": "modifyEndDate",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    LocalDate currentEndDate = getEndDate();\n    if (endDate == null && currentEndDate == null || endDate.equals(currentEndDate)) {\n        return;\n    }\n    setEndDate(endDate);\n}",
+                "start_point": {
+                    "row": 200,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 206,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void clearEndDate() {\n    LocalDate currentEndDate = getEndDate();\n    if (currentEndDate == null) {\n        return;\n    }\n    setEndDate(null);\n}",
+                "name": "clearEndDate",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    LocalDate currentEndDate = getEndDate();\n    if (currentEndDate == null) {\n        return;\n    }\n    setEndDate(null);\n}",
+                "start_point": {
+                    "row": 208,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 214,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "WithIntervalMutable.Helper<LeaseTerm> getChangeDates() {\n    return changeDates;\n}",
+                "name": "getChangeDates",
+                "modifiers": null,
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return changeDates;\n}",
+                "start_point": {
+                    "row": 220,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 222,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@ActionSemantics(Of.IDEMPOTENT)\n@Override\npublic LeaseTerm changeDates(\n        final @Named(\"Start Date\") @Optional LocalDate startDate,\n        final @Named(\"End Date\") @Optional LocalDate endDate) {\n    return getChangeDates().changeDates(startDate, endDate);\n}",
+                "name": "changeDates",
+                "modifiers": "@ActionSemantics(Of.IDEMPOTENT)\n    @Override\n    public",
+                "return_type": "LeaseTerm",
+                "parameters": [
+                    {
+                        "type": "final @Named(\"Start Date\") @Optional",
+                        "name": "LocalDate"
+                    },
+                    {
+                        "type": "final @Named(\"End Date\") @Optional",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    return getChangeDates().changeDates(startDate, endDate);\n}",
+                "start_point": {
+                    "row": 224,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 230,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public String disableChangeDates(\n        final LocalDate startDate,\n        final LocalDate endDate) {\n    return null;\n}",
+                "name": "disableChangeDates",
+                "modifiers": "public",
+                "return_type": "String",
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    },
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    return null;\n}",
+                "start_point": {
+                    "row": 232,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 236,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\npublic LocalDate default0ChangeDates() {\n    return getChangeDates().default0ChangeDates();\n}",
+                "name": "default0ChangeDates",
+                "modifiers": "@Override\n    public",
+                "return_type": "LocalDate",
+                "parameters": [],
+                "body": "{\n    return getChangeDates().default0ChangeDates();\n}",
+                "start_point": {
+                    "row": 238,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 241,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\npublic LocalDate default1ChangeDates() {\n    return getChangeDates().default1ChangeDates();\n}",
+                "name": "default1ChangeDates",
+                "modifiers": "@Override\n    public",
+                "return_type": "LocalDate",
+                "parameters": [],
+                "body": "{\n    return getChangeDates().default1ChangeDates();\n}",
+                "start_point": {
+                    "row": 243,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 246,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\npublic String validateChangeDates(\n        final LocalDate startDate,\n        final LocalDate endDate) {\n    return getChangeDates().validateChangeDates(startDate, endDate);\n}",
+                "name": "validateChangeDates",
+                "modifiers": "@Override\n    public",
+                "return_type": "String",
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    },
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    return getChangeDates().validateChangeDates(startDate, endDate);\n}",
+                "start_point": {
+                    "row": 248,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 253,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Programmatic\n@Override\npublic LocalDateInterval getInterval() {\n    return LocalDateInterval.including(getStartDate(), getEndDate());\n}",
+                "name": "getInterval",
+                "modifiers": "@Programmatic\n    @Override\n    public",
+                "return_type": "LocalDateInterval",
+                "parameters": [],
+                "body": "{\n    return LocalDateInterval.including(getStartDate(), getEndDate());\n}",
+                "start_point": {
+                    "row": 257,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 261,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Programmatic\npublic LocalDateInterval getEffectiveInterval() {\n    return getInterval().overlap(getLeaseItem().getEffectiveInterval());\n}",
+                "name": "getEffectiveInterval",
+                "modifiers": "@Programmatic\n    public",
+                "return_type": "LocalDateInterval",
+                "parameters": [],
+                "body": "{\n    return getInterval().overlap(getLeaseItem().getEffectiveInterval());\n}",
+                "start_point": {
+                    "row": 263,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 266,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public boolean isCurrent() {\n    return isActiveOn(getClockService().now());\n}",
+                "name": "isCurrent",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return isActiveOn(getClockService().now());\n}",
+                "start_point": {
+                    "row": 270,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 272,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Programmatic\npublic boolean isActiveOn(final LocalDate localDate) {\n    LocalDateInterval effectiveInterval = getEffectiveInterval();\n    if (effectiveInterval == null) {\n        return false;\n    }\n    return effectiveInterval.contains(localDate);\n}",
+                "name": "isActiveOn",
+                "modifiers": "@Programmatic\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    LocalDateInterval effectiveInterval = getEffectiveInterval();\n    if (effectiveInterval == null) {\n        return false;\n    }\n    return effectiveInterval.contains(localDate);\n}",
+                "start_point": {
+                    "row": 274,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 281,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@javax.jdo.annotations.Column(allowsNull = \"false\", length = JdoColumnLength.STATUS_ENUM)\n@Disabled\npublic LeaseTermStatus getStatus() {\n    return status;\n}",
+                "name": "getStatus",
+                "modifiers": "@javax.jdo.annotations.Column(allowsNull = \"false\", length = JdoColumnLength.STATUS_ENUM)\n    @Disabled\n    public",
+                "return_type": "LeaseTermStatus",
+                "parameters": [],
+                "body": "{\n    return status;\n}",
+                "start_point": {
+                    "row": 287,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 291,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void setStatus(final LeaseTermStatus status) {\n    this.status = status;\n}",
+                "name": "setStatus",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LeaseTermStatus"
+                    }
+                ],
+                "body": "{\n    this.status = status;\n}",
+                "start_point": {
+                    "row": 293,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 295,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void created() {\n    setStatus(LeaseTermStatus.NEW);\n}",
+                "name": "created",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    setStatus(LeaseTermStatus.NEW);\n}",
+                "start_point": {
+                    "row": 297,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 299,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@javax.jdo.annotations.Column(allowsNull = \"false\", length = JdoColumnLength.LEASE_TERM_FREQUENCY_ENUM)\npublic LeaseTermFrequency getFrequency() {\n    return frequency;\n}",
+                "name": "getFrequency",
+                "modifiers": "@javax.jdo.annotations.Column(allowsNull = \"false\", length = JdoColumnLength.LEASE_TERM_FREQUENCY_ENUM)\n    public",
+                "return_type": "LeaseTermFrequency",
+                "parameters": [],
+                "body": "{\n    return frequency;\n}",
+                "start_point": {
+                    "row": 305,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 308,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void setFrequency(final LeaseTermFrequency frequency) {\n    this.frequency = frequency;\n}",
+                "name": "setFrequency",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LeaseTermFrequency"
+                    }
+                ],
+                "body": "{\n    this.frequency = frequency;\n}",
+                "start_point": {
+                    "row": 310,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 312,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public BigDecimal getTrialValue() {\n    return null;\n}",
+                "name": "getTrialValue",
+                "modifiers": "public",
+                "return_type": "BigDecimal",
+                "parameters": [],
+                "body": "{\n    return null;\n}",
+                "start_point": {
+                    "row": 316,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 318,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public BigDecimal getApprovedValue() {\n    return null;\n}",
+                "name": "getApprovedValue",
+                "modifiers": "public",
+                "return_type": "BigDecimal",
+                "parameters": [],
+                "body": "{\n    return null;\n}",
+                "start_point": {
+                    "row": 322,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 324,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Named(\"Previous Term\")\n@Hidden(where = Where.ALL_TABLES)\n@Optional\n@Override\npublic LeaseTerm getPrevious() {\n    return previous;\n}",
+                "name": "getPrevious",
+                "modifiers": "@Named(\"Previous Term\")\n    @Hidden(where = Where.ALL_TABLES)\n    @Optional\n    @Override\n    public",
+                "return_type": "LeaseTerm",
+                "parameters": [],
+                "body": "{\n    return previous;\n}",
+                "start_point": {
+                    "row": 332,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 338,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void setPrevious(final LeaseTerm previous) {\n    this.previous = previous;\n}",
+                "name": "setPrevious",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LeaseTerm"
+                    }
+                ],
+                "body": "{\n    this.previous = previous;\n}",
+                "start_point": {
+                    "row": 340,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 342,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void modifyPrevious(final LeaseTerm previous) {\n    LeaseTerm currentPrevious = getPrevious();\n    if (previous == null || previous.equals(currentPrevious)) {\n        return;\n    }\n    clearPrevious();\n    previous.setNext(this);\n    setPrevious(previous);\n}",
+                "name": "modifyPrevious",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LeaseTerm"
+                    }
+                ],
+                "body": "{\n    LeaseTerm currentPrevious = getPrevious();\n    if (previous == null || previous.equals(currentPrevious)) {\n        return;\n    }\n    clearPrevious();\n    previous.setNext(this);\n    setPrevious(previous);\n}",
+                "start_point": {
+                    "row": 344,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 352,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void clearPrevious() {\n    LeaseTerm currentPrevious = getPrevious();\n    if (currentPrevious == null) {\n        return;\n    }\n    currentPrevious.setNext(null);\n    setPrevious(null);\n}",
+                "name": "clearPrevious",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    LeaseTerm currentPrevious = getPrevious();\n    if (currentPrevious == null) {\n        return;\n    }\n    currentPrevious.setNext(null);\n    setPrevious(null);\n}",
+                "start_point": {
+                    "row": 354,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 361,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Hidden(where = Where.ALL_TABLES)\n@Named(\"Next Term\")\n@Optional\n@Override\npublic LeaseTerm getNext() {\n    return next;\n}",
+                "name": "getNext",
+                "modifiers": "@Hidden(where = Where.ALL_TABLES)\n    @Named(\"Next Term\")\n    @Optional\n    @Override\n    public",
+                "return_type": "LeaseTerm",
+                "parameters": [],
+                "body": "{\n    return next;\n}",
+                "start_point": {
+                    "row": 368,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 374,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void setNext(final LeaseTerm next) {\n    this.next = next;\n}",
+                "name": "setNext",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LeaseTerm"
+                    }
+                ],
+                "body": "{\n    this.next = next;\n}",
+                "start_point": {
+                    "row": 376,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 378,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void modifyNext(final LeaseTerm next) {\n    LeaseTerm currentNext = getNext();\n    if (next == null || next.equals(currentNext)) {\n        return;\n    }\n    if (currentNext != null) {\n        currentNext.clearPrevious();\n    }\n    next.modifyPrevious(this);\n}",
+                "name": "modifyNext",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LeaseTerm"
+                    }
+                ],
+                "body": "{\n    LeaseTerm currentNext = getNext();\n    if (next == null || next.equals(currentNext)) {\n        return;\n    }\n    if (currentNext != null) {\n        currentNext.clearPrevious();\n    }\n    next.modifyPrevious(this);\n}",
+                "start_point": {
+                    "row": 380,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 389,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void clearNext() {\n    LeaseTerm currentNext = getNext();\n    if (currentNext == null) {\n        return;\n    }\n    currentNext.clearPrevious();\n}",
+                "name": "clearNext",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    LeaseTerm currentNext = getNext();\n    if (currentNext == null) {\n        return;\n    }\n    currentNext.clearPrevious();\n}",
+                "start_point": {
+                    "row": 391,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 397,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Render(Type.EAGERLY)\npublic SortedSet<InvoiceItemForLease> getInvoiceItems() {\n    return invoiceItems;\n}",
+                "name": "getInvoiceItems",
+                "modifiers": "@Render(Type.EAGERLY)\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return invoiceItems;\n}",
+                "start_point": {
+                    "row": 404,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 407,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void setInvoiceItems(final SortedSet<InvoiceItemForLease> invoiceItems) {\n    this.invoiceItems = invoiceItems;\n}",
+                "name": "setInvoiceItems",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "SortedSet<InvoiceItemForLease>"
+                    }
+                ],
+                "body": "{\n    this.invoiceItems = invoiceItems;\n}",
+                "start_point": {
+                    "row": 409,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 411,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void addToInvoiceItems(final InvoiceItemForLease invoiceItem) {\n    if (invoiceItem == null || getInvoiceItems().contains(invoiceItem)) {\n        return;\n    }\n    invoiceItem.clearLeaseTerm();\n    invoiceItem.setLeaseTerm(this);\n    getInvoiceItems().add(invoiceItem);\n}",
+                "name": "addToInvoiceItems",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "InvoiceItemForLease"
+                    }
+                ],
+                "body": "{\n    if (invoiceItem == null || getInvoiceItems().contains(invoiceItem)) {\n        return;\n    }\n    invoiceItem.clearLeaseTerm();\n    invoiceItem.setLeaseTerm(this);\n    getInvoiceItems().add(invoiceItem);\n}",
+                "start_point": {
+                    "row": 413,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 420,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void removeFromInvoiceItems(final InvoiceItemForLease invoiceItem) {\n    if (invoiceItem == null || !getInvoiceItems().contains(invoiceItem)) {\n        return;\n    }\n    invoiceItem.setLeaseTerm(null);\n    getInvoiceItems().remove(invoiceItem);\n}",
+                "name": "removeFromInvoiceItems",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "InvoiceItemForLease"
+                    }
+                ],
+                "body": "{\n    if (invoiceItem == null || !getInvoiceItems().contains(invoiceItem)) {\n        return;\n    }\n    invoiceItem.setLeaseTerm(null);\n    getInvoiceItems().remove(invoiceItem);\n}",
+                "start_point": {
+                    "row": 422,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 428,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Programmatic\n@Prototype\npublic void remove() {\n    if (getNext() != null) {\n        getNext().remove();\n    }\n    if (this.getInvoiceItems().size() == 0) {\n        // TODO: Disabled, see EST-273\n        // this.modifyPrevious(null);\n        // getContainer().remove(this);\n    }\n}",
+                "name": "remove",
+                "modifiers": "@Programmatic\n    @Prototype\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    if (getNext() != null) {\n        getNext().remove();\n    }\n    if (this.getInvoiceItems().size() == 0) {\n        // TODO: Disabled, see EST-273\n        // this.modifyPrevious(null);\n        // getContainer().remove(this);\n    }\n}",
+                "start_point": {
+                    "row": 432,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 443,
+                    "column": 5
+                },
+                "method_mode": "Modified"
+            },
+            {
+                "definition": "@Programmatic\npublic void removeUnapprovedInvoiceItemsForDate(final LocalDate startDate, final LocalDate dueDate) {\n    for (InvoiceItemForLease invoiceItem : getInvoiceItems()) {\n        Invoice invoice = invoiceItem.getInvoice();\n        if ((invoice == null || invoice.getStatus().equals(InvoiceStatus.NEW)) &&\n                startDate.equals(invoiceItem.getStartDate()) &&\n                dueDate.equals(invoiceItem.getDueDate())) {\n            invoiceItem.setInvoice(null);\n            invoiceItem.clearLeaseTerm();\n            getContainer().flush();\n            remove(invoiceItem);\n        }\n    }\n}",
+                "name": "removeUnapprovedInvoiceItemsForDate",
+                "modifiers": "@Programmatic\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    },
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    for (InvoiceItemForLease invoiceItem : getInvoiceItems()) {\n        Invoice invoice = invoiceItem.getInvoice();\n        if ((invoice == null || invoice.getStatus().equals(InvoiceStatus.NEW)) &&\n                startDate.equals(invoiceItem.getStartDate()) &&\n                dueDate.equals(invoiceItem.getDueDate())) {\n            invoiceItem.setInvoice(null);\n            invoiceItem.clearLeaseTerm();\n            getContainer().flush();\n            remove(invoiceItem);\n        }\n    }\n}",
+                "start_point": {
+                    "row": 445,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 458,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Programmatic\npublic InvoiceItemForLease findOrCreateUnapprovedInvoiceItemFor(\n        final LocalDate startDate,\n        final LocalDate dueDate) {\n    InvoiceItemForLease ii = findUnapprovedInvoiceItemFor(startDate, dueDate);\n    if (ii == null) {\n        ii = invoiceItemsForLease.newInvoiceItem(this, startDate, dueDate);\n    }\n    return ii;\n}",
+                "name": "findOrCreateUnapprovedInvoiceItemFor",
+                "modifiers": "@Programmatic\n    public",
+                "return_type": "InvoiceItemForLease",
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    },
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    InvoiceItemForLease ii = findUnapprovedInvoiceItemFor(startDate, dueDate);\n    if (ii == null) {\n        ii = invoiceItemsForLease.newInvoiceItem(this, startDate, dueDate);\n    }\n    return ii;\n}",
+                "start_point": {
+                    "row": 460,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 469,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Programmatic\npublic InvoiceItemForLease findUnapprovedInvoiceItemFor(\n        final LocalDate startDate,\n        final LocalDate dueDate) {\n    for (InvoiceItemForLease invoiceItem : getInvoiceItems()) {\n        Invoice invoice = invoiceItem.getInvoice();\n        if ((invoice == null || invoice.getStatus().equals(InvoiceStatus.NEW)) &&\n                this.equals(invoiceItem.getLeaseTerm()) &&\n                startDate.equals(invoiceItem.getStartDate()) &&\n                dueDate.equals(invoiceItem.getDueDate())) {\n            return invoiceItem;\n        }\n    }\n    return null;\n}",
+                "name": "findUnapprovedInvoiceItemFor",
+                "modifiers": "@Programmatic\n    public",
+                "return_type": "InvoiceItemForLease",
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    },
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    for (InvoiceItemForLease invoiceItem : getInvoiceItems()) {\n        Invoice invoice = invoiceItem.getInvoice();\n        if ((invoice == null || invoice.getStatus().equals(InvoiceStatus.NEW)) &&\n                this.equals(invoiceItem.getLeaseTerm()) &&\n                startDate.equals(invoiceItem.getStartDate()) &&\n                dueDate.equals(invoiceItem.getDueDate())) {\n            return invoiceItem;\n        }\n    }\n    return null;\n}",
+                "start_point": {
+                    "row": 471,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 485,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Programmatic\npublic BigDecimal invoicedValueFor(final LocalDate startDate) {\n    BigDecimal invoicedValue = new BigDecimal(0);\n    for (InvoiceItemForLease invoiceItem : getInvoiceItems()) {\n        Invoice invoice = invoiceItem.getInvoice();\n        if (invoice == null || invoice.getStatus() == InvoiceStatus.NEW ||\n                invoiceItem.getStartDate() == null ||\n                invoiceItem.getStartDate().compareTo(startDate) != 0) {\n            continue;\n        }\n        invoicedValue = invoicedValue.add(invoiceItem.getNetAmount());\n    }\n    return invoicedValue;\n}",
+                "name": "invoicedValueFor",
+                "modifiers": "@Programmatic\n    public",
+                "return_type": "BigDecimal",
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    BigDecimal invoicedValue = new BigDecimal(0);\n    for (InvoiceItemForLease invoiceItem : getInvoiceItems()) {\n        Invoice invoice = invoiceItem.getInvoice();\n        if (invoice == null || invoice.getStatus() == InvoiceStatus.NEW ||\n                invoiceItem.getStartDate() == null ||\n                invoiceItem.getStartDate().compareTo(startDate) != 0) {\n            continue;\n        }\n        invoicedValue = invoicedValue.add(invoiceItem.getNetAmount());\n    }\n    return invoicedValue;\n}",
+                "start_point": {
+                    "row": 487,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 500,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Programmatic\npublic LeaseTerm calculate(\n        final @Named(\"Period Start Date\") LocalDate startDate,\n        final @Named(\"Due Date\") LocalDate dueDate) {\n    return calculate(startDate, null, dueDate, InvoiceRunType.NORMAL_RUN);\n}",
+                "name": "calculate",
+                "modifiers": "@Programmatic\n    public",
+                "return_type": "LeaseTerm",
+                "parameters": [
+                    {
+                        "type": "final @Named(\"Period Start Date\")",
+                        "name": "LocalDate"
+                    },
+                    {
+                        "type": "final @Named(\"Due Date\")",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    return calculate(startDate, null, dueDate, InvoiceRunType.NORMAL_RUN);\n}",
+                "start_point": {
+                    "row": 504,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 509,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public LeaseTerm calculate(\n        final @Named(\"Period start Date\") LocalDate startDate,\n        final @Named(\"Period end Date\") @Optional LocalDate endDate,\n        final @Named(\"Due Date\") LocalDate dueDate,\n        final @Named(\"Run Type\") InvoiceRunType runType) {\n    invoiceCalculationService.calculateAndInvoice(\n            this, startDate, endDate, dueDate, getLeaseItem().getInvoicingFrequency(), runType);\n    return this;\n}",
+                "name": "calculate",
+                "modifiers": "public",
+                "return_type": "LeaseTerm",
+                "parameters": [
+                    {
+                        "type": "final @Named(\"Period start Date\")",
+                        "name": "LocalDate"
+                    },
+                    {
+                        "type": "final @Named(\"Period end Date\") @Optional",
+                        "name": "LocalDate"
+                    },
+                    {
+                        "type": "final @Named(\"Due Date\")",
+                        "name": "LocalDate"
+                    },
+                    {
+                        "type": "final @Named(\"Run Type\")",
+                        "name": "InvoiceRunType"
+                    }
+                ],
+                "body": "{\n    invoiceCalculationService.calculateAndInvoice(\n            this, startDate, endDate, dueDate, getLeaseItem().getInvoicingFrequency(), runType);\n    return this;\n}",
+                "start_point": {
+                    "row": 511,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 519,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Bulk\npublic LeaseTerm verify() {\n    verifyUntil(getClockService().now());\n    return this;\n}",
+                "name": "verify",
+                "modifiers": "@Bulk\n    public",
+                "return_type": "LeaseTerm",
+                "parameters": [],
+                "body": "{\n    verifyUntil(getClockService().now());\n    return this;\n}",
+                "start_point": {
+                    "row": 523,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 527,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Programmatic\npublic void verifyUntil(final LocalDate date) {\n    update();\n    // convenience code to automatically create terms but not for terms who\n    // have a start date after today\n    LeaseTerm nextTerm = getNext();\n    if (nextTerm == null && getNextStartDate().compareTo(date) <= 0) {\n        nextTerm = createNext(getNextStartDate());\n    }\n    if (nextTerm != null) {\n        nextTerm.verifyUntil(date);\n    }\n}",
+                "name": "verifyUntil",
+                "modifiers": "@Programmatic\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    update();\n    // convenience code to automatically create terms but not for terms who\n    // have a start date after today\n    LeaseTerm nextTerm = getNext();\n    if (nextTerm == null && getNextStartDate().compareTo(date) <= 0) {\n        nextTerm = createNext(getNextStartDate());\n    }\n    if (nextTerm != null) {\n        nextTerm.verifyUntil(date);\n    }\n}",
+                "start_point": {
+                    "row": 529,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 541,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "private LocalDate getNextStartDate() {\n    LocalDate nextStartDate = getInterval().endDateExcluding();\n    if (nextStartDate == null) {\n        return getFrequency().nextDate(getStartDate());\n    }\n    return nextStartDate;\n}",
+                "name": "getNextStartDate",
+                "modifiers": "private",
+                "return_type": "LocalDate",
+                "parameters": [],
+                "body": "{\n    LocalDate nextStartDate = getInterval().endDateExcluding();\n    if (nextStartDate == null) {\n        return getFrequency().nextDate(getStartDate());\n    }\n    return nextStartDate;\n}",
+                "start_point": {
+                    "row": 543,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 549,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public LeaseTerm createNext(\n        final @Named(\"Start date\") LocalDate nextStartDate) {\n    LeaseTerm nextTerm = getNext();\n    if (nextTerm != null) {\n        return nextTerm;\n    }\n    // Don't create terms after termination date\n    LocalDate terminationDate = getLeaseItem().getLease().getTerminationDate();\n    if (terminationDate != null &&\n            terminationDate.isBefore(nextStartDate)) {\n        return null;\n    }\n    // Ok, we need to create a term\n    nextTerm = terms.newLeaseTerm(getLeaseItem(), this, nextStartDate);\n    nextTerm.initialize();\n    nextTerm.modifyStartDate(nextStartDate);\n    nextTerm.update();\n    return nextTerm;\n}",
+                "name": "createNext",
+                "modifiers": "public",
+                "return_type": "LeaseTerm",
+                "parameters": [
+                    {
+                        "type": "final @Named(\"Start date\")",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    LeaseTerm nextTerm = getNext();\n    if (nextTerm != null) {\n        return nextTerm;\n    }\n    // Don't create terms after termination date\n    LocalDate terminationDate = getLeaseItem().getLease().getTerminationDate();\n    if (terminationDate != null &&\n            terminationDate.isBefore(nextStartDate)) {\n        return null;\n    }\n    // Ok, we need to create a term\n    nextTerm = terms.newLeaseTerm(getLeaseItem(), this, nextStartDate);\n    nextTerm.initialize();\n    nextTerm.modifyStartDate(nextStartDate);\n    nextTerm.update();\n    return nextTerm;\n}",
+                "start_point": {
+                    "row": 553,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 571,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "protected void initialize() {\n    setStatus(LeaseTermStatus.NEW);\n    LeaseTerm previousTerm = getPrevious();\n    BigInteger sequence = BigInteger.ONE;\n    if (previousTerm != null) {\n        sequence = previousTerm.getSequence().add(BigInteger.ONE);\n        setFrequency(previousTerm.getFrequency());\n    }\n    setSequence(sequence);\n}",
+                "name": "initialize",
+                "modifiers": "protected",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    setStatus(LeaseTermStatus.NEW);\n    LeaseTerm previousTerm = getPrevious();\n    BigInteger sequence = BigInteger.ONE;\n    if (previousTerm != null) {\n        sequence = previousTerm.getSequence().add(BigInteger.ONE);\n        setFrequency(previousTerm.getFrequency());\n    }\n    setSequence(sequence);\n}",
+                "start_point": {
+                    "row": 576,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 585,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Programmatic\nprotected void update() {\n    // terminate the last term\n    LocalDate terminationDate = getLeaseItem().getLease().getTerminationDate();\n    if (terminationDate != null && getNext() == null) {\n        if (getEndDate() == null || getEndDate().compareTo(terminationDate) > 0) {\n            setEndDate(terminationDate);\n        }\n    }\n    // Get the end date from the next start date\n    if (getEndDate() == null && getNext() != null) {\n        modifyEndDate(getNext().getInterval().endDateFromStartDate());\n    }\n\n}",
+                "name": "update",
+                "modifiers": "@Programmatic\n    protected",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    // terminate the last term\n    LocalDate terminationDate = getLeaseItem().getLease().getTerminationDate();\n    if (terminationDate != null && getNext() == null) {\n        if (getEndDate() == null || getEndDate().compareTo(terminationDate) > 0) {\n            setEndDate(terminationDate);\n        }\n    }\n    // Get the end date from the next start date\n    if (getEndDate() == null && getNext() != null) {\n        modifyEndDate(getNext().getInterval().endDateFromStartDate());\n    }\n\n}",
+                "start_point": {
+                    "row": 587,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 601,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Programmatic\npublic void copyValuesTo(final LeaseTerm target) {\n    target.setStartDate(getStartDate());\n    target.setEndDate(getEndDate());\n    target.setStatus(getStatus());\n    target.setFrequency(getFrequency());\n}",
+                "name": "copyValuesTo",
+                "modifiers": "@Programmatic\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LeaseTerm"
+                    }
+                ],
+                "body": "{\n    target.setStartDate(getStartDate());\n    target.setEndDate(getEndDate());\n    target.setStatus(getStatus());\n    target.setFrequency(getFrequency());\n}",
+                "start_point": {
+                    "row": 605,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 611,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Bulk\n@ActionSemantics(Of.IDEMPOTENT)\npublic LeaseTerm approve() {\n    if (!getStatus().isApproved()) {\n        setStatus(LeaseTermStatus.APPROVED);\n    }\n    return this;\n}",
+                "name": "approve",
+                "modifiers": "@Bulk\n    @ActionSemantics(Of.IDEMPOTENT)\n    public",
+                "return_type": "LeaseTerm",
+                "parameters": [],
+                "body": "{\n    if (!getStatus().isApproved()) {\n        setStatus(LeaseTermStatus.APPROVED);\n    }\n    return this;\n}",
+                "start_point": {
+                    "row": 615,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 622,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Programmatic\npublic BigDecimal valueForDate(final LocalDate dueDate) {\n    return getTrialValue();\n}",
+                "name": "valueForDate",
+                "modifiers": "@Programmatic\n    public",
+                "return_type": "BigDecimal",
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    return getTrialValue();\n}",
+                "start_point": {
+                    "row": 626,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 629,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Programmatic\nBigDecimal valueForPeriod(\n        final LocalDate periodStartDate,\n        final LocalDate dueDate,\n        final InvoicingFrequency frequency) {\n    return invoiceCalculationService.calculateSumForAllPeriods(this, periodStartDate, dueDate, frequency);\n}",
+                "name": "valueForPeriod",
+                "modifiers": "@Programmatic",
+                "return_type": "BigDecimal",
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    },
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    },
+                    {
+                        "type": "final",
+                        "name": "InvoicingFrequency"
+                    }
+                ],
+                "body": "{\n    return invoiceCalculationService.calculateSumForAllPeriods(this, periodStartDate, dueDate, frequency);\n}",
+                "start_point": {
+                    "row": 631,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 637,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\npublic String toString(){\n    return getInterval().toString()+ \" / \";\n}",
+                "name": "toString",
+                "modifiers": "@Override\n    public",
+                "return_type": "String",
+                "parameters": [],
+                "body": "{\n    return getInterval().toString()+ \" / \";\n}",
+                "start_point": {
+                    "row": 641,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 644,
+                    "column": 5
+                },
+                "method_mode": "Modified"
+            },
+            {
+                "definition": "public final void injectInvoiceItemsForLease(final InvoiceItemsForLease invoiceItemsForLease) {\n    this.invoiceItemsForLease = invoiceItemsForLease;\n}",
+                "name": "injectInvoiceItemsForLease",
+                "modifiers": "public final",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "InvoiceItemsForLease"
+                    }
+                ],
+                "body": "{\n    this.invoiceItemsForLease = invoiceItemsForLease;\n}",
+                "start_point": {
+                    "row": 651,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 653,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public final void injectInvoiceCalculationService(final InvoiceCalculationService invoiceCalculationService) {\n    this.invoiceCalculationService = invoiceCalculationService;\n}",
+                "name": "injectInvoiceCalculationService",
+                "modifiers": "public final",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "InvoiceCalculationService"
+                    }
+                ],
+                "body": "{\n    this.invoiceCalculationService = invoiceCalculationService;\n}",
+                "start_point": {
+                    "row": 657,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 659,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public final void injectLeaseTerms(final LeaseTerms terms) {\n    this.terms = terms;\n}",
+                "name": "injectLeaseTerms",
+                "modifiers": "public final",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LeaseTerms"
+                    }
+                ],
+                "body": "{\n    this.terms = terms;\n}",
+                "start_point": {
+                    "row": 663,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 665,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            }
+        ],
+        "class_mode": "Modified"
+    }
+]

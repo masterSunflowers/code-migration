@@ -1,5 +1,7 @@
 [
     {
+        "repo_name": "gravitee-io_graviteeio-access-management",
+        "commit": "0b18ada3207991cdfd70a551c56af125d2a0efe1",
         "rev_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-admin/src/main/java/io/gravitee/am/management/handlers/admin/provider/security/EndUserAuthentication.java",
         "definition": "public class EndUserAuthentication implements Authentication {\n\n    private final Object principal;\n    private final Object credentials;\n    private Map<String, Object> additionalInformation;\n\n    public EndUserAuthentication(Object principal, Object credentials) {\n        this.principal = principal;\n        this.credentials = credentials;\n    }\n\n    @Override\n    public Object getCredentials() {\n        return credentials;\n    }\n\n    @Override\n    public Object getPrincipal() {\n        return principal;\n    }\n\n    @Override\n    public Map<String, Object> getAdditionalInformation() {\n        return additionalInformation;\n    }\n\n    public void setAdditionalInformation(Map<String, Object> additionalInformation) {\n        this.additionalInformation = additionalInformation;\n    }\n\n    @Override\n    public String toString() {\n        return principal.toString();\n    }\n}",
         "package": "package io.gravitee.am.management.handlers.admin.provider.security;",

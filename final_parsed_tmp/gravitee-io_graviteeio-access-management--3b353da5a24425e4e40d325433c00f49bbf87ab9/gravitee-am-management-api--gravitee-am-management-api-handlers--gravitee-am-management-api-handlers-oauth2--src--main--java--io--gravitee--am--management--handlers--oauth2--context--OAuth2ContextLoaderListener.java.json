@@ -1,5 +1,7 @@
 [
     {
+        "repo_name": "gravitee-io_graviteeio-access-management",
+        "commit": "3b353da5a24425e4e40d325433c00f49bbf87ab9",
         "rev_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-oauth2/src/main/java/io/gravitee/am/management/handlers/oauth2/context/OAuth2ContextLoaderListener.java",
         "definition": "public class OAuth2ContextLoaderListener extends ContextLoaderListener {\n\n    public OAuth2ContextLoaderListener(WebApplicationContext context) {\n        super(context);\n    }\n\n    @Override\n    public void contextInitialized(ServletContextEvent event) {\n        super.contextInitialized(event);\n    }\n\n    @Override\n    public void contextDestroyed(ServletContextEvent event) {\n        super.contextDestroyed(event);\n    }\n}",
         "package": "package io.gravitee.am.management.handlers.oauth2.context;",

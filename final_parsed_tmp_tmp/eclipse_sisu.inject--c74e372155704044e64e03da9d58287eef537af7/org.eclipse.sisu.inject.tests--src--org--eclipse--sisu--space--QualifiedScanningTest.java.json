@@ -1,0 +1,386 @@
+[
+    {
+        "repo_name": "eclipse_sisu.inject",
+        "commit": "c74e372155704044e64e03da9d58287eef537af7",
+        "rev_path": "org.eclipse.sisu.inject.tests/src/org/eclipse/sisu/space/QualifiedScanningTest.java",
+        "definition": "public class QualifiedScanningTest\n    extends TestCase\n{\n    @Named\n    interface A\n    {\n    }\n\n    @Named\n    static abstract class B\n    {\n    }\n\n    @Named\n    static class C\n    {\n    }\n\n    @Qualifier\n    @Retention( RetentionPolicy.RUNTIME )\n    public @interface Legacy\n    {\n    }\n\n    @Named\n    @Legacy\n    static class D\n    {\n    }\n\n    @Legacy\n    @Named\n    static class E\n    {\n    }\n\n    static class F\n        extends B\n    {\n    }\n\n    @Singleton\n    static class G\n    {\n    }\n\n    static class TestListener\n        implements QualifiedTypeListener\n    {\n        final List<Class<?>> clazzes = new ArrayList<Class<?>>();\n\n        final Set<Object> sources = new HashSet<Object>();\n\n        public void hear( final Annotation qualifier, final Class<?> clazz, final Object source )\n        {\n            clazzes.add( clazz );\n            sources.add( source );\n        }\n    }\n\n    public void testQualifiedScanning()\n    {\n        final TestListener listener = new TestListener();\n        final ClassSpace space =\n            new URLClassSpace( getClass().getClassLoader(), new URL[] { getClass().getResource( \"\" ) } );\n        new ClassSpaceScanner( space ).accept( new QualifiedTypeVisitor( listener ) );\n        assertEquals( 35, listener.clazzes.size() );\n\n        assertTrue( listener.clazzes.contains( C.class ) );\n        assertTrue( listener.clazzes.contains( D.class ) );\n        assertTrue( listener.clazzes.contains( E.class ) );\n    }\n\n    public void testAdaptedScanning()\n    {\n        final TestListener listener = new TestListener();\n        final ClassSpace space =\n            new URLClassSpace( getClass().getClassLoader(), new URL[] { getClass().getResource( \"\" ) } );\n        final ClassSpaceVisitor visitor = new QualifiedTypeVisitor( listener );\n        new ClassSpaceScanner( space ).accept( new ClassSpaceVisitor()\n        {\n            public void visit( final ClassSpace _space )\n            {\n                visitor.visit( _space );\n            }\n\n            public ClassVisitor visitClass( final URL url )\n            {\n                if ( url.toString().contains( \"$D.class\" ) )\n                {\n                    return null;\n                }\n                return visitor.visitClass( url );\n            }\n\n            public void visitEnd()\n            {\n                visitor.visitEnd();\n            }\n        } );\n\n        assertEquals( 34, listener.clazzes.size() );\n\n        assertTrue( listener.clazzes.contains( C.class ) );\n        assertTrue( listener.clazzes.contains( E.class ) );\n    }\n\n    public void testFilteredScanning()\n    {\n        final TestListener listener = new TestListener();\n        final ClassSpace space =\n            new URLClassSpace( getClass().getClassLoader(), new URL[] { getClass().getResource( \"\" ) } );\n        final ClassSpaceVisitor visitor = new QualifiedTypeVisitor( listener );\n        new ClassSpaceScanner( new ClassFinder()\n        {\n            public Enumeration<URL> findClasses( final ClassSpace space2 )\n            {\n                return space2.findEntries( null, \"*D.class\", true );\n            }\n        }, space ).accept( visitor );\n\n        assertEquals( 1, listener.clazzes.size() );\n\n        assertTrue( listener.clazzes.contains( D.class ) );\n    }\n\n    @Ignore( \"Need to replace some test archives\" )\n    public void /* test */ignoreIndexedScanning()\n    {\n        final TestListener listener = new TestListener();\n        final ClassSpace space =\n            new URLClassSpace( getClass().getClassLoader(), new URL[] { getClass().getResource( \"\" ) } );\n        final ClassSpaceVisitor visitor = new QualifiedTypeVisitor( listener );\n        new ClassSpaceScanner( new SisuIndexFinder( false ), space ).accept( visitor );\n\n        // we deliberately use a partial index\n\n        assertEquals( 2, listener.clazzes.size() );\n\n        assertTrue( listener.clazzes.contains( C.class ) );\n        assertTrue( listener.clazzes.contains( D.class ) );\n    }\n\n    public void testBrokenScanning()\n        throws IOException\n    {\n        // System.setProperty( \"java.protocol.handler.pkgs\", getClass().getPackage().getName() );\n        URL.setURLStreamHandlerFactory( new URLStreamHandlerFactory()\n        {\n            public URLStreamHandler createURLStreamHandler( final String protocol )\n            {\n                if ( \"oops\".equals( protocol ) )\n                {\n                    return new Handler();\n                }\n                return null;\n            }\n        } );\n\n        final ClassSpace space =\n            new URLClassSpace( getClass().getClassLoader(), new URL[] { getClass().getResource( \"\" ) } );\n\n        final URL badURL = new URL( \"oops:bad/\" );\n        final ClassSpace brokenResourceSpace = new ClassSpace()\n        {\n            public Class<?> loadClass( final String name )\n            {\n                return space.loadClass( name );\n            }\n\n            public DeferredClass<?> deferLoadClass( final String name )\n            {\n                return space.deferLoadClass( name );\n            }\n\n            public Enumeration<URL> getResources( final String name )\n            {\n                return space.getResources( name );\n            }\n\n            public URL getResource( final String name )\n            {\n                return badURL;\n            }\n\n            public Enumeration<URL> findEntries( final String path, final String glob, final boolean recurse )\n            {\n                return Collections.enumeration( Collections.singleton( badURL ) );\n            }\n        };\n\n        new ClassSpaceScanner( brokenResourceSpace ).accept( new QualifiedTypeVisitor( null ) );\n\n        final ClassSpace brokenLoadSpace = new ClassSpace()\n        {\n            public Class<?> loadClass( final String name )\n            {\n                throw new TypeNotPresentException( name, new ClassNotFoundException( name ) );\n            }\n\n            public DeferredClass<?> deferLoadClass( final String name )\n            {\n                return space.deferLoadClass( name );\n            }\n\n            public Enumeration<URL> getResources( final String name )\n            {\n                return space.getResources( name );\n            }\n\n            public URL getResource( final String name )\n            {\n                return space.getResource( name );\n            }\n\n            public Enumeration<URL> findEntries( final String path, final String glob, final boolean recurse )\n            {\n                return space.findEntries( path, glob, recurse );\n            }\n        };\n\n        new ClassSpaceScanner( brokenLoadSpace ).accept( new QualifiedTypeVisitor( null ) );\n\n        ClassSpaceScanner.accept( null, null );\n\n        assertFalse( new SisuIndexFinder( false ).findClasses( brokenResourceSpace ).hasMoreElements() );\n    }\n\n    public void testSourceDetection()\n        throws MalformedURLException\n    {\n        final TestListener listener = new TestListener();\n\n        final QualifiedTypeVisitor visitor = new QualifiedTypeVisitor( listener );\n\n        visitor.visit( new URLClassSpace( getClass().getClassLoader(), new URL[] { getClass().getResource( \"\" ) } ) );\n\n        assertEquals( 0, listener.sources.size() );\n\n        visitor.visitClass( new URL( \"file:target/classes/java/lang/Object.class\" ) );\n        visitor.visit( 0, 0, Type.getInternalName( Object.class ), null, null, null );\n        visitor.visitAnnotation( Type.getDescriptor( Named.class ), true );\n        visitor.visitEnd();\n\n        assertEquals( 1, listener.sources.size() );\n        assertTrue( listener.sources.contains( \"target/classes/\" ) );\n\n        visitor.visitClass( new URL( \"jar:file:bar.jar!/java/lang/String.class\" ) );\n        visitor.visit( 0, 0, Type.getInternalName( String.class ), null, null, null );\n        visitor.visitAnnotation( Type.getDescriptor( Named.class ), true );\n        visitor.visitEnd();\n\n        assertEquals( 2, listener.sources.size() );\n        assertTrue( listener.sources.contains( \"target/classes/\" ) );\n        assertTrue( listener.sources.contains( \"file:bar.jar!/\" ) );\n\n        visitor.visitClass( new URL( \"file:some/obfuscated/location\" ) );\n        visitor.visit( 0, 0, Type.getInternalName( Integer.class ), null, null, null );\n        visitor.visitAnnotation( Type.getDescriptor( Named.class ), true );\n        visitor.visitEnd();\n\n        assertEquals( 3, listener.sources.size() );\n        assertTrue( listener.sources.contains( \"target/classes/\" ) );\n        assertTrue( listener.sources.contains( \"file:bar.jar!/\" ) );\n        assertTrue( listener.sources.contains( \"some/obfuscated/location\" ) );\n    }\n\n    public void testOptionalLogging()\n        throws Exception\n    {\n        final Level level = Logger.getLogger( \"\" ).getLevel();\n        try\n        {\n            Logger.getLogger( \"\" ).setLevel( Level.SEVERE );\n\n            // check everything still works without any SLF4J jars\n            final ClassLoader noLoggingLoader =\n                new URLClassLoader( ( (URLClassLoader) getClass().getClassLoader() ).getURLs(), null )\n                {\n                    @Override\n                    protected synchronized Class<?> loadClass( final String name, final boolean resolve )\n                        throws ClassNotFoundException\n                    {\n                        if ( name.contains( \"slf4j\" ) )\n                        {\n                            throw new ClassNotFoundException( name );\n                        }\n                        if ( name.contains( \"cobertura\" ) )\n                        {\n                            return QualifiedScanningTest.class.getClassLoader().loadClass( name );\n                        }\n                        return super.loadClass( name, resolve );\n                    }\n                };\n\n            noLoggingLoader.loadClass( BrokenScanningExample.class.getName() ).newInstance();\n        }\n        finally\n        {\n            Logger.getLogger( \"\" ).setLevel( level );\n        }\n    }\n\n    public void testEmptyMethods()\n    {\n        final AnnotationVisitor emptyAnnotationVisitor = new EmptyAnnotationVisitor();\n\n        emptyAnnotationVisitor.visit( null, null );\n        emptyAnnotationVisitor.visitEnum( null, null, null );\n        emptyAnnotationVisitor.visitAnnotation( null, null );\n        emptyAnnotationVisitor.visitArray( null );\n        emptyAnnotationVisitor.visitEnd();\n\n        final ClassVisitor emptyClassVisitor = new EmptyClassVisitor();\n\n        emptyClassVisitor.visit( 0, 0, null, null, null, null );\n        emptyClassVisitor.visitAnnotation( null, false );\n        emptyClassVisitor.visitAttribute( null );\n        emptyClassVisitor.visitSource( null, null );\n        emptyClassVisitor.visitEnd();\n    }\n\n    public void testICU4J()\n    {\n        final ClassLoader loader = getClass().getClassLoader();\n        final URL[] urls = { loader.getResource( \"icu4j-2.6.1.jar\" ) };\n        final ClassSpace space = new URLClassSpace( loader, urls );\n\n        final TestListener listener = new TestListener();\n        new ClassSpaceScanner( space ).accept( new QualifiedTypeVisitor( listener ) );\n        assertEquals( 0, listener.clazzes.size() );\n    }\n}",
+        "package": "package org.eclipse.sisu.space;",
+        "tree_path": "QualifiedScanningTest",
+        "name": "QualifiedScanningTest",
+        "modifiers": "public",
+        "superclass": "extends TestCase",
+        "super_interfaces": null,
+        "body": "{\n    @Named\n    interface A\n    {\n    }\n\n    @Named\n    static abstract class B\n    {\n    }\n\n    @Named\n    static class C\n    {\n    }\n\n    @Qualifier\n    @Retention( RetentionPolicy.RUNTIME )\n    public @interface Legacy\n    {\n    }\n\n    @Named\n    @Legacy\n    static class D\n    {\n    }\n\n    @Legacy\n    @Named\n    static class E\n    {\n    }\n\n    static class F\n        extends B\n    {\n    }\n\n    @Singleton\n    static class G\n    {\n    }\n\n    static class TestListener\n        implements QualifiedTypeListener\n    {\n        final List<Class<?>> clazzes = new ArrayList<Class<?>>();\n\n        final Set<Object> sources = new HashSet<Object>();\n\n        public void hear( final Annotation qualifier, final Class<?> clazz, final Object source )\n        {\n            clazzes.add( clazz );\n            sources.add( source );\n        }\n    }\n\n    public void testQualifiedScanning()\n    {\n        final TestListener listener = new TestListener();\n        final ClassSpace space =\n            new URLClassSpace( getClass().getClassLoader(), new URL[] { getClass().getResource( \"\" ) } );\n        new ClassSpaceScanner( space ).accept( new QualifiedTypeVisitor( listener ) );\n        assertEquals( 35, listener.clazzes.size() );\n\n        assertTrue( listener.clazzes.contains( C.class ) );\n        assertTrue( listener.clazzes.contains( D.class ) );\n        assertTrue( listener.clazzes.contains( E.class ) );\n    }\n\n    public void testAdaptedScanning()\n    {\n        final TestListener listener = new TestListener();\n        final ClassSpace space =\n            new URLClassSpace( getClass().getClassLoader(), new URL[] { getClass().getResource( \"\" ) } );\n        final ClassSpaceVisitor visitor = new QualifiedTypeVisitor( listener );\n        new ClassSpaceScanner( space ).accept( new ClassSpaceVisitor()\n        {\n            public void visit( final ClassSpace _space )\n            {\n                visitor.visit( _space );\n            }\n\n            public ClassVisitor visitClass( final URL url )\n            {\n                if ( url.toString().contains( \"$D.class\" ) )\n                {\n                    return null;\n                }\n                return visitor.visitClass( url );\n            }\n\n            public void visitEnd()\n            {\n                visitor.visitEnd();\n            }\n        } );\n\n        assertEquals( 34, listener.clazzes.size() );\n\n        assertTrue( listener.clazzes.contains( C.class ) );\n        assertTrue( listener.clazzes.contains( E.class ) );\n    }\n\n    public void testFilteredScanning()\n    {\n        final TestListener listener = new TestListener();\n        final ClassSpace space =\n            new URLClassSpace( getClass().getClassLoader(), new URL[] { getClass().getResource( \"\" ) } );\n        final ClassSpaceVisitor visitor = new QualifiedTypeVisitor( listener );\n        new ClassSpaceScanner( new ClassFinder()\n        {\n            public Enumeration<URL> findClasses( final ClassSpace space2 )\n            {\n                return space2.findEntries( null, \"*D.class\", true );\n            }\n        }, space ).accept( visitor );\n\n        assertEquals( 1, listener.clazzes.size() );\n\n        assertTrue( listener.clazzes.contains( D.class ) );\n    }\n\n    @Ignore( \"Need to replace some test archives\" )\n    public void /* test */ignoreIndexedScanning()\n    {\n        final TestListener listener = new TestListener();\n        final ClassSpace space =\n            new URLClassSpace( getClass().getClassLoader(), new URL[] { getClass().getResource( \"\" ) } );\n        final ClassSpaceVisitor visitor = new QualifiedTypeVisitor( listener );\n        new ClassSpaceScanner( new SisuIndexFinder( false ), space ).accept( visitor );\n\n        // we deliberately use a partial index\n\n        assertEquals( 2, listener.clazzes.size() );\n\n        assertTrue( listener.clazzes.contains( C.class ) );\n        assertTrue( listener.clazzes.contains( D.class ) );\n    }\n\n    public void testBrokenScanning()\n        throws IOException\n    {\n        // System.setProperty( \"java.protocol.handler.pkgs\", getClass().getPackage().getName() );\n        URL.setURLStreamHandlerFactory( new URLStreamHandlerFactory()\n        {\n            public URLStreamHandler createURLStreamHandler( final String protocol )\n            {\n                if ( \"oops\".equals( protocol ) )\n                {\n                    return new Handler();\n                }\n                return null;\n            }\n        } );\n\n        final ClassSpace space =\n            new URLClassSpace( getClass().getClassLoader(), new URL[] { getClass().getResource( \"\" ) } );\n\n        final URL badURL = new URL( \"oops:bad/\" );\n        final ClassSpace brokenResourceSpace = new ClassSpace()\n        {\n            public Class<?> loadClass( final String name )\n            {\n                return space.loadClass( name );\n            }\n\n            public DeferredClass<?> deferLoadClass( final String name )\n            {\n                return space.deferLoadClass( name );\n            }\n\n            public Enumeration<URL> getResources( final String name )\n            {\n                return space.getResources( name );\n            }\n\n            public URL getResource( final String name )\n            {\n                return badURL;\n            }\n\n            public Enumeration<URL> findEntries( final String path, final String glob, final boolean recurse )\n            {\n                return Collections.enumeration( Collections.singleton( badURL ) );\n            }\n        };\n\n        new ClassSpaceScanner( brokenResourceSpace ).accept( new QualifiedTypeVisitor( null ) );\n\n        final ClassSpace brokenLoadSpace = new ClassSpace()\n        {\n            public Class<?> loadClass( final String name )\n            {\n                throw new TypeNotPresentException( name, new ClassNotFoundException( name ) );\n            }\n\n            public DeferredClass<?> deferLoadClass( final String name )\n            {\n                return space.deferLoadClass( name );\n            }\n\n            public Enumeration<URL> getResources( final String name )\n            {\n                return space.getResources( name );\n            }\n\n            public URL getResource( final String name )\n            {\n                return space.getResource( name );\n            }\n\n            public Enumeration<URL> findEntries( final String path, final String glob, final boolean recurse )\n            {\n                return space.findEntries( path, glob, recurse );\n            }\n        };\n\n        new ClassSpaceScanner( brokenLoadSpace ).accept( new QualifiedTypeVisitor( null ) );\n\n        ClassSpaceScanner.accept( null, null );\n\n        assertFalse( new SisuIndexFinder( false ).findClasses( brokenResourceSpace ).hasMoreElements() );\n    }\n\n    public void testSourceDetection()\n        throws MalformedURLException\n    {\n        final TestListener listener = new TestListener();\n\n        final QualifiedTypeVisitor visitor = new QualifiedTypeVisitor( listener );\n\n        visitor.visit( new URLClassSpace( getClass().getClassLoader(), new URL[] { getClass().getResource( \"\" ) } ) );\n\n        assertEquals( 0, listener.sources.size() );\n\n        visitor.visitClass( new URL( \"file:target/classes/java/lang/Object.class\" ) );\n        visitor.visit( 0, 0, Type.getInternalName( Object.class ), null, null, null );\n        visitor.visitAnnotation( Type.getDescriptor( Named.class ), true );\n        visitor.visitEnd();\n\n        assertEquals( 1, listener.sources.size() );\n        assertTrue( listener.sources.contains( \"target/classes/\" ) );\n\n        visitor.visitClass( new URL( \"jar:file:bar.jar!/java/lang/String.class\" ) );\n        visitor.visit( 0, 0, Type.getInternalName( String.class ), null, null, null );\n        visitor.visitAnnotation( Type.getDescriptor( Named.class ), true );\n        visitor.visitEnd();\n\n        assertEquals( 2, listener.sources.size() );\n        assertTrue( listener.sources.contains( \"target/classes/\" ) );\n        assertTrue( listener.sources.contains( \"file:bar.jar!/\" ) );\n\n        visitor.visitClass( new URL( \"file:some/obfuscated/location\" ) );\n        visitor.visit( 0, 0, Type.getInternalName( Integer.class ), null, null, null );\n        visitor.visitAnnotation( Type.getDescriptor( Named.class ), true );\n        visitor.visitEnd();\n\n        assertEquals( 3, listener.sources.size() );\n        assertTrue( listener.sources.contains( \"target/classes/\" ) );\n        assertTrue( listener.sources.contains( \"file:bar.jar!/\" ) );\n        assertTrue( listener.sources.contains( \"some/obfuscated/location\" ) );\n    }\n\n    public void testOptionalLogging()\n        throws Exception\n    {\n        final Level level = Logger.getLogger( \"\" ).getLevel();\n        try\n        {\n            Logger.getLogger( \"\" ).setLevel( Level.SEVERE );\n\n            // check everything still works without any SLF4J jars\n            final ClassLoader noLoggingLoader =\n                new URLClassLoader( ( (URLClassLoader) getClass().getClassLoader() ).getURLs(), null )\n                {\n                    @Override\n                    protected synchronized Class<?> loadClass( final String name, final boolean resolve )\n                        throws ClassNotFoundException\n                    {\n                        if ( name.contains( \"slf4j\" ) )\n                        {\n                            throw new ClassNotFoundException( name );\n                        }\n                        if ( name.contains( \"cobertura\" ) )\n                        {\n                            return QualifiedScanningTest.class.getClassLoader().loadClass( name );\n                        }\n                        return super.loadClass( name, resolve );\n                    }\n                };\n\n            noLoggingLoader.loadClass( BrokenScanningExample.class.getName() ).newInstance();\n        }\n        finally\n        {\n            Logger.getLogger( \"\" ).setLevel( level );\n        }\n    }\n\n    public void testEmptyMethods()\n    {\n        final AnnotationVisitor emptyAnnotationVisitor = new EmptyAnnotationVisitor();\n\n        emptyAnnotationVisitor.visit( null, null );\n        emptyAnnotationVisitor.visitEnum( null, null, null );\n        emptyAnnotationVisitor.visitAnnotation( null, null );\n        emptyAnnotationVisitor.visitArray( null );\n        emptyAnnotationVisitor.visitEnd();\n\n        final ClassVisitor emptyClassVisitor = new EmptyClassVisitor();\n\n        emptyClassVisitor.visit( 0, 0, null, null, null, null );\n        emptyClassVisitor.visitAnnotation( null, false );\n        emptyClassVisitor.visitAttribute( null );\n        emptyClassVisitor.visitSource( null, null );\n        emptyClassVisitor.visitEnd();\n    }\n\n    public void testICU4J()\n    {\n        final ClassLoader loader = getClass().getClassLoader();\n        final URL[] urls = { loader.getResource( \"icu4j-2.6.1.jar\" ) };\n        final ClassSpace space = new URLClassSpace( loader, urls );\n\n        final TestListener listener = new TestListener();\n        new ClassSpaceScanner( space ).accept( new QualifiedTypeVisitor( listener ) );\n        assertEquals( 0, listener.clazzes.size() );\n    }\n}",
+        "start_point": {
+            "row": 43,
+            "column": 0
+        },
+        "end_point": {
+            "row": 375,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "public void testQualifiedScanning()\n{\n    final TestListener listener = new TestListener();\n    final ClassSpace space =\n        new URLClassSpace( getClass().getClassLoader(), new URL[] { getClass().getResource( \"\" ) } );\n    new ClassSpaceScanner( space ).accept( new QualifiedTypeVisitor( listener ) );\n    assertEquals( 35, listener.clazzes.size() );\n\n    assertTrue( listener.clazzes.contains( C.class ) );\n    assertTrue( listener.clazzes.contains( D.class ) );\n    assertTrue( listener.clazzes.contains( E.class ) );\n}",
+                "name": "testQualifiedScanning",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    final TestListener listener = new TestListener();\n    final ClassSpace space =\n        new URLClassSpace( getClass().getClassLoader(), new URL[] { getClass().getResource( \"\" ) } );\n    new ClassSpaceScanner( space ).accept( new QualifiedTypeVisitor( listener ) );\n    assertEquals( 35, listener.clazzes.size() );\n\n    assertTrue( listener.clazzes.contains( C.class ) );\n    assertTrue( listener.clazzes.contains( D.class ) );\n    assertTrue( listener.clazzes.contains( E.class ) );\n}",
+                "start_point": {
+                    "row": 103,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 114,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void testAdaptedScanning()\n{\n    final TestListener listener = new TestListener();\n    final ClassSpace space =\n        new URLClassSpace( getClass().getClassLoader(), new URL[] { getClass().getResource( \"\" ) } );\n    final ClassSpaceVisitor visitor = new QualifiedTypeVisitor( listener );\n    new ClassSpaceScanner( space ).accept( new ClassSpaceVisitor()\n    {\n        public void visit( final ClassSpace _space )\n        {\n            visitor.visit( _space );\n        }\n\n        public ClassVisitor visitClass( final URL url )\n        {\n            if ( url.toString().contains( \"$D.class\" ) )\n            {\n                return null;\n            }\n            return visitor.visitClass( url );\n        }\n\n        public void visitEnd()\n        {\n            visitor.visitEnd();\n        }\n    } );\n\n    assertEquals( 34, listener.clazzes.size() );\n\n    assertTrue( listener.clazzes.contains( C.class ) );\n    assertTrue( listener.clazzes.contains( E.class ) );\n}",
+                "name": "testAdaptedScanning",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    final TestListener listener = new TestListener();\n    final ClassSpace space =\n        new URLClassSpace( getClass().getClassLoader(), new URL[] { getClass().getResource( \"\" ) } );\n    final ClassSpaceVisitor visitor = new QualifiedTypeVisitor( listener );\n    new ClassSpaceScanner( space ).accept( new ClassSpaceVisitor()\n    {\n        public void visit( final ClassSpace _space )\n        {\n            visitor.visit( _space );\n        }\n\n        public ClassVisitor visitClass( final URL url )\n        {\n            if ( url.toString().contains( \"$D.class\" ) )\n            {\n                return null;\n            }\n            return visitor.visitClass( url );\n        }\n\n        public void visitEnd()\n        {\n            visitor.visitEnd();\n        }\n    } );\n\n    assertEquals( 34, listener.clazzes.size() );\n\n    assertTrue( listener.clazzes.contains( C.class ) );\n    assertTrue( listener.clazzes.contains( E.class ) );\n}",
+                "start_point": {
+                    "row": 116,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 148,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void testFilteredScanning()\n{\n    final TestListener listener = new TestListener();\n    final ClassSpace space =\n        new URLClassSpace( getClass().getClassLoader(), new URL[] { getClass().getResource( \"\" ) } );\n    final ClassSpaceVisitor visitor = new QualifiedTypeVisitor( listener );\n    new ClassSpaceScanner( new ClassFinder()\n    {\n        public Enumeration<URL> findClasses( final ClassSpace space2 )\n        {\n            return space2.findEntries( null, \"*D.class\", true );\n        }\n    }, space ).accept( visitor );\n\n    assertEquals( 1, listener.clazzes.size() );\n\n    assertTrue( listener.clazzes.contains( D.class ) );\n}",
+                "name": "testFilteredScanning",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    final TestListener listener = new TestListener();\n    final ClassSpace space =\n        new URLClassSpace( getClass().getClassLoader(), new URL[] { getClass().getResource( \"\" ) } );\n    final ClassSpaceVisitor visitor = new QualifiedTypeVisitor( listener );\n    new ClassSpaceScanner( new ClassFinder()\n    {\n        public Enumeration<URL> findClasses( final ClassSpace space2 )\n        {\n            return space2.findEntries( null, \"*D.class\", true );\n        }\n    }, space ).accept( visitor );\n\n    assertEquals( 1, listener.clazzes.size() );\n\n    assertTrue( listener.clazzes.contains( D.class ) );\n}",
+                "start_point": {
+                    "row": 150,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 167,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Ignore( \"Need to replace some test archives\" )\npublic void /* test */ignoreIndexedScanning()\n{\n    final TestListener listener = new TestListener();\n    final ClassSpace space =\n        new URLClassSpace( getClass().getClassLoader(), new URL[] { getClass().getResource( \"\" ) } );\n    final ClassSpaceVisitor visitor = new QualifiedTypeVisitor( listener );\n    new ClassSpaceScanner( new SisuIndexFinder( false ), space ).accept( visitor );\n\n    // we deliberately use a partial index\n\n    assertEquals( 2, listener.clazzes.size() );\n\n    assertTrue( listener.clazzes.contains( C.class ) );\n    assertTrue( listener.clazzes.contains( D.class ) );\n}",
+                "name": "ignoreIndexedScanning",
+                "modifiers": "@Ignore( \"Need to replace some test archives\" )\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    final TestListener listener = new TestListener();\n    final ClassSpace space =\n        new URLClassSpace( getClass().getClassLoader(), new URL[] { getClass().getResource( \"\" ) } );\n    final ClassSpaceVisitor visitor = new QualifiedTypeVisitor( listener );\n    new ClassSpaceScanner( new SisuIndexFinder( false ), space ).accept( visitor );\n\n    // we deliberately use a partial index\n\n    assertEquals( 2, listener.clazzes.size() );\n\n    assertTrue( listener.clazzes.contains( C.class ) );\n    assertTrue( listener.clazzes.contains( D.class ) );\n}",
+                "start_point": {
+                    "row": 169,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 184,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void testBrokenScanning()\n    throws IOException\n{\n    // System.setProperty( \"java.protocol.handler.pkgs\", getClass().getPackage().getName() );\n    URL.setURLStreamHandlerFactory( new URLStreamHandlerFactory()\n    {\n        public URLStreamHandler createURLStreamHandler( final String protocol )\n        {\n            if ( \"oops\".equals( protocol ) )\n            {\n                return new Handler();\n            }\n            return null;\n        }\n    } );\n\n    final ClassSpace space =\n        new URLClassSpace( getClass().getClassLoader(), new URL[] { getClass().getResource( \"\" ) } );\n\n    final URL badURL = new URL( \"oops:bad/\" );\n    final ClassSpace brokenResourceSpace = new ClassSpace()\n    {\n        public Class<?> loadClass( final String name )\n        {\n            return space.loadClass( name );\n        }\n\n        public DeferredClass<?> deferLoadClass( final String name )\n        {\n            return space.deferLoadClass( name );\n        }\n\n        public Enumeration<URL> getResources( final String name )\n        {\n            return space.getResources( name );\n        }\n\n        public URL getResource( final String name )\n        {\n            return badURL;\n        }\n\n        public Enumeration<URL> findEntries( final String path, final String glob, final boolean recurse )\n        {\n            return Collections.enumeration( Collections.singleton( badURL ) );\n        }\n    };\n\n    new ClassSpaceScanner( brokenResourceSpace ).accept( new QualifiedTypeVisitor( null ) );\n\n    final ClassSpace brokenLoadSpace = new ClassSpace()\n    {\n        public Class<?> loadClass( final String name )\n        {\n            throw new TypeNotPresentException( name, new ClassNotFoundException( name ) );\n        }\n\n        public DeferredClass<?> deferLoadClass( final String name )\n        {\n            return space.deferLoadClass( name );\n        }\n\n        public Enumeration<URL> getResources( final String name )\n        {\n            return space.getResources( name );\n        }\n\n        public URL getResource( final String name )\n        {\n            return space.getResource( name );\n        }\n\n        public Enumeration<URL> findEntries( final String path, final String glob, final boolean recurse )\n        {\n            return space.findEntries( path, glob, recurse );\n        }\n    };\n\n    new ClassSpaceScanner( brokenLoadSpace ).accept( new QualifiedTypeVisitor( null ) );\n\n    ClassSpaceScanner.accept( null, null );\n\n    assertFalse( new SisuIndexFinder( false ).findClasses( brokenResourceSpace ).hasMoreElements() );\n}",
+                "name": "testBrokenScanning",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    // System.setProperty( \"java.protocol.handler.pkgs\", getClass().getPackage().getName() );\n    URL.setURLStreamHandlerFactory( new URLStreamHandlerFactory()\n    {\n        public URLStreamHandler createURLStreamHandler( final String protocol )\n        {\n            if ( \"oops\".equals( protocol ) )\n            {\n                return new Handler();\n            }\n            return null;\n        }\n    } );\n\n    final ClassSpace space =\n        new URLClassSpace( getClass().getClassLoader(), new URL[] { getClass().getResource( \"\" ) } );\n\n    final URL badURL = new URL( \"oops:bad/\" );\n    final ClassSpace brokenResourceSpace = new ClassSpace()\n    {\n        public Class<?> loadClass( final String name )\n        {\n            return space.loadClass( name );\n        }\n\n        public DeferredClass<?> deferLoadClass( final String name )\n        {\n            return space.deferLoadClass( name );\n        }\n\n        public Enumeration<URL> getResources( final String name )\n        {\n            return space.getResources( name );\n        }\n\n        public URL getResource( final String name )\n        {\n            return badURL;\n        }\n\n        public Enumeration<URL> findEntries( final String path, final String glob, final boolean recurse )\n        {\n            return Collections.enumeration( Collections.singleton( badURL ) );\n        }\n    };\n\n    new ClassSpaceScanner( brokenResourceSpace ).accept( new QualifiedTypeVisitor( null ) );\n\n    final ClassSpace brokenLoadSpace = new ClassSpace()\n    {\n        public Class<?> loadClass( final String name )\n        {\n            throw new TypeNotPresentException( name, new ClassNotFoundException( name ) );\n        }\n\n        public DeferredClass<?> deferLoadClass( final String name )\n        {\n            return space.deferLoadClass( name );\n        }\n\n        public Enumeration<URL> getResources( final String name )\n        {\n            return space.getResources( name );\n        }\n\n        public URL getResource( final String name )\n        {\n            return space.getResource( name );\n        }\n\n        public Enumeration<URL> findEntries( final String path, final String glob, final boolean recurse )\n        {\n            return space.findEntries( path, glob, recurse );\n        }\n    };\n\n    new ClassSpaceScanner( brokenLoadSpace ).accept( new QualifiedTypeVisitor( null ) );\n\n    ClassSpaceScanner.accept( null, null );\n\n    assertFalse( new SisuIndexFinder( false ).findClasses( brokenResourceSpace ).hasMoreElements() );\n}",
+                "start_point": {
+                    "row": 186,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 269,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void testSourceDetection()\n    throws MalformedURLException\n{\n    final TestListener listener = new TestListener();\n\n    final QualifiedTypeVisitor visitor = new QualifiedTypeVisitor( listener );\n\n    visitor.visit( new URLClassSpace( getClass().getClassLoader(), new URL[] { getClass().getResource( \"\" ) } ) );\n\n    assertEquals( 0, listener.sources.size() );\n\n    visitor.visitClass( new URL( \"file:target/classes/java/lang/Object.class\" ) );\n    visitor.visit( 0, 0, Type.getInternalName( Object.class ), null, null, null );\n    visitor.visitAnnotation( Type.getDescriptor( Named.class ), true );\n    visitor.visitEnd();\n\n    assertEquals( 1, listener.sources.size() );\n    assertTrue( listener.sources.contains( \"target/classes/\" ) );\n\n    visitor.visitClass( new URL( \"jar:file:bar.jar!/java/lang/String.class\" ) );\n    visitor.visit( 0, 0, Type.getInternalName( String.class ), null, null, null );\n    visitor.visitAnnotation( Type.getDescriptor( Named.class ), true );\n    visitor.visitEnd();\n\n    assertEquals( 2, listener.sources.size() );\n    assertTrue( listener.sources.contains( \"target/classes/\" ) );\n    assertTrue( listener.sources.contains( \"file:bar.jar!/\" ) );\n\n    visitor.visitClass( new URL( \"file:some/obfuscated/location\" ) );\n    visitor.visit( 0, 0, Type.getInternalName( Integer.class ), null, null, null );\n    visitor.visitAnnotation( Type.getDescriptor( Named.class ), true );\n    visitor.visitEnd();\n\n    assertEquals( 3, listener.sources.size() );\n    assertTrue( listener.sources.contains( \"target/classes/\" ) );\n    assertTrue( listener.sources.contains( \"file:bar.jar!/\" ) );\n    assertTrue( listener.sources.contains( \"some/obfuscated/location\" ) );\n}",
+                "name": "testSourceDetection",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    final TestListener listener = new TestListener();\n\n    final QualifiedTypeVisitor visitor = new QualifiedTypeVisitor( listener );\n\n    visitor.visit( new URLClassSpace( getClass().getClassLoader(), new URL[] { getClass().getResource( \"\" ) } ) );\n\n    assertEquals( 0, listener.sources.size() );\n\n    visitor.visitClass( new URL( \"file:target/classes/java/lang/Object.class\" ) );\n    visitor.visit( 0, 0, Type.getInternalName( Object.class ), null, null, null );\n    visitor.visitAnnotation( Type.getDescriptor( Named.class ), true );\n    visitor.visitEnd();\n\n    assertEquals( 1, listener.sources.size() );\n    assertTrue( listener.sources.contains( \"target/classes/\" ) );\n\n    visitor.visitClass( new URL( \"jar:file:bar.jar!/java/lang/String.class\" ) );\n    visitor.visit( 0, 0, Type.getInternalName( String.class ), null, null, null );\n    visitor.visitAnnotation( Type.getDescriptor( Named.class ), true );\n    visitor.visitEnd();\n\n    assertEquals( 2, listener.sources.size() );\n    assertTrue( listener.sources.contains( \"target/classes/\" ) );\n    assertTrue( listener.sources.contains( \"file:bar.jar!/\" ) );\n\n    visitor.visitClass( new URL( \"file:some/obfuscated/location\" ) );\n    visitor.visit( 0, 0, Type.getInternalName( Integer.class ), null, null, null );\n    visitor.visitAnnotation( Type.getDescriptor( Named.class ), true );\n    visitor.visitEnd();\n\n    assertEquals( 3, listener.sources.size() );\n    assertTrue( listener.sources.contains( \"target/classes/\" ) );\n    assertTrue( listener.sources.contains( \"file:bar.jar!/\" ) );\n    assertTrue( listener.sources.contains( \"some/obfuscated/location\" ) );\n}",
+                "start_point": {
+                    "row": 271,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 308,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void testOptionalLogging()\n    throws Exception\n{\n    final Level level = Logger.getLogger( \"\" ).getLevel();\n    try\n    {\n        Logger.getLogger( \"\" ).setLevel( Level.SEVERE );\n\n        // check everything still works without any SLF4J jars\n        final ClassLoader noLoggingLoader =\n            new URLClassLoader( ( (URLClassLoader) getClass().getClassLoader() ).getURLs(), null )\n            {\n                @Override\n                protected synchronized Class<?> loadClass( final String name, final boolean resolve )\n                    throws ClassNotFoundException\n                {\n                    if ( name.contains( \"slf4j\" ) )\n                    {\n                        throw new ClassNotFoundException( name );\n                    }\n                    if ( name.contains( \"cobertura\" ) )\n                    {\n                        return QualifiedScanningTest.class.getClassLoader().loadClass( name );\n                    }\n                    return super.loadClass( name, resolve );\n                }\n            };\n\n        noLoggingLoader.loadClass( BrokenScanningExample.class.getName() ).newInstance();\n    }\n    finally\n    {\n        Logger.getLogger( \"\" ).setLevel( level );\n    }\n}",
+                "name": "testOptionalLogging",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    final Level level = Logger.getLogger( \"\" ).getLevel();\n    try\n    {\n        Logger.getLogger( \"\" ).setLevel( Level.SEVERE );\n\n        // check everything still works without any SLF4J jars\n        final ClassLoader noLoggingLoader =\n            new URLClassLoader( ( (URLClassLoader) getClass().getClassLoader() ).getURLs(), null )\n            {\n                @Override\n                protected synchronized Class<?> loadClass( final String name, final boolean resolve )\n                    throws ClassNotFoundException\n                {\n                    if ( name.contains( \"slf4j\" ) )\n                    {\n                        throw new ClassNotFoundException( name );\n                    }\n                    if ( name.contains( \"cobertura\" ) )\n                    {\n                        return QualifiedScanningTest.class.getClassLoader().loadClass( name );\n                    }\n                    return super.loadClass( name, resolve );\n                }\n            };\n\n        noLoggingLoader.loadClass( BrokenScanningExample.class.getName() ).newInstance();\n    }\n    finally\n    {\n        Logger.getLogger( \"\" ).setLevel( level );\n    }\n}",
+                "start_point": {
+                    "row": 310,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 344,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void testEmptyMethods()\n{\n    final AnnotationVisitor emptyAnnotationVisitor = new EmptyAnnotationVisitor();\n\n    emptyAnnotationVisitor.visit( null, null );\n    emptyAnnotationVisitor.visitEnum( null, null, null );\n    emptyAnnotationVisitor.visitAnnotation( null, null );\n    emptyAnnotationVisitor.visitArray( null );\n    emptyAnnotationVisitor.visitEnd();\n\n    final ClassVisitor emptyClassVisitor = new EmptyClassVisitor();\n\n    emptyClassVisitor.visit( 0, 0, null, null, null, null );\n    emptyClassVisitor.visitAnnotation( null, false );\n    emptyClassVisitor.visitAttribute( null );\n    emptyClassVisitor.visitSource( null, null );\n    emptyClassVisitor.visitEnd();\n}",
+                "name": "testEmptyMethods",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    final AnnotationVisitor emptyAnnotationVisitor = new EmptyAnnotationVisitor();\n\n    emptyAnnotationVisitor.visit( null, null );\n    emptyAnnotationVisitor.visitEnum( null, null, null );\n    emptyAnnotationVisitor.visitAnnotation( null, null );\n    emptyAnnotationVisitor.visitArray( null );\n    emptyAnnotationVisitor.visitEnd();\n\n    final ClassVisitor emptyClassVisitor = new EmptyClassVisitor();\n\n    emptyClassVisitor.visit( 0, 0, null, null, null, null );\n    emptyClassVisitor.visitAnnotation( null, false );\n    emptyClassVisitor.visitAttribute( null );\n    emptyClassVisitor.visitSource( null, null );\n    emptyClassVisitor.visitEnd();\n}",
+                "start_point": {
+                    "row": 346,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 363,
+                    "column": 5
+                },
+                "method_mode": "Deleted"
+            },
+            {
+                "definition": "public void testICU4J()\n{\n    final ClassLoader loader = getClass().getClassLoader();\n    final URL[] urls = { loader.getResource( \"icu4j-2.6.1.jar\" ) };\n    final ClassSpace space = new URLClassSpace( loader, urls );\n\n    final TestListener listener = new TestListener();\n    new ClassSpaceScanner( space ).accept( new QualifiedTypeVisitor( listener ) );\n    assertEquals( 0, listener.clazzes.size() );\n}",
+                "name": "testICU4J",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    final ClassLoader loader = getClass().getClassLoader();\n    final URL[] urls = { loader.getResource( \"icu4j-2.6.1.jar\" ) };\n    final ClassSpace space = new URLClassSpace( loader, urls );\n\n    final TestListener listener = new TestListener();\n    new ClassSpaceScanner( space ).accept( new QualifiedTypeVisitor( listener ) );\n    assertEquals( 0, listener.clazzes.size() );\n}",
+                "start_point": {
+                    "row": 365,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 374,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            }
+        ],
+        "class_mode": "Modified"
+    },
+    {
+        "repo_name": "eclipse_sisu.inject",
+        "commit": "c74e372155704044e64e03da9d58287eef537af7",
+        "rev_path": "org.eclipse.sisu.inject.tests/src/org/eclipse/sisu/space/QualifiedScanningTest.java",
+        "definition": "@Named\nstatic abstract class B\n{\n}",
+        "package": "package org.eclipse.sisu.space;",
+        "tree_path": "QualifiedScanningTest.B",
+        "name": "B",
+        "modifiers": "@Named\n    static abstract",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n}",
+        "start_point": {
+            "row": 51,
+            "column": 4
+        },
+        "end_point": {
+            "row": 54,
+            "column": 5
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [],
+        "class_mode": "Unchanged"
+    },
+    {
+        "repo_name": "eclipse_sisu.inject",
+        "commit": "c74e372155704044e64e03da9d58287eef537af7",
+        "rev_path": "org.eclipse.sisu.inject.tests/src/org/eclipse/sisu/space/QualifiedScanningTest.java",
+        "definition": "@Named\nstatic class C\n{\n}",
+        "package": "package org.eclipse.sisu.space;",
+        "tree_path": "QualifiedScanningTest.C",
+        "name": "C",
+        "modifiers": "@Named\n    static",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n}",
+        "start_point": {
+            "row": 56,
+            "column": 4
+        },
+        "end_point": {
+            "row": 59,
+            "column": 5
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [],
+        "class_mode": "Unchanged"
+    },
+    {
+        "repo_name": "eclipse_sisu.inject",
+        "commit": "c74e372155704044e64e03da9d58287eef537af7",
+        "rev_path": "org.eclipse.sisu.inject.tests/src/org/eclipse/sisu/space/QualifiedScanningTest.java",
+        "definition": "@Named\n@Legacy\nstatic class D\n{\n}",
+        "package": "package org.eclipse.sisu.space;",
+        "tree_path": "QualifiedScanningTest.D",
+        "name": "D",
+        "modifiers": "@Named\n    @Legacy\n    static",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n}",
+        "start_point": {
+            "row": 67,
+            "column": 4
+        },
+        "end_point": {
+            "row": 71,
+            "column": 5
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [],
+        "class_mode": "Unchanged"
+    },
+    {
+        "repo_name": "eclipse_sisu.inject",
+        "commit": "c74e372155704044e64e03da9d58287eef537af7",
+        "rev_path": "org.eclipse.sisu.inject.tests/src/org/eclipse/sisu/space/QualifiedScanningTest.java",
+        "definition": "@Legacy\n@Named\nstatic class E\n{\n}",
+        "package": "package org.eclipse.sisu.space;",
+        "tree_path": "QualifiedScanningTest.E",
+        "name": "E",
+        "modifiers": "@Legacy\n    @Named\n    static",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n}",
+        "start_point": {
+            "row": 73,
+            "column": 4
+        },
+        "end_point": {
+            "row": 77,
+            "column": 5
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [],
+        "class_mode": "Unchanged"
+    },
+    {
+        "repo_name": "eclipse_sisu.inject",
+        "commit": "c74e372155704044e64e03da9d58287eef537af7",
+        "rev_path": "org.eclipse.sisu.inject.tests/src/org/eclipse/sisu/space/QualifiedScanningTest.java",
+        "definition": "static class F\n    extends B\n{\n}",
+        "package": "package org.eclipse.sisu.space;",
+        "tree_path": "QualifiedScanningTest.F",
+        "name": "F",
+        "modifiers": "static",
+        "superclass": "extends B",
+        "super_interfaces": null,
+        "body": "{\n}",
+        "start_point": {
+            "row": 79,
+            "column": 4
+        },
+        "end_point": {
+            "row": 82,
+            "column": 5
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [],
+        "class_mode": "Unchanged"
+    },
+    {
+        "repo_name": "eclipse_sisu.inject",
+        "commit": "c74e372155704044e64e03da9d58287eef537af7",
+        "rev_path": "org.eclipse.sisu.inject.tests/src/org/eclipse/sisu/space/QualifiedScanningTest.java",
+        "definition": "@Singleton\nstatic class G\n{\n}",
+        "package": "package org.eclipse.sisu.space;",
+        "tree_path": "QualifiedScanningTest.G",
+        "name": "G",
+        "modifiers": "@Singleton\n    static",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n}",
+        "start_point": {
+            "row": 84,
+            "column": 4
+        },
+        "end_point": {
+            "row": 87,
+            "column": 5
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [],
+        "class_mode": "Unchanged"
+    },
+    {
+        "repo_name": "eclipse_sisu.inject",
+        "commit": "c74e372155704044e64e03da9d58287eef537af7",
+        "rev_path": "org.eclipse.sisu.inject.tests/src/org/eclipse/sisu/space/QualifiedScanningTest.java",
+        "definition": "static class TestListener\n    implements QualifiedTypeListener\n{\n    final List<Class<?>> clazzes = new ArrayList<Class<?>>();\n\n    final Set<Object> sources = new HashSet<Object>();\n\n    public void hear( final Annotation qualifier, final Class<?> clazz, final Object source )\n    {\n        clazzes.add( clazz );\n        sources.add( source );\n    }\n}",
+        "package": "package org.eclipse.sisu.space;",
+        "tree_path": "QualifiedScanningTest.TestListener",
+        "name": "TestListener",
+        "modifiers": "static",
+        "superclass": null,
+        "super_interfaces": "implements QualifiedTypeListener",
+        "body": "{\n    final List<Class<?>> clazzes = new ArrayList<Class<?>>();\n\n    final Set<Object> sources = new HashSet<Object>();\n\n    public void hear( final Annotation qualifier, final Class<?> clazz, final Object source )\n    {\n        clazzes.add( clazz );\n        sources.add( source );\n    }\n}",
+        "start_point": {
+            "row": 89,
+            "column": 4
+        },
+        "end_point": {
+            "row": 101,
+            "column": 5
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "public void hear( final Annotation qualifier, final Class<?> clazz, final Object source )\n{\n    clazzes.add( clazz );\n    sources.add( source );\n}",
+                "name": "hear",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "Annotation"
+                    },
+                    {
+                        "type": "final",
+                        "name": "Class<?>"
+                    },
+                    {
+                        "type": "final",
+                        "name": "Object"
+                    }
+                ],
+                "body": "{\n    clazzes.add( clazz );\n    sources.add( source );\n}",
+                "start_point": {
+                    "row": 96,
+                    "column": 8
+                },
+                "end_point": {
+                    "row": 100,
+                    "column": 9
+                }
+            }
+        ],
+        "class_mode": "Unchanged"
+    }
+]

@@ -3,7 +3,7 @@ import os
 import json
 import pandas as pd
 from tqdm import tqdm
-from difflib import SequenceMatcher
+import myers
 # import subprocess
 
 # repos_storage = "/drive1/phatnt/zTrans/data/repos"
@@ -22,15 +22,31 @@ from difflib import SequenceMatcher
 #     except subprocess.CalledProcessError:
 #         return None
 #     return res.decode("utf-8")
-def get_similarity_index(code1, code2):
-    # Calculate similarity ratio using SequenceMatcher
-    similarity = SequenceMatcher(None, code1, code2).ratio()
-    # Convert to percentage and round to 2 decimal places
-    return round(similarity * 100, 2)
+def get_similarity_index(old: str, new: str) -> float:
+    def get_lines(text: str) -> list[str]:
+        return text.replace('\r\n', '\n').strip().splitlines()
+
+    def get_changes(old: list[str], new: list[str]) -> list[tuple[str, str]]:
+        changes = myers.diff(old, new)
+        return changes
+    old_lines = get_lines(old)
+    new_lines = get_lines(new)
+    changes = get_changes(old_lines, new_lines)
+    
+    num_unchanged_lines = sum(1 for op, _ in changes if op == 'k')
+    
+    # Calculate similarity
+    total_lines = len(old_lines) + len(new_lines)
+    if total_lines == 0:
+        similarity = 100.0
+    else:
+        similarity = round(2 * num_unchanged_lines / total_lines * 100, 2)
+
+    return similarity
 
 
 def annotate_class(
-    parsed_class, repo, prev_commit, cur_commit, file_path, mode, threshold: int = 0.5
+    parsed_class, repo, prev_commit, cur_commit, file_path, mode, threshold: float = 50
 ):
     if mode == "Modified":
         old = file_path
@@ -63,11 +79,16 @@ def annotate_class(
                 break
         if mapped:
             continue
-
+    
+    for aclass in old_data:
+        if "class_mode" in aclass:
+            continue
         # Check for rename
         max_similarity = 0
         best_match = None
         for bclass in new_data:
+            if "class_mode" in bclass:
+                continue
             if (
                 get_similarity_index(aclass["definition"], bclass["definition"])
                 > max_similarity
@@ -79,8 +100,6 @@ def annotate_class(
         if max_similarity == 100:
             aclass["class_mode"] = "Renamed-Unchanged"
             best_match["class_mode"] = "Renamed-Unchanged"
-            aclass["map_tree_path"] = best_match["tree_path"]
-            best_match["map_tree_path"] = aclass["tree_path"]
             continue
         elif max_similarity > threshold:
             aclass["class_mode"] = "Renamed-Modified"

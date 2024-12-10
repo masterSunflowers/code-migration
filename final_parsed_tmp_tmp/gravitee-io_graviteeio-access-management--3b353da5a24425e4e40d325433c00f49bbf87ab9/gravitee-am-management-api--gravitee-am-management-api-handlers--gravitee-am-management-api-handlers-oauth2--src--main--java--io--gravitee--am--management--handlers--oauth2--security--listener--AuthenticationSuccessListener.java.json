@@ -1,0 +1,50 @@
+[
+    {
+        "repo_name": "gravitee-io_graviteeio-access-management",
+        "commit": "3b353da5a24425e4e40d325433c00f49bbf87ab9",
+        "rev_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-oauth2/src/main/java/io/gravitee/am/management/handlers/oauth2/security/listener/AuthenticationSuccessListener.java",
+        "definition": "public class AuthenticationSuccessListener implements ApplicationListener<AuthenticationSuccessEvent> {\n\n    @Autowired\n    private Domain domain;\n\n    @Autowired\n    private UserService userService;\n\n    @Override\n    public void onApplicationEvent(AuthenticationSuccessEvent event) {\n        final User principal = (User) event.getAuthentication().getPrincipal();\n        Map<String, String> details = (Map<String, String>) event.getAuthentication().getDetails();\n\n        try {\n            // TODO async call\n            io.gravitee.am.model.User user = userService.loadUserByUsernameAndDomain(domain.getId(), principal.getUsername()).blockingGet();\n            UpdateUser updateUser = new UpdateUser();\n            if (details != null) {\n                updateUser.setSource(details.get(RepositoryProviderUtils.SOURCE));\n                updateUser.setClient(details.get(OAuth2Utils.CLIENT_ID));\n            }\n            updateUser.setLoggedAt(new Date());\n            updateUser.setLoginsCount(user.getLoginsCount() + 1);\n            updateUser.setAdditionalInformation(principal.getAdditionalInformation());\n            userService.update(domain.getId(), user.getId(), updateUser);\n        } catch (UserNotFoundException unfe) {\n            final NewUser newUser = new NewUser();\n            newUser.setUsername(principal.getUsername());\n            if (details != null) {\n                newUser.setSource(details.get(RepositoryProviderUtils.SOURCE));\n                newUser.setClient(details.get(OAuth2Utils.CLIENT_ID));\n            }\n            newUser.setLoggedAt(new Date());\n            newUser.setLoginsCount(1l);\n            newUser.setAdditionalInformation(principal.getAdditionalInformation());\n            userService.create(domain.getId(), newUser);\n        }\n    }\n}",
+        "package": "package io.gravitee.am.management.handlers.oauth2.security.listener;",
+        "tree_path": "AuthenticationSuccessListener",
+        "name": "AuthenticationSuccessListener",
+        "modifiers": "public",
+        "superclass": null,
+        "super_interfaces": "implements ApplicationListener<AuthenticationSuccessEvent>",
+        "body": "{\n\n    @Autowired\n    private Domain domain;\n\n    @Autowired\n    private UserService userService;\n\n    @Override\n    public void onApplicationEvent(AuthenticationSuccessEvent event) {\n        final User principal = (User) event.getAuthentication().getPrincipal();\n        Map<String, String> details = (Map<String, String>) event.getAuthentication().getDetails();\n\n        try {\n            // TODO async call\n            io.gravitee.am.model.User user = userService.loadUserByUsernameAndDomain(domain.getId(), principal.getUsername()).blockingGet();\n            UpdateUser updateUser = new UpdateUser();\n            if (details != null) {\n                updateUser.setSource(details.get(RepositoryProviderUtils.SOURCE));\n                updateUser.setClient(details.get(OAuth2Utils.CLIENT_ID));\n            }\n            updateUser.setLoggedAt(new Date());\n            updateUser.setLoginsCount(user.getLoginsCount() + 1);\n            updateUser.setAdditionalInformation(principal.getAdditionalInformation());\n            userService.update(domain.getId(), user.getId(), updateUser);\n        } catch (UserNotFoundException unfe) {\n            final NewUser newUser = new NewUser();\n            newUser.setUsername(principal.getUsername());\n            if (details != null) {\n                newUser.setSource(details.get(RepositoryProviderUtils.SOURCE));\n                newUser.setClient(details.get(OAuth2Utils.CLIENT_ID));\n            }\n            newUser.setLoggedAt(new Date());\n            newUser.setLoginsCount(1l);\n            newUser.setAdditionalInformation(principal.getAdditionalInformation());\n            userService.create(domain.getId(), newUser);\n        }\n    }\n}",
+        "start_point": {
+            "row": 36,
+            "column": 0
+        },
+        "end_point": {
+            "row": 74,
+            "column": 1
+        },
+        "file_mode": "Renamed-Modified",
+        "map_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-admin/src/main/java/io/gravitee/am/management/handlers/admin/security/listener/AuthenticationSuccessListener.java",
+        "methods": [
+            {
+                "definition": "@Override\npublic void onApplicationEvent(AuthenticationSuccessEvent event) {\n    final User principal = (User) event.getAuthentication().getPrincipal();\n    Map<String, String> details = (Map<String, String>) event.getAuthentication().getDetails();\n\n    try {\n        // TODO async call\n        io.gravitee.am.model.User user = userService.loadUserByUsernameAndDomain(domain.getId(), principal.getUsername()).blockingGet();\n        UpdateUser updateUser = new UpdateUser();\n        if (details != null) {\n            updateUser.setSource(details.get(RepositoryProviderUtils.SOURCE));\n            updateUser.setClient(details.get(OAuth2Utils.CLIENT_ID));\n        }\n        updateUser.setLoggedAt(new Date());\n        updateUser.setLoginsCount(user.getLoginsCount() + 1);\n        updateUser.setAdditionalInformation(principal.getAdditionalInformation());\n        userService.update(domain.getId(), user.getId(), updateUser);\n    } catch (UserNotFoundException unfe) {\n        final NewUser newUser = new NewUser();\n        newUser.setUsername(principal.getUsername());\n        if (details != null) {\n            newUser.setSource(details.get(RepositoryProviderUtils.SOURCE));\n            newUser.setClient(details.get(OAuth2Utils.CLIENT_ID));\n        }\n        newUser.setLoggedAt(new Date());\n        newUser.setLoginsCount(1l);\n        newUser.setAdditionalInformation(principal.getAdditionalInformation());\n        userService.create(domain.getId(), newUser);\n    }\n}",
+                "name": "onApplicationEvent",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "AuthenticationSuccessEvent",
+                        "name": "event"
+                    }
+                ],
+                "body": "{\n    final User principal = (User) event.getAuthentication().getPrincipal();\n    Map<String, String> details = (Map<String, String>) event.getAuthentication().getDetails();\n\n    try {\n        // TODO async call\n        io.gravitee.am.model.User user = userService.loadUserByUsernameAndDomain(domain.getId(), principal.getUsername()).blockingGet();\n        UpdateUser updateUser = new UpdateUser();\n        if (details != null) {\n            updateUser.setSource(details.get(RepositoryProviderUtils.SOURCE));\n            updateUser.setClient(details.get(OAuth2Utils.CLIENT_ID));\n        }\n        updateUser.setLoggedAt(new Date());\n        updateUser.setLoginsCount(user.getLoginsCount() + 1);\n        updateUser.setAdditionalInformation(principal.getAdditionalInformation());\n        userService.update(domain.getId(), user.getId(), updateUser);\n    } catch (UserNotFoundException unfe) {\n        final NewUser newUser = new NewUser();\n        newUser.setUsername(principal.getUsername());\n        if (details != null) {\n            newUser.setSource(details.get(RepositoryProviderUtils.SOURCE));\n            newUser.setClient(details.get(OAuth2Utils.CLIENT_ID));\n        }\n        newUser.setLoggedAt(new Date());\n        newUser.setLoginsCount(1l);\n        newUser.setAdditionalInformation(principal.getAdditionalInformation());\n        userService.create(domain.getId(), newUser);\n    }\n}",
+                "start_point": {
+                    "row": 44,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 73,
+                    "column": 5
+                },
+                "method_mode": "Modified"
+            }
+        ],
+        "class_mode": "Modified"
+    }
+]

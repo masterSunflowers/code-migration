@@ -1,5 +1,7 @@
 [
     {
+        "repo_name": "gravitee-io_graviteeio-access-management",
+        "commit": "0b18ada3207991cdfd70a551c56af125d2a0efe1",
         "rev_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-admin/src/main/java/io/gravitee/am/management/handlers/admin/context/AdminContextLoaderListener.java",
         "definition": "public class AdminContextLoaderListener extends ContextLoaderListener {\n\n    public AdminContextLoaderListener(WebApplicationContext context) {\n        super(context);\n    }\n\n    @Override\n    public void contextInitialized(ServletContextEvent event) {\n        super.contextInitialized(event);\n    }\n\n    @Override\n    public void contextDestroyed(ServletContextEvent event) {\n        super.contextDestroyed(event);\n    }\n}",
         "package": "package io.gravitee.am.management.handlers.admin.context;",

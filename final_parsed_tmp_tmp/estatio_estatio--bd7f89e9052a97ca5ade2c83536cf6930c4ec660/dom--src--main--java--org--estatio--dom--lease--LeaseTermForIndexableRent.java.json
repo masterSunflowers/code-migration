@@ -1,0 +1,669 @@
+[
+    {
+        "repo_name": "estatio_estatio",
+        "commit": "bd7f89e9052a97ca5ade2c83536cf6930c4ec660",
+        "rev_path": "dom/src/main/java/org/estatio/dom/lease/LeaseTermForIndexableRent.java",
+        "definition": "@javax.jdo.annotations.PersistenceCapable\n// identityType=IdentityType.DATASTORE inherited from superclass\n@javax.jdo.annotations.Inheritance(\n        strategy = InheritanceStrategy.SUPERCLASS_TABLE)\n// no @DatastoreIdentity nor @Version, since inherited from supertype\npublic class LeaseTermForIndexableRent extends LeaseTerm implements Indexable {\n\n    private Index index;\n\n    @javax.jdo.annotations.Column(name = \"indexId\", allowsNull = \"true\")\n    @Mandatory\n    @Override\n    public Index getIndex() {\n        return index;\n    }\n\n    @Override\n    public void setIndex(final Index index) {\n        this.index = index;\n    }\n\n    public List<Index> choicesIndex() {\n        return indices.allIndices();\n    }\n\n    // ///////////////////////////////////////////\n\n    @javax.jdo.annotations.Persistent\n    private LocalDate baseIndexStartDate;\n\n    @javax.jdo.annotations.Column(allowsNull = \"true\")\n    @Mandatory\n    @Override\n    public LocalDate getBaseIndexStartDate() {\n        return baseIndexStartDate;\n    }\n\n    @Override\n    public void setBaseIndexStartDate(final LocalDate baseIndexStartDate) {\n        this.baseIndexStartDate = baseIndexStartDate;\n    }\n\n    // ///////////////////////////////////////////\n\n    private BigDecimal baseIndexValue;\n\n    @javax.jdo.annotations.Column(scale = 2, allowsNull = \"true\")\n    @Optional\n    @Override\n    public BigDecimal getBaseIndexValue() {\n        return baseIndexValue;\n    }\n\n    @Override\n    public void setBaseIndexValue(final BigDecimal baseIndexValue) {\n        this.baseIndexValue = baseIndexValue;\n    }\n\n    // ///////////////////////////////////////////\n\n    @javax.jdo.annotations.Persistent\n    private LocalDate nextIndexStartDate;\n\n    @javax.jdo.annotations.Column(allowsNull = \"true\")\n    @Mandatory\n    @Override\n    public LocalDate getNextIndexStartDate() {\n        return nextIndexStartDate;\n    }\n\n    @Override\n    public void setNextIndexStartDate(final LocalDate nextIndexStartDate) {\n        this.nextIndexStartDate = nextIndexStartDate;\n    }\n\n    // ///////////////////////////////////////////\n\n    private BigDecimal nextIndexValue;\n\n    @javax.jdo.annotations.Column(scale = 2, allowsNull = \"true\")\n    @Optional\n    @Override\n    public BigDecimal getNextIndexValue() {\n        return nextIndexValue;\n    }\n\n    @Override\n    public void setNextIndexValue(final BigDecimal nextIndexValue) {\n        this.nextIndexValue = nextIndexValue;\n    }\n\n    // //////////////////////////////////////\n\n    private BigDecimal rebaseFactor;\n\n    @NotPersisted\n    @Override\n    public BigDecimal getRebaseFactor() {\n        return rebaseFactor;\n    }\n\n    @Override\n    public void setRebaseFactor(final BigDecimal rebaseFactor) {\n        this.rebaseFactor = rebaseFactor;\n\n    }\n\n    // ///////////////////////////////////////////\n\n    @javax.jdo.annotations.Persistent\n    private LocalDate effectiveDate;\n\n    @Optional\n    public LocalDate getEffectiveDate() {\n        return effectiveDate;\n    }\n\n    public void setEffectiveDate(final LocalDate effectiveDate) {\n        this.effectiveDate = effectiveDate;\n    }\n\n    // ///////////////////////////////////////////\n\n    private BigDecimal indexationPercentage;\n\n    @javax.jdo.annotations.Column(scale = 1, allowsNull = \"true\")\n    @Optional\n    public BigDecimal getIndexationPercentage() {\n        return indexationPercentage;\n    }\n\n    @Override\n    public void setIndexationPercentage(final BigDecimal indexationPercentage) {\n        this.indexationPercentage = indexationPercentage;\n    }\n\n    // ///////////////////////////////////////////\n\n    private BigDecimal levellingPercentage;\n\n    @javax.jdo.annotations.Column(scale = 1, allowsNull = \"true\")\n    @Optional\n    @Override\n    public BigDecimal getLevellingPercentage() {\n        return levellingPercentage;\n    }\n\n    public void setLevellingPercentage(final BigDecimal levellingPercentage) {\n        this.levellingPercentage = levellingPercentage;\n    }\n\n    // ///////////////////////////////////////////\n\n    private BigDecimal baseValue;\n\n    @javax.jdo.annotations.Column(scale = 2, allowsNull = \"true\")\n    @Optional\n    @Override\n    public BigDecimal getBaseValue() {\n        return baseValue;\n    }\n\n    public void setBaseValue(final BigDecimal baseValue) {\n        this.baseValue = baseValue;\n    }\n\n    // ///////////////////////////////////////////\n\n    private BigDecimal indexedValue;\n\n    @javax.jdo.annotations.Column(scale = 2, allowsNull = \"true\")\n    @Optional\n    public BigDecimal getIndexedValue() {\n        return indexedValue;\n    }\n\n    @Override\n    public void setIndexedValue(final BigDecimal indexedValue) {\n        this.indexedValue = indexedValue;\n    }\n\n    // //////////////////////////////////////\n\n    private BigDecimal settledValue;\n\n    @javax.jdo.annotations.Column(scale = 2, allowsNull = \"true\")\n    @Optional\n    public BigDecimal getSettledValue() {\n        return settledValue;\n    }\n\n    public void setSettledValue(final BigDecimal settledValue) {\n        this.settledValue = settledValue;\n    }\n\n    // //////////////////////////////////////\n\n    @Override\n    public BigDecimal getApprovedValue() {\n        return getStatus().isApproved() ? getTrialValue() : null;\n    }\n\n    // //////////////////////////////////////\n\n    @Override\n    public BigDecimal getTrialValue() {\n        return MathUtils.firstNonZero(getSettledValue(), getIndexedValue(), getBaseValue());\n    }\n\n    // ///////////////////////////////////////////\n\n    @Override\n    @Programmatic\n    public void initialize() {\n        super.initialize();\n        final LeaseTermForIndexableRent previousTerm = (LeaseTermForIndexableRent) getPrevious();\n        if (previousTerm != null) {\n            LeaseTermFrequency frequency = previousTerm.getFrequency();\n            if (frequency != null) {\n                setIndex(previousTerm.getIndex());\n                setBaseIndexStartDate(previousTerm.getNextIndexStartDate());\n                setNextIndexStartDate(frequency.nextDate(previousTerm.getNextIndexStartDate()));\n                setEffectiveDate(frequency.nextDate(previousTerm.getEffectiveDate()));\n                setBaseValue(previousTerm.getSettledValue());\n                setLevellingPercentage(previousTerm.getLevellingPercentage());\n            }\n        }\n    }\n\n    @Programmatic\n    @Override\n    public void update() {\n        super.update();\n        LeaseTermForIndexableRent previousTerm = (LeaseTermForIndexableRent) getPrevious();\n        if (previousTerm != null) {\n            BigDecimal newBaseValue = MathUtils.firstNonZero(\n                    previousTerm.getIndexedValue(),\n                    previousTerm.getBaseValue());\n            if (getBaseValue() == null || newBaseValue.compareTo(getBaseValue()) != 0) {\n                setBaseValue(newBaseValue);\n            }\n        }\n        indexationService.indexate(this);\n\n    }\n\n    // //////////////////////////////////////\n\n    @Override\n    public void copyValuesTo(final LeaseTerm target) {\n        LeaseTermForIndexableRent t = (LeaseTermForIndexableRent) target;\n        super.copyValuesTo(t);\n        t.setIndex(getIndex());\n        t.setBaseIndexStartDate(getBaseIndexStartDate());\n        t.setBaseIndexValue(getBaseIndexValue());\n        t.setNextIndexStartDate(getNextIndexStartDate());\n        t.setNextIndexValue(getNextIndexValue());\n        t.setEffectiveDate(getEffectiveDate());\n        t.setIndexationPercentage(getIndexationPercentage());\n        t.setLevellingPercentage(getLevellingPercentage());\n        t.setBaseValue(getBaseValue());\n        t.setIndexedValue(getIndexedValue());\n        t.setSettledValue(getSettledValue());\n    }\n\n    // //////////////////////////////////////\n\n    @Override\n    @Programmatic\n    public BigDecimal valueForDate(final LocalDate dueDate) {\n        // use the indexed value on or after the effective date, use the base\n        // otherwise\n        if (getEffectiveDate() == null) {\n            return MathUtils.firstNonZero(getSettledValue(), getIndexedValue(), getBaseValue());\n        }\n        if (getStartDate().compareTo(getEffectiveDate()) == 0) {\n            return MathUtils.firstNonZero(getSettledValue(), getIndexedValue(), getBaseValue());\n        }\n        if (dueDate.compareTo(getEffectiveDate()) >= 0) {\n            return MathUtils.firstNonZero(getSettledValue(), getIndexedValue(), getBaseValue());\n        }\n        return MathUtils.firstNonZero(getBaseValue(), getSettledValue());\n    }\n\n    // ///////////////////////////////////////////\n\n    private Indices indices;\n\n    public final void injectIndices(final Indices indexes) {\n        this.indices = indexes;\n    }\n\n    private IndexationService indexationService;\n\n    public final void injectIndexationService(final IndexationService indexationService) {\n        this.indexationService = indexationService;\n    }\n\n}",
+        "package": "package org.estatio.dom.lease;",
+        "tree_path": "LeaseTermForIndexableRent",
+        "name": "LeaseTermForIndexableRent",
+        "modifiers": "@javax.jdo.annotations.PersistenceCapable\n// identityType=IdentityType.DATASTORE inherited from superclass\n@javax.jdo.annotations.Inheritance(\n        strategy = InheritanceStrategy.SUPERCLASS_TABLE)\n// no @DatastoreIdentity nor @Version, since inherited from supertype\npublic",
+        "superclass": "extends LeaseTerm",
+        "super_interfaces": "implements Indexable",
+        "body": "{\n\n    private Index index;\n\n    @javax.jdo.annotations.Column(name = \"indexId\", allowsNull = \"true\")\n    @Mandatory\n    @Override\n    public Index getIndex() {\n        return index;\n    }\n\n    @Override\n    public void setIndex(final Index index) {\n        this.index = index;\n    }\n\n    public List<Index> choicesIndex() {\n        return indices.allIndices();\n    }\n\n    // ///////////////////////////////////////////\n\n    @javax.jdo.annotations.Persistent\n    private LocalDate baseIndexStartDate;\n\n    @javax.jdo.annotations.Column(allowsNull = \"true\")\n    @Mandatory\n    @Override\n    public LocalDate getBaseIndexStartDate() {\n        return baseIndexStartDate;\n    }\n\n    @Override\n    public void setBaseIndexStartDate(final LocalDate baseIndexStartDate) {\n        this.baseIndexStartDate = baseIndexStartDate;\n    }\n\n    // ///////////////////////////////////////////\n\n    private BigDecimal baseIndexValue;\n\n    @javax.jdo.annotations.Column(scale = 2, allowsNull = \"true\")\n    @Optional\n    @Override\n    public BigDecimal getBaseIndexValue() {\n        return baseIndexValue;\n    }\n\n    @Override\n    public void setBaseIndexValue(final BigDecimal baseIndexValue) {\n        this.baseIndexValue = baseIndexValue;\n    }\n\n    // ///////////////////////////////////////////\n\n    @javax.jdo.annotations.Persistent\n    private LocalDate nextIndexStartDate;\n\n    @javax.jdo.annotations.Column(allowsNull = \"true\")\n    @Mandatory\n    @Override\n    public LocalDate getNextIndexStartDate() {\n        return nextIndexStartDate;\n    }\n\n    @Override\n    public void setNextIndexStartDate(final LocalDate nextIndexStartDate) {\n        this.nextIndexStartDate = nextIndexStartDate;\n    }\n\n    // ///////////////////////////////////////////\n\n    private BigDecimal nextIndexValue;\n\n    @javax.jdo.annotations.Column(scale = 2, allowsNull = \"true\")\n    @Optional\n    @Override\n    public BigDecimal getNextIndexValue() {\n        return nextIndexValue;\n    }\n\n    @Override\n    public void setNextIndexValue(final BigDecimal nextIndexValue) {\n        this.nextIndexValue = nextIndexValue;\n    }\n\n    // //////////////////////////////////////\n\n    private BigDecimal rebaseFactor;\n\n    @NotPersisted\n    @Override\n    public BigDecimal getRebaseFactor() {\n        return rebaseFactor;\n    }\n\n    @Override\n    public void setRebaseFactor(final BigDecimal rebaseFactor) {\n        this.rebaseFactor = rebaseFactor;\n\n    }\n\n    // ///////////////////////////////////////////\n\n    @javax.jdo.annotations.Persistent\n    private LocalDate effectiveDate;\n\n    @Optional\n    public LocalDate getEffectiveDate() {\n        return effectiveDate;\n    }\n\n    public void setEffectiveDate(final LocalDate effectiveDate) {\n        this.effectiveDate = effectiveDate;\n    }\n\n    // ///////////////////////////////////////////\n\n    private BigDecimal indexationPercentage;\n\n    @javax.jdo.annotations.Column(scale = 1, allowsNull = \"true\")\n    @Optional\n    public BigDecimal getIndexationPercentage() {\n        return indexationPercentage;\n    }\n\n    @Override\n    public void setIndexationPercentage(final BigDecimal indexationPercentage) {\n        this.indexationPercentage = indexationPercentage;\n    }\n\n    // ///////////////////////////////////////////\n\n    private BigDecimal levellingPercentage;\n\n    @javax.jdo.annotations.Column(scale = 1, allowsNull = \"true\")\n    @Optional\n    @Override\n    public BigDecimal getLevellingPercentage() {\n        return levellingPercentage;\n    }\n\n    public void setLevellingPercentage(final BigDecimal levellingPercentage) {\n        this.levellingPercentage = levellingPercentage;\n    }\n\n    // ///////////////////////////////////////////\n\n    private BigDecimal baseValue;\n\n    @javax.jdo.annotations.Column(scale = 2, allowsNull = \"true\")\n    @Optional\n    @Override\n    public BigDecimal getBaseValue() {\n        return baseValue;\n    }\n\n    public void setBaseValue(final BigDecimal baseValue) {\n        this.baseValue = baseValue;\n    }\n\n    // ///////////////////////////////////////////\n\n    private BigDecimal indexedValue;\n\n    @javax.jdo.annotations.Column(scale = 2, allowsNull = \"true\")\n    @Optional\n    public BigDecimal getIndexedValue() {\n        return indexedValue;\n    }\n\n    @Override\n    public void setIndexedValue(final BigDecimal indexedValue) {\n        this.indexedValue = indexedValue;\n    }\n\n    // //////////////////////////////////////\n\n    private BigDecimal settledValue;\n\n    @javax.jdo.annotations.Column(scale = 2, allowsNull = \"true\")\n    @Optional\n    public BigDecimal getSettledValue() {\n        return settledValue;\n    }\n\n    public void setSettledValue(final BigDecimal settledValue) {\n        this.settledValue = settledValue;\n    }\n\n    // //////////////////////////////////////\n\n    @Override\n    public BigDecimal getApprovedValue() {\n        return getStatus().isApproved() ? getTrialValue() : null;\n    }\n\n    // //////////////////////////////////////\n\n    @Override\n    public BigDecimal getTrialValue() {\n        return MathUtils.firstNonZero(getSettledValue(), getIndexedValue(), getBaseValue());\n    }\n\n    // ///////////////////////////////////////////\n\n    @Override\n    @Programmatic\n    public void initialize() {\n        super.initialize();\n        final LeaseTermForIndexableRent previousTerm = (LeaseTermForIndexableRent) getPrevious();\n        if (previousTerm != null) {\n            LeaseTermFrequency frequency = previousTerm.getFrequency();\n            if (frequency != null) {\n                setIndex(previousTerm.getIndex());\n                setBaseIndexStartDate(previousTerm.getNextIndexStartDate());\n                setNextIndexStartDate(frequency.nextDate(previousTerm.getNextIndexStartDate()));\n                setEffectiveDate(frequency.nextDate(previousTerm.getEffectiveDate()));\n                setBaseValue(previousTerm.getSettledValue());\n                setLevellingPercentage(previousTerm.getLevellingPercentage());\n            }\n        }\n    }\n\n    @Programmatic\n    @Override\n    public void update() {\n        super.update();\n        LeaseTermForIndexableRent previousTerm = (LeaseTermForIndexableRent) getPrevious();\n        if (previousTerm != null) {\n            BigDecimal newBaseValue = MathUtils.firstNonZero(\n                    previousTerm.getIndexedValue(),\n                    previousTerm.getBaseValue());\n            if (getBaseValue() == null || newBaseValue.compareTo(getBaseValue()) != 0) {\n                setBaseValue(newBaseValue);\n            }\n        }\n        indexationService.indexate(this);\n\n    }\n\n    // //////////////////////////////////////\n\n    @Override\n    public void copyValuesTo(final LeaseTerm target) {\n        LeaseTermForIndexableRent t = (LeaseTermForIndexableRent) target;\n        super.copyValuesTo(t);\n        t.setIndex(getIndex());\n        t.setBaseIndexStartDate(getBaseIndexStartDate());\n        t.setBaseIndexValue(getBaseIndexValue());\n        t.setNextIndexStartDate(getNextIndexStartDate());\n        t.setNextIndexValue(getNextIndexValue());\n        t.setEffectiveDate(getEffectiveDate());\n        t.setIndexationPercentage(getIndexationPercentage());\n        t.setLevellingPercentage(getLevellingPercentage());\n        t.setBaseValue(getBaseValue());\n        t.setIndexedValue(getIndexedValue());\n        t.setSettledValue(getSettledValue());\n    }\n\n    // //////////////////////////////////////\n\n    @Override\n    @Programmatic\n    public BigDecimal valueForDate(final LocalDate dueDate) {\n        // use the indexed value on or after the effective date, use the base\n        // otherwise\n        if (getEffectiveDate() == null) {\n            return MathUtils.firstNonZero(getSettledValue(), getIndexedValue(), getBaseValue());\n        }\n        if (getStartDate().compareTo(getEffectiveDate()) == 0) {\n            return MathUtils.firstNonZero(getSettledValue(), getIndexedValue(), getBaseValue());\n        }\n        if (dueDate.compareTo(getEffectiveDate()) >= 0) {\n            return MathUtils.firstNonZero(getSettledValue(), getIndexedValue(), getBaseValue());\n        }\n        return MathUtils.firstNonZero(getBaseValue(), getSettledValue());\n    }\n\n    // ///////////////////////////////////////////\n\n    private Indices indices;\n\n    public final void injectIndices(final Indices indexes) {\n        this.indices = indexes;\n    }\n\n    private IndexationService indexationService;\n\n    public final void injectIndexationService(final IndexationService indexationService) {\n        this.indexationService = indexationService;\n    }\n\n}",
+        "start_point": {
+            "row": 38,
+            "column": 0
+        },
+        "end_point": {
+            "row": 336,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "@javax.jdo.annotations.Column(name = \"indexId\", allowsNull = \"true\")\n@Mandatory\n@Override\npublic Index getIndex() {\n    return index;\n}",
+                "name": "getIndex",
+                "modifiers": "@javax.jdo.annotations.Column(name = \"indexId\", allowsNull = \"true\")\n    @Mandatory\n    @Override\n    public",
+                "return_type": "Index",
+                "parameters": [],
+                "body": "{\n    return index;\n}",
+                "start_point": {
+                    "row": 47,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 52,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\npublic void setIndex(final Index index) {\n    this.index = index;\n}",
+                "name": "setIndex",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "Index"
+                    }
+                ],
+                "body": "{\n    this.index = index;\n}",
+                "start_point": {
+                    "row": 54,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 57,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public List<Index> choicesIndex() {\n    return indices.allIndices();\n}",
+                "name": "choicesIndex",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return indices.allIndices();\n}",
+                "start_point": {
+                    "row": 59,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 61,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@javax.jdo.annotations.Column(allowsNull = \"true\")\n@Mandatory\n@Override\npublic LocalDate getBaseIndexStartDate() {\n    return baseIndexStartDate;\n}",
+                "name": "getBaseIndexStartDate",
+                "modifiers": "@javax.jdo.annotations.Column(allowsNull = \"true\")\n    @Mandatory\n    @Override\n    public",
+                "return_type": "LocalDate",
+                "parameters": [],
+                "body": "{\n    return baseIndexStartDate;\n}",
+                "start_point": {
+                    "row": 68,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 73,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\npublic void setBaseIndexStartDate(final LocalDate baseIndexStartDate) {\n    this.baseIndexStartDate = baseIndexStartDate;\n}",
+                "name": "setBaseIndexStartDate",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    this.baseIndexStartDate = baseIndexStartDate;\n}",
+                "start_point": {
+                    "row": 75,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 78,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@javax.jdo.annotations.Column(scale = 2, allowsNull = \"true\")\n@Optional\n@Override\npublic BigDecimal getBaseIndexValue() {\n    return baseIndexValue;\n}",
+                "name": "getBaseIndexValue",
+                "modifiers": "@javax.jdo.annotations.Column(scale = 2, allowsNull = \"true\")\n    @Optional\n    @Override\n    public",
+                "return_type": "BigDecimal",
+                "parameters": [],
+                "body": "{\n    return baseIndexValue;\n}",
+                "start_point": {
+                    "row": 84,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 89,
+                    "column": 5
+                },
+                "method_mode": "Modified"
+            },
+            {
+                "definition": "@Override\npublic void setBaseIndexValue(final BigDecimal baseIndexValue) {\n    this.baseIndexValue = baseIndexValue;\n}",
+                "name": "setBaseIndexValue",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "BigDecimal"
+                    }
+                ],
+                "body": "{\n    this.baseIndexValue = baseIndexValue;\n}",
+                "start_point": {
+                    "row": 91,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 94,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@javax.jdo.annotations.Column(allowsNull = \"true\")\n@Mandatory\n@Override\npublic LocalDate getNextIndexStartDate() {\n    return nextIndexStartDate;\n}",
+                "name": "getNextIndexStartDate",
+                "modifiers": "@javax.jdo.annotations.Column(allowsNull = \"true\")\n    @Mandatory\n    @Override\n    public",
+                "return_type": "LocalDate",
+                "parameters": [],
+                "body": "{\n    return nextIndexStartDate;\n}",
+                "start_point": {
+                    "row": 101,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 106,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\npublic void setNextIndexStartDate(final LocalDate nextIndexStartDate) {\n    this.nextIndexStartDate = nextIndexStartDate;\n}",
+                "name": "setNextIndexStartDate",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    this.nextIndexStartDate = nextIndexStartDate;\n}",
+                "start_point": {
+                    "row": 108,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 111,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@javax.jdo.annotations.Column(scale = 2, allowsNull = \"true\")\n@Optional\n@Override\npublic BigDecimal getNextIndexValue() {\n    return nextIndexValue;\n}",
+                "name": "getNextIndexValue",
+                "modifiers": "@javax.jdo.annotations.Column(scale = 2, allowsNull = \"true\")\n    @Optional\n    @Override\n    public",
+                "return_type": "BigDecimal",
+                "parameters": [],
+                "body": "{\n    return nextIndexValue;\n}",
+                "start_point": {
+                    "row": 117,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 122,
+                    "column": 5
+                },
+                "method_mode": "Modified"
+            },
+            {
+                "definition": "@Override\npublic void setNextIndexValue(final BigDecimal nextIndexValue) {\n    this.nextIndexValue = nextIndexValue;\n}",
+                "name": "setNextIndexValue",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "BigDecimal"
+                    }
+                ],
+                "body": "{\n    this.nextIndexValue = nextIndexValue;\n}",
+                "start_point": {
+                    "row": 124,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 127,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@NotPersisted\n@Override\npublic BigDecimal getRebaseFactor() {\n    return rebaseFactor;\n}",
+                "name": "getRebaseFactor",
+                "modifiers": "@NotPersisted\n    @Override\n    public",
+                "return_type": "BigDecimal",
+                "parameters": [],
+                "body": "{\n    return rebaseFactor;\n}",
+                "start_point": {
+                    "row": 133,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 137,
+                    "column": 5
+                },
+                "method_mode": "Modified"
+            },
+            {
+                "definition": "@Override\npublic void setRebaseFactor(final BigDecimal rebaseFactor) {\n    this.rebaseFactor = rebaseFactor;\n\n}",
+                "name": "setRebaseFactor",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "BigDecimal"
+                    }
+                ],
+                "body": "{\n    this.rebaseFactor = rebaseFactor;\n\n}",
+                "start_point": {
+                    "row": 139,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 143,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Optional\npublic LocalDate getEffectiveDate() {\n    return effectiveDate;\n}",
+                "name": "getEffectiveDate",
+                "modifiers": "@Optional\n    public",
+                "return_type": "LocalDate",
+                "parameters": [],
+                "body": "{\n    return effectiveDate;\n}",
+                "start_point": {
+                    "row": 150,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 153,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void setEffectiveDate(final LocalDate effectiveDate) {\n    this.effectiveDate = effectiveDate;\n}",
+                "name": "setEffectiveDate",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    this.effectiveDate = effectiveDate;\n}",
+                "start_point": {
+                    "row": 155,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 157,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@javax.jdo.annotations.Column(scale = 1, allowsNull = \"true\")\n@Optional\npublic BigDecimal getIndexationPercentage() {\n    return indexationPercentage;\n}",
+                "name": "getIndexationPercentage",
+                "modifiers": "@javax.jdo.annotations.Column(scale = 1, allowsNull = \"true\")\n    @Optional\n    public",
+                "return_type": "BigDecimal",
+                "parameters": [],
+                "body": "{\n    return indexationPercentage;\n}",
+                "start_point": {
+                    "row": 163,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 167,
+                    "column": 5
+                },
+                "method_mode": "Modified"
+            },
+            {
+                "definition": "@Override\npublic void setIndexationPercentage(final BigDecimal indexationPercentage) {\n    this.indexationPercentage = indexationPercentage;\n}",
+                "name": "setIndexationPercentage",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "BigDecimal"
+                    }
+                ],
+                "body": "{\n    this.indexationPercentage = indexationPercentage;\n}",
+                "start_point": {
+                    "row": 169,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 172,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@javax.jdo.annotations.Column(scale = 1, allowsNull = \"true\")\n@Optional\n@Override\npublic BigDecimal getLevellingPercentage() {\n    return levellingPercentage;\n}",
+                "name": "getLevellingPercentage",
+                "modifiers": "@javax.jdo.annotations.Column(scale = 1, allowsNull = \"true\")\n    @Optional\n    @Override\n    public",
+                "return_type": "BigDecimal",
+                "parameters": [],
+                "body": "{\n    return levellingPercentage;\n}",
+                "start_point": {
+                    "row": 178,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 183,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void setLevellingPercentage(final BigDecimal levellingPercentage) {\n    this.levellingPercentage = levellingPercentage;\n}",
+                "name": "setLevellingPercentage",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "BigDecimal"
+                    }
+                ],
+                "body": "{\n    this.levellingPercentage = levellingPercentage;\n}",
+                "start_point": {
+                    "row": 185,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 187,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@javax.jdo.annotations.Column(scale = 2, allowsNull = \"true\")\n@Optional\n@Override\npublic BigDecimal getBaseValue() {\n    return baseValue;\n}",
+                "name": "getBaseValue",
+                "modifiers": "@javax.jdo.annotations.Column(scale = 2, allowsNull = \"true\")\n    @Optional\n    @Override\n    public",
+                "return_type": "BigDecimal",
+                "parameters": [],
+                "body": "{\n    return baseValue;\n}",
+                "start_point": {
+                    "row": 193,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 198,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void setBaseValue(final BigDecimal baseValue) {\n    this.baseValue = baseValue;\n}",
+                "name": "setBaseValue",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "BigDecimal"
+                    }
+                ],
+                "body": "{\n    this.baseValue = baseValue;\n}",
+                "start_point": {
+                    "row": 200,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 202,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@javax.jdo.annotations.Column(scale = 2, allowsNull = \"true\")\n@Optional\npublic BigDecimal getIndexedValue() {\n    return indexedValue;\n}",
+                "name": "getIndexedValue",
+                "modifiers": "@javax.jdo.annotations.Column(scale = 2, allowsNull = \"true\")\n    @Optional\n    public",
+                "return_type": "BigDecimal",
+                "parameters": [],
+                "body": "{\n    return indexedValue;\n}",
+                "start_point": {
+                    "row": 208,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 212,
+                    "column": 5
+                },
+                "method_mode": "Modified"
+            },
+            {
+                "definition": "@Override\npublic void setIndexedValue(final BigDecimal indexedValue) {\n    this.indexedValue = indexedValue;\n}",
+                "name": "setIndexedValue",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "BigDecimal"
+                    }
+                ],
+                "body": "{\n    this.indexedValue = indexedValue;\n}",
+                "start_point": {
+                    "row": 214,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 217,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@javax.jdo.annotations.Column(scale = 2, allowsNull = \"true\")\n@Optional\npublic BigDecimal getSettledValue() {\n    return settledValue;\n}",
+                "name": "getSettledValue",
+                "modifiers": "@javax.jdo.annotations.Column(scale = 2, allowsNull = \"true\")\n    @Optional\n    public",
+                "return_type": "BigDecimal",
+                "parameters": [],
+                "body": "{\n    return settledValue;\n}",
+                "start_point": {
+                    "row": 223,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 227,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void setSettledValue(final BigDecimal settledValue) {\n    this.settledValue = settledValue;\n}",
+                "name": "setSettledValue",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "BigDecimal"
+                    }
+                ],
+                "body": "{\n    this.settledValue = settledValue;\n}",
+                "start_point": {
+                    "row": 229,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 231,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\npublic BigDecimal getApprovedValue() {\n    return getStatus().isApproved() ? getTrialValue() : null;\n}",
+                "name": "getApprovedValue",
+                "modifiers": "@Override\n    public",
+                "return_type": "BigDecimal",
+                "parameters": [],
+                "body": "{\n    return getStatus().isApproved() ? getTrialValue() : null;\n}",
+                "start_point": {
+                    "row": 235,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 238,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\npublic BigDecimal getTrialValue() {\n    return MathUtils.firstNonZero(getSettledValue(), getIndexedValue(), getBaseValue());\n}",
+                "name": "getTrialValue",
+                "modifiers": "@Override\n    public",
+                "return_type": "BigDecimal",
+                "parameters": [],
+                "body": "{\n    return MathUtils.firstNonZero(getSettledValue(), getIndexedValue(), getBaseValue());\n}",
+                "start_point": {
+                    "row": 242,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 245,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\n@Programmatic\npublic void initialize() {\n    super.initialize();\n    final LeaseTermForIndexableRent previousTerm = (LeaseTermForIndexableRent) getPrevious();\n    if (previousTerm != null) {\n        LeaseTermFrequency frequency = previousTerm.getFrequency();\n        if (frequency != null) {\n            setIndex(previousTerm.getIndex());\n            setBaseIndexStartDate(previousTerm.getNextIndexStartDate());\n            setNextIndexStartDate(frequency.nextDate(previousTerm.getNextIndexStartDate()));\n            setEffectiveDate(frequency.nextDate(previousTerm.getEffectiveDate()));\n            setBaseValue(previousTerm.getSettledValue());\n            setLevellingPercentage(previousTerm.getLevellingPercentage());\n        }\n    }\n}",
+                "name": "initialize",
+                "modifiers": "@Override\n    @Programmatic\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    super.initialize();\n    final LeaseTermForIndexableRent previousTerm = (LeaseTermForIndexableRent) getPrevious();\n    if (previousTerm != null) {\n        LeaseTermFrequency frequency = previousTerm.getFrequency();\n        if (frequency != null) {\n            setIndex(previousTerm.getIndex());\n            setBaseIndexStartDate(previousTerm.getNextIndexStartDate());\n            setNextIndexStartDate(frequency.nextDate(previousTerm.getNextIndexStartDate()));\n            setEffectiveDate(frequency.nextDate(previousTerm.getEffectiveDate()));\n            setBaseValue(previousTerm.getSettledValue());\n            setLevellingPercentage(previousTerm.getLevellingPercentage());\n        }\n    }\n}",
+                "start_point": {
+                    "row": 249,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 265,
+                    "column": 5
+                },
+                "method_mode": "Modified"
+            },
+            {
+                "definition": "@Programmatic\n@Override\npublic void update() {\n    super.update();\n    LeaseTermForIndexableRent previousTerm = (LeaseTermForIndexableRent) getPrevious();\n    if (previousTerm != null) {\n        BigDecimal newBaseValue = MathUtils.firstNonZero(\n                previousTerm.getIndexedValue(),\n                previousTerm.getBaseValue());\n        if (getBaseValue() == null || newBaseValue.compareTo(getBaseValue()) != 0) {\n            setBaseValue(newBaseValue);\n        }\n    }\n    indexationService.indexate(this);\n\n}",
+                "name": "update",
+                "modifiers": "@Programmatic\n    @Override\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    super.update();\n    LeaseTermForIndexableRent previousTerm = (LeaseTermForIndexableRent) getPrevious();\n    if (previousTerm != null) {\n        BigDecimal newBaseValue = MathUtils.firstNonZero(\n                previousTerm.getIndexedValue(),\n                previousTerm.getBaseValue());\n        if (getBaseValue() == null || newBaseValue.compareTo(getBaseValue()) != 0) {\n            setBaseValue(newBaseValue);\n        }\n    }\n    indexationService.indexate(this);\n\n}",
+                "start_point": {
+                    "row": 267,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 282,
+                    "column": 5
+                },
+                "method_mode": "Modified"
+            },
+            {
+                "definition": "@Override\npublic void copyValuesTo(final LeaseTerm target) {\n    LeaseTermForIndexableRent t = (LeaseTermForIndexableRent) target;\n    super.copyValuesTo(t);\n    t.setIndex(getIndex());\n    t.setBaseIndexStartDate(getBaseIndexStartDate());\n    t.setBaseIndexValue(getBaseIndexValue());\n    t.setNextIndexStartDate(getNextIndexStartDate());\n    t.setNextIndexValue(getNextIndexValue());\n    t.setEffectiveDate(getEffectiveDate());\n    t.setIndexationPercentage(getIndexationPercentage());\n    t.setLevellingPercentage(getLevellingPercentage());\n    t.setBaseValue(getBaseValue());\n    t.setIndexedValue(getIndexedValue());\n    t.setSettledValue(getSettledValue());\n}",
+                "name": "copyValuesTo",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LeaseTerm"
+                    }
+                ],
+                "body": "{\n    LeaseTermForIndexableRent t = (LeaseTermForIndexableRent) target;\n    super.copyValuesTo(t);\n    t.setIndex(getIndex());\n    t.setBaseIndexStartDate(getBaseIndexStartDate());\n    t.setBaseIndexValue(getBaseIndexValue());\n    t.setNextIndexStartDate(getNextIndexStartDate());\n    t.setNextIndexValue(getNextIndexValue());\n    t.setEffectiveDate(getEffectiveDate());\n    t.setIndexationPercentage(getIndexationPercentage());\n    t.setLevellingPercentage(getLevellingPercentage());\n    t.setBaseValue(getBaseValue());\n    t.setIndexedValue(getIndexedValue());\n    t.setSettledValue(getSettledValue());\n}",
+                "start_point": {
+                    "row": 286,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 301,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\n@Programmatic\npublic BigDecimal valueForDate(final LocalDate dueDate) {\n    // use the indexed value on or after the effective date, use the base\n    // otherwise\n    if (getEffectiveDate() == null) {\n        return MathUtils.firstNonZero(getSettledValue(), getIndexedValue(), getBaseValue());\n    }\n    if (getStartDate().compareTo(getEffectiveDate()) == 0) {\n        return MathUtils.firstNonZero(getSettledValue(), getIndexedValue(), getBaseValue());\n    }\n    if (dueDate.compareTo(getEffectiveDate()) >= 0) {\n        return MathUtils.firstNonZero(getSettledValue(), getIndexedValue(), getBaseValue());\n    }\n    return MathUtils.firstNonZero(getBaseValue(), getSettledValue());\n}",
+                "name": "valueForDate",
+                "modifiers": "@Override\n    @Programmatic\n    public",
+                "return_type": "BigDecimal",
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "LocalDate"
+                    }
+                ],
+                "body": "{\n    // use the indexed value on or after the effective date, use the base\n    // otherwise\n    if (getEffectiveDate() == null) {\n        return MathUtils.firstNonZero(getSettledValue(), getIndexedValue(), getBaseValue());\n    }\n    if (getStartDate().compareTo(getEffectiveDate()) == 0) {\n        return MathUtils.firstNonZero(getSettledValue(), getIndexedValue(), getBaseValue());\n    }\n    if (dueDate.compareTo(getEffectiveDate()) >= 0) {\n        return MathUtils.firstNonZero(getSettledValue(), getIndexedValue(), getBaseValue());\n    }\n    return MathUtils.firstNonZero(getBaseValue(), getSettledValue());\n}",
+                "start_point": {
+                    "row": 305,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 320,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public final void injectIndices(final Indices indexes) {\n    this.indices = indexes;\n}",
+                "name": "injectIndices",
+                "modifiers": "public final",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "Indices"
+                    }
+                ],
+                "body": "{\n    this.indices = indexes;\n}",
+                "start_point": {
+                    "row": 326,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 328,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public final void injectIndexationService(final IndexationService indexationService) {\n    this.indexationService = indexationService;\n}",
+                "name": "injectIndexationService",
+                "modifiers": "public final",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "final",
+                        "name": "IndexationService"
+                    }
+                ],
+                "body": "{\n    this.indexationService = indexationService;\n}",
+                "start_point": {
+                    "row": 332,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 334,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            }
+        ],
+        "class_mode": "Modified"
+    }
+]

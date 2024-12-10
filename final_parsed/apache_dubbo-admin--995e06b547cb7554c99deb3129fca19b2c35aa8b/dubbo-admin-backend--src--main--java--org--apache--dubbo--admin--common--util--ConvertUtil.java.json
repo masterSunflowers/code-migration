@@ -1,5 +1,7 @@
 [
     {
+        "repo_name": "apache_dubbo-admin",
+        "commit": "995e06b547cb7554c99deb3129fca19b2c35aa8b",
         "rev_path": "dubbo-admin-backend/src/main/java/org/apache/dubbo/admin/common/util/ConvertUtil.java",
         "definition": "public class ConvertUtil {\n    private ConvertUtil() {\n    }\n\n    public static Map<String, String> serviceName2Map(String serviceName) {\n        String group = null;\n        String version = null;\n        int i = serviceName.indexOf(\"/\");\n        if (i > 0) {\n            group = serviceName.substring(0, i);\n            serviceName = serviceName.substring(i + 1);\n        }\n        i = serviceName.lastIndexOf(\":\");\n        if (i > 0) {\n            version = serviceName.substring(i + 1);\n            serviceName = serviceName.substring(0, i);\n        }\n\n        Map<String, String> ret = new HashMap<String, String>();\n        if (!StringUtils.isEmpty(serviceName)) {\n            ret.put(Constants.INTERFACE_KEY, serviceName);\n        }\n        if (!StringUtils.isEmpty(version)) {\n            ret.put(Constants.VERSION_KEY, version);\n        }\n        if (!StringUtils.isEmpty(group)) {\n            ret.put(Constants.GROUP_KEY, group);\n        }\n\n        return ret;\n    }\n}",
         "package": "package org.apache.dubbo.admin.common.util;",

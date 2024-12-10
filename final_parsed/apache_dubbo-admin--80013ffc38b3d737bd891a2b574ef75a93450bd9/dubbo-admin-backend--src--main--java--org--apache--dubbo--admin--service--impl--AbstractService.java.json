@@ -1,5 +1,7 @@
 [
     {
+        "repo_name": "apache_dubbo-admin",
+        "commit": "80013ffc38b3d737bd891a2b574ef75a93450bd9",
         "rev_path": "dubbo-admin-backend/src/main/java/org/apache/dubbo/admin/service/impl/AbstractService.java",
         "definition": "public class AbstractService {\n\n    protected static final Logger logger = LoggerFactory.getLogger(AbstractService.class);\n    @Autowired\n    protected RegistryService registryService;\n    @Autowired\n    private RegistryServerSync sync;\n\n    public ConcurrentMap<String, ConcurrentMap<String, Map<String, URL>>> getRegistryCache() {\n        return sync.getRegistryCache();\n    }\n\n}",
         "package": "package org.apache.dubbo.admin.service.impl;",

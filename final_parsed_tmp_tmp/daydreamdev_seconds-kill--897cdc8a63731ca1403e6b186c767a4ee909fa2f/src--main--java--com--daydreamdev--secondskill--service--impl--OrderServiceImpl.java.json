@@ -1,0 +1,287 @@
+[
+    {
+        "repo_name": "daydreamdev_seconds-kill",
+        "commit": "897cdc8a63731ca1403e6b186c767a4ee909fa2f",
+        "rev_path": "src/main/java/com/daydreamdev/secondskill/service/impl/OrderServiceImpl.java",
+        "definition": "@Slf4j\n@Transactional(rollbackFor = Exception.class)\n@Service(value = \"OrderService\")\npublic class OrderServiceImpl implements OrderService {\n\n    @Autowired\n    private StockServiceImpl stockService;\n\n    @Autowired\n    private StockOrderMapper orderMapper;\n\n    @Autowired\n    private KafkaTemplate<String, String> kafkaTemplate;\n\n    @Value(\"${spring.kafka.template.default-topic}\")\n    private String kafkaTopic;\n\n    private Gson gson = new GsonBuilder().create();\n\n    @Override\n    public int delOrderDBBefore() {\n        return orderMapper.delOrderDBBefore();\n    }\n\n    @Override\n    public int createWrongOrder(int sid) throws Exception {\n        Stock stock = checkStock(sid);\n        saleStock(stock);\n        int res = createOrder(stock);\n\n        return res;\n    }\n\n    @Override\n    public int createOptimisticOrder(int sid) throws Exception {\n        // \u6821\u9a8c\u5e93\u5b58\n        Stock stock = checkStock(sid);\n        // \u4e50\u89c2\u9501\u66f4\u65b0\n        saleStockOptimstic(stock);\n        // \u521b\u5efa\u8ba2\u5355\n        int id = createOrder(stock);\n\n        return id;\n    }\n\n    @Override\n    public int createOrderWithLimitAndRedis(int sid) throws Exception {\n        // \u6821\u9a8c\u5e93\u5b58\uff0c\u4ece Redis \u4e2d\u83b7\u53d6\n        Stock stock = checkStockWithRedis(sid);\n        // \u4e50\u89c2\u9501\u66f4\u65b0\u5e93\u5b58\u548cRedis\n        saleStockOptimsticWithRedis(stock);\n        // \u521b\u5efa\u8ba2\u5355\n        int res = createOrder(stock);\n\n        return res;\n    }\n\n    @Override\n    public void createOrderWithLimitAndRedisAndKafka(int sid) throws Exception {\n        // \u6821\u9a8c\u5e93\u5b58\n        Stock stock = checkStockWithRedis(sid);\n        // \u4e0b\u5355\u8bf7\u6c42\u53d1\u9001\u81f3 kafka\uff0c\u9700\u8981\u5e8f\u5217\u5316 stock\n        kafkaTemplate.send(kafkaTopic, gson.toJson(stock));\n        log.info(\"\u6d88\u606f\u53d1\u9001\u81f3 Kafka \u6210\u529f\");\n    }\n\n    @Override\n    public int consumerTopicToCreateOrderWithKafka(Stock stock) throws Exception {\n        // \u4e50\u89c2\u9501\u66f4\u65b0\u5e93\u5b58\u548c Redis\n        saleStockOptimsticWithRedis(stock);\n        int res = createOrder(stock);\n\n        return res;\n    }\n\n    /**\n     * Redis \u6821\u9a8c\u5e93\u5b58\n     *\n     * @param sid\n     */\n    private Stock checkStockWithRedis(int sid) throws Exception {\n        Integer count = Integer.parseInt(RedisPoolUtil.get(RedisKeysConstant.STOCK_COUNT + sid));\n        Integer sale = Integer.parseInt(RedisPoolUtil.get(RedisKeysConstant.STOCK_SALE + sid));\n        Integer version = Integer.parseInt(RedisPoolUtil.get(RedisKeysConstant.STOCK_VERSION + sid));\n        if (count < 1) {\n            log.info(\"\u5e93\u5b58\u4e0d\u8db3\");\n            throw new RuntimeException(\"\u5e93\u5b58\u4e0d\u8db3 Redis currentCount: \" + sale);\n        }\n        Stock stock = new Stock();\n        stock.setId(sid);\n        stock.setCount(count);\n        stock.setSale(sale);\n        stock.setVersion(version);\n        // \u6b64\u5904\u5e94\u8be5\u662f\u70ed\u66f4\u65b0\uff0c\u4f46\u662f\u5728\u6570\u636e\u5e93\u4e2d\u53ea\u6709\u4e00\u4e2a\u5546\u54c1\uff0c\u6240\u4ee5\u76f4\u63a5\u8d4b\u503c\n        stock.setName(\"\u624b\u673a\");\n\n        return stock;\n    }\n\n    /**\n     * \u66f4\u65b0\u6570\u636e\u5e93\u548c DB\n     */\n    private void saleStockOptimsticWithRedis(Stock stock) throws Exception {\n        int res = stockService.updateStockByOptimistic(stock);\n        if (res == 0){\n            throw new RuntimeException(\"\u5e76\u53d1\u66f4\u65b0\u5e93\u5b58\u5931\u8d25\") ;\n        }\n        // \u66f4\u65b0 Redis\n        StockWithRedis.updateStockWithRedis(stock);\n    }\n\n    /**\n     * \u6821\u9a8c\u5e93\u5b58\n     */\n    private Stock checkStock(int sid) throws Exception {\n        Stock stock = stockService.getStockById(sid);\n        if (stock.getCount() < 1) {\n            throw new RuntimeException(\"\u5e93\u5b58\u4e0d\u8db3\");\n        }\n        return stock;\n    }\n\n    /**\n     * \u6263\u5e93\u5b58\n     */\n    private int saleStock(Stock stock) {\n        stock.setSale(stock.getSale() + 1);\n        stock.setCount(stock.getCount() - 1);\n        return stockService.updateStockById(stock);\n    }\n\n    /**\n     * \u4e50\u89c2\u9501\u6263\u5e93\u5b58\n     */\n    private void saleStockOptimstic(Stock stock) throws Exception {\n        int count = stockService.updateStockByOptimistic(stock);\n        if (count == 0) {\n            throw new RuntimeException(\"\u5e76\u53d1\u66f4\u65b0\u5e93\u5b58\u5931\u8d25\");\n        }\n    }\n\n    /**\n     * \u521b\u5efa\u8ba2\u5355\n     */\n    private int createOrder(Stock stock) throws Exception {\n        StockOrder order = new StockOrder();\n        order.setSid(stock.getId());\n        order.setName(stock.getName());\n        order.setCreateTime(new Date());\n        int res = orderMapper.insertSelective(order);\n        if (res == 0) {\n            throw new RuntimeException(\"\u521b\u5efa\u8ba2\u5355\u5931\u8d25\");\n        }\n        return res;\n    }\n}",
+        "package": "package com.daydreamdev.secondskill.service.impl;",
+        "tree_path": "OrderServiceImpl",
+        "name": "OrderServiceImpl",
+        "modifiers": "@Slf4j\n@Transactional(rollbackFor = Exception.class)\n@Service(value = \"OrderService\")\npublic",
+        "superclass": null,
+        "super_interfaces": "implements OrderService",
+        "body": "{\n\n    @Autowired\n    private StockServiceImpl stockService;\n\n    @Autowired\n    private StockOrderMapper orderMapper;\n\n    @Autowired\n    private KafkaTemplate<String, String> kafkaTemplate;\n\n    @Value(\"${spring.kafka.template.default-topic}\")\n    private String kafkaTopic;\n\n    private Gson gson = new GsonBuilder().create();\n\n    @Override\n    public int delOrderDBBefore() {\n        return orderMapper.delOrderDBBefore();\n    }\n\n    @Override\n    public int createWrongOrder(int sid) throws Exception {\n        Stock stock = checkStock(sid);\n        saleStock(stock);\n        int res = createOrder(stock);\n\n        return res;\n    }\n\n    @Override\n    public int createOptimisticOrder(int sid) throws Exception {\n        // \u6821\u9a8c\u5e93\u5b58\n        Stock stock = checkStock(sid);\n        // \u4e50\u89c2\u9501\u66f4\u65b0\n        saleStockOptimstic(stock);\n        // \u521b\u5efa\u8ba2\u5355\n        int id = createOrder(stock);\n\n        return id;\n    }\n\n    @Override\n    public int createOrderWithLimitAndRedis(int sid) throws Exception {\n        // \u6821\u9a8c\u5e93\u5b58\uff0c\u4ece Redis \u4e2d\u83b7\u53d6\n        Stock stock = checkStockWithRedis(sid);\n        // \u4e50\u89c2\u9501\u66f4\u65b0\u5e93\u5b58\u548cRedis\n        saleStockOptimsticWithRedis(stock);\n        // \u521b\u5efa\u8ba2\u5355\n        int res = createOrder(stock);\n\n        return res;\n    }\n\n    @Override\n    public void createOrderWithLimitAndRedisAndKafka(int sid) throws Exception {\n        // \u6821\u9a8c\u5e93\u5b58\n        Stock stock = checkStockWithRedis(sid);\n        // \u4e0b\u5355\u8bf7\u6c42\u53d1\u9001\u81f3 kafka\uff0c\u9700\u8981\u5e8f\u5217\u5316 stock\n        kafkaTemplate.send(kafkaTopic, gson.toJson(stock));\n        log.info(\"\u6d88\u606f\u53d1\u9001\u81f3 Kafka \u6210\u529f\");\n    }\n\n    @Override\n    public int consumerTopicToCreateOrderWithKafka(Stock stock) throws Exception {\n        // \u4e50\u89c2\u9501\u66f4\u65b0\u5e93\u5b58\u548c Redis\n        saleStockOptimsticWithRedis(stock);\n        int res = createOrder(stock);\n\n        return res;\n    }\n\n    /**\n     * Redis \u6821\u9a8c\u5e93\u5b58\n     *\n     * @param sid\n     */\n    private Stock checkStockWithRedis(int sid) throws Exception {\n        Integer count = Integer.parseInt(RedisPoolUtil.get(RedisKeysConstant.STOCK_COUNT + sid));\n        Integer sale = Integer.parseInt(RedisPoolUtil.get(RedisKeysConstant.STOCK_SALE + sid));\n        Integer version = Integer.parseInt(RedisPoolUtil.get(RedisKeysConstant.STOCK_VERSION + sid));\n        if (count < 1) {\n            log.info(\"\u5e93\u5b58\u4e0d\u8db3\");\n            throw new RuntimeException(\"\u5e93\u5b58\u4e0d\u8db3 Redis currentCount: \" + sale);\n        }\n        Stock stock = new Stock();\n        stock.setId(sid);\n        stock.setCount(count);\n        stock.setSale(sale);\n        stock.setVersion(version);\n        // \u6b64\u5904\u5e94\u8be5\u662f\u70ed\u66f4\u65b0\uff0c\u4f46\u662f\u5728\u6570\u636e\u5e93\u4e2d\u53ea\u6709\u4e00\u4e2a\u5546\u54c1\uff0c\u6240\u4ee5\u76f4\u63a5\u8d4b\u503c\n        stock.setName(\"\u624b\u673a\");\n\n        return stock;\n    }\n\n    /**\n     * \u66f4\u65b0\u6570\u636e\u5e93\u548c DB\n     */\n    private void saleStockOptimsticWithRedis(Stock stock) throws Exception {\n        int res = stockService.updateStockByOptimistic(stock);\n        if (res == 0){\n            throw new RuntimeException(\"\u5e76\u53d1\u66f4\u65b0\u5e93\u5b58\u5931\u8d25\") ;\n        }\n        // \u66f4\u65b0 Redis\n        StockWithRedis.updateStockWithRedis(stock);\n    }\n\n    /**\n     * \u6821\u9a8c\u5e93\u5b58\n     */\n    private Stock checkStock(int sid) throws Exception {\n        Stock stock = stockService.getStockById(sid);\n        if (stock.getCount() < 1) {\n            throw new RuntimeException(\"\u5e93\u5b58\u4e0d\u8db3\");\n        }\n        return stock;\n    }\n\n    /**\n     * \u6263\u5e93\u5b58\n     */\n    private int saleStock(Stock stock) {\n        stock.setSale(stock.getSale() + 1);\n        stock.setCount(stock.getCount() - 1);\n        return stockService.updateStockById(stock);\n    }\n\n    /**\n     * \u4e50\u89c2\u9501\u6263\u5e93\u5b58\n     */\n    private void saleStockOptimstic(Stock stock) throws Exception {\n        int count = stockService.updateStockByOptimistic(stock);\n        if (count == 0) {\n            throw new RuntimeException(\"\u5e76\u53d1\u66f4\u65b0\u5e93\u5b58\u5931\u8d25\");\n        }\n    }\n\n    /**\n     * \u521b\u5efa\u8ba2\u5355\n     */\n    private int createOrder(Stock stock) throws Exception {\n        StockOrder order = new StockOrder();\n        order.setSid(stock.getId());\n        order.setName(stock.getName());\n        order.setCreateTime(new Date());\n        int res = orderMapper.insertSelective(order);\n        if (res == 0) {\n            throw new RuntimeException(\"\u521b\u5efa\u8ba2\u5355\u5931\u8d25\");\n        }\n        return res;\n    }\n}",
+        "start_point": {
+            "row": 26,
+            "column": 0
+        },
+        "end_point": {
+            "row": 181,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "@Override\npublic int delOrderDBBefore() {\n    return orderMapper.delOrderDBBefore();\n}",
+                "name": "delOrderDBBefore",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return orderMapper.delOrderDBBefore();\n}",
+                "start_point": {
+                    "row": 45,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 48,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\npublic int createWrongOrder(int sid) throws Exception {\n    Stock stock = checkStock(sid);\n    saleStock(stock);\n    int res = createOrder(stock);\n\n    return res;\n}",
+                "name": "createWrongOrder",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "int",
+                        "name": "sid"
+                    }
+                ],
+                "body": "{\n    Stock stock = checkStock(sid);\n    saleStock(stock);\n    int res = createOrder(stock);\n\n    return res;\n}",
+                "start_point": {
+                    "row": 50,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 57,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\npublic int createOptimisticOrder(int sid) throws Exception {\n    // \u6821\u9a8c\u5e93\u5b58\n    Stock stock = checkStock(sid);\n    // \u4e50\u89c2\u9501\u66f4\u65b0\n    saleStockOptimstic(stock);\n    // \u521b\u5efa\u8ba2\u5355\n    int id = createOrder(stock);\n\n    return id;\n}",
+                "name": "createOptimisticOrder",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "int",
+                        "name": "sid"
+                    }
+                ],
+                "body": "{\n    // \u6821\u9a8c\u5e93\u5b58\n    Stock stock = checkStock(sid);\n    // \u4e50\u89c2\u9501\u66f4\u65b0\n    saleStockOptimstic(stock);\n    // \u521b\u5efa\u8ba2\u5355\n    int id = createOrder(stock);\n\n    return id;\n}",
+                "start_point": {
+                    "row": 59,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 69,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\npublic int createOrderWithLimitAndRedis(int sid) throws Exception {\n    // \u6821\u9a8c\u5e93\u5b58\uff0c\u4ece Redis \u4e2d\u83b7\u53d6\n    Stock stock = checkStockWithRedis(sid);\n    // \u4e50\u89c2\u9501\u66f4\u65b0\u5e93\u5b58\u548cRedis\n    saleStockOptimsticWithRedis(stock);\n    // \u521b\u5efa\u8ba2\u5355\n    int res = createOrder(stock);\n\n    return res;\n}",
+                "name": "createOrderWithLimitAndRedis",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "int",
+                        "name": "sid"
+                    }
+                ],
+                "body": "{\n    // \u6821\u9a8c\u5e93\u5b58\uff0c\u4ece Redis \u4e2d\u83b7\u53d6\n    Stock stock = checkStockWithRedis(sid);\n    // \u4e50\u89c2\u9501\u66f4\u65b0\u5e93\u5b58\u548cRedis\n    saleStockOptimsticWithRedis(stock);\n    // \u521b\u5efa\u8ba2\u5355\n    int res = createOrder(stock);\n\n    return res;\n}",
+                "start_point": {
+                    "row": 71,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 81,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\npublic void createOrderWithLimitAndRedisAndKafka(int sid) throws Exception {\n    // \u6821\u9a8c\u5e93\u5b58\n    Stock stock = checkStockWithRedis(sid);\n    // \u4e0b\u5355\u8bf7\u6c42\u53d1\u9001\u81f3 kafka\uff0c\u9700\u8981\u5e8f\u5217\u5316 stock\n    kafkaTemplate.send(kafkaTopic, gson.toJson(stock));\n    log.info(\"\u6d88\u606f\u53d1\u9001\u81f3 Kafka \u6210\u529f\");\n}",
+                "name": "createOrderWithLimitAndRedisAndKafka",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "int",
+                        "name": "sid"
+                    }
+                ],
+                "body": "{\n    // \u6821\u9a8c\u5e93\u5b58\n    Stock stock = checkStockWithRedis(sid);\n    // \u4e0b\u5355\u8bf7\u6c42\u53d1\u9001\u81f3 kafka\uff0c\u9700\u8981\u5e8f\u5217\u5316 stock\n    kafkaTemplate.send(kafkaTopic, gson.toJson(stock));\n    log.info(\"\u6d88\u606f\u53d1\u9001\u81f3 Kafka \u6210\u529f\");\n}",
+                "start_point": {
+                    "row": 83,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 90,
+                    "column": 5
+                },
+                "method_mode": "Added"
+            },
+            {
+                "definition": "@Override\npublic int consumerTopicToCreateOrderWithKafka(Stock stock) throws Exception {\n    // \u4e50\u89c2\u9501\u66f4\u65b0\u5e93\u5b58\u548c Redis\n    saleStockOptimsticWithRedis(stock);\n    int res = createOrder(stock);\n\n    return res;\n}",
+                "name": "consumerTopicToCreateOrderWithKafka",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Stock",
+                        "name": "stock"
+                    }
+                ],
+                "body": "{\n    // \u4e50\u89c2\u9501\u66f4\u65b0\u5e93\u5b58\u548c Redis\n    saleStockOptimsticWithRedis(stock);\n    int res = createOrder(stock);\n\n    return res;\n}",
+                "start_point": {
+                    "row": 92,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 99,
+                    "column": 5
+                },
+                "method_mode": "Added"
+            },
+            {
+                "definition": "private Stock checkStockWithRedis(int sid) throws Exception {\n    Integer count = Integer.parseInt(RedisPoolUtil.get(RedisKeysConstant.STOCK_COUNT + sid));\n    Integer sale = Integer.parseInt(RedisPoolUtil.get(RedisKeysConstant.STOCK_SALE + sid));\n    Integer version = Integer.parseInt(RedisPoolUtil.get(RedisKeysConstant.STOCK_VERSION + sid));\n    if (count < 1) {\n        log.info(\"\u5e93\u5b58\u4e0d\u8db3\");\n        throw new RuntimeException(\"\u5e93\u5b58\u4e0d\u8db3 Redis currentCount: \" + sale);\n    }\n    Stock stock = new Stock();\n    stock.setId(sid);\n    stock.setCount(count);\n    stock.setSale(sale);\n    stock.setVersion(version);\n    // \u6b64\u5904\u5e94\u8be5\u662f\u70ed\u66f4\u65b0\uff0c\u4f46\u662f\u5728\u6570\u636e\u5e93\u4e2d\u53ea\u6709\u4e00\u4e2a\u5546\u54c1\uff0c\u6240\u4ee5\u76f4\u63a5\u8d4b\u503c\n    stock.setName(\"\u624b\u673a\");\n\n    return stock;\n}",
+                "name": "checkStockWithRedis",
+                "modifiers": "private",
+                "return_type": "Stock",
+                "parameters": [
+                    {
+                        "type": "int",
+                        "name": "sid"
+                    }
+                ],
+                "body": "{\n    Integer count = Integer.parseInt(RedisPoolUtil.get(RedisKeysConstant.STOCK_COUNT + sid));\n    Integer sale = Integer.parseInt(RedisPoolUtil.get(RedisKeysConstant.STOCK_SALE + sid));\n    Integer version = Integer.parseInt(RedisPoolUtil.get(RedisKeysConstant.STOCK_VERSION + sid));\n    if (count < 1) {\n        log.info(\"\u5e93\u5b58\u4e0d\u8db3\");\n        throw new RuntimeException(\"\u5e93\u5b58\u4e0d\u8db3 Redis currentCount: \" + sale);\n    }\n    Stock stock = new Stock();\n    stock.setId(sid);\n    stock.setCount(count);\n    stock.setSale(sale);\n    stock.setVersion(version);\n    // \u6b64\u5904\u5e94\u8be5\u662f\u70ed\u66f4\u65b0\uff0c\u4f46\u662f\u5728\u6570\u636e\u5e93\u4e2d\u53ea\u6709\u4e00\u4e2a\u5546\u54c1\uff0c\u6240\u4ee5\u76f4\u63a5\u8d4b\u503c\n    stock.setName(\"\u624b\u673a\");\n\n    return stock;\n}",
+                "start_point": {
+                    "row": 106,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 123,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "private void saleStockOptimsticWithRedis(Stock stock) throws Exception {\n    int res = stockService.updateStockByOptimistic(stock);\n    if (res == 0){\n        throw new RuntimeException(\"\u5e76\u53d1\u66f4\u65b0\u5e93\u5b58\u5931\u8d25\") ;\n    }\n    // \u66f4\u65b0 Redis\n    StockWithRedis.updateStockWithRedis(stock);\n}",
+                "name": "saleStockOptimsticWithRedis",
+                "modifiers": "private",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Stock",
+                        "name": "stock"
+                    }
+                ],
+                "body": "{\n    int res = stockService.updateStockByOptimistic(stock);\n    if (res == 0){\n        throw new RuntimeException(\"\u5e76\u53d1\u66f4\u65b0\u5e93\u5b58\u5931\u8d25\") ;\n    }\n    // \u66f4\u65b0 Redis\n    StockWithRedis.updateStockWithRedis(stock);\n}",
+                "start_point": {
+                    "row": 128,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 135,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "private Stock checkStock(int sid) throws Exception {\n    Stock stock = stockService.getStockById(sid);\n    if (stock.getCount() < 1) {\n        throw new RuntimeException(\"\u5e93\u5b58\u4e0d\u8db3\");\n    }\n    return stock;\n}",
+                "name": "checkStock",
+                "modifiers": "private",
+                "return_type": "Stock",
+                "parameters": [
+                    {
+                        "type": "int",
+                        "name": "sid"
+                    }
+                ],
+                "body": "{\n    Stock stock = stockService.getStockById(sid);\n    if (stock.getCount() < 1) {\n        throw new RuntimeException(\"\u5e93\u5b58\u4e0d\u8db3\");\n    }\n    return stock;\n}",
+                "start_point": {
+                    "row": 140,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 146,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "private int saleStock(Stock stock) {\n    stock.setSale(stock.getSale() + 1);\n    stock.setCount(stock.getCount() - 1);\n    return stockService.updateStockById(stock);\n}",
+                "name": "saleStock",
+                "modifiers": "private",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Stock",
+                        "name": "stock"
+                    }
+                ],
+                "body": "{\n    stock.setSale(stock.getSale() + 1);\n    stock.setCount(stock.getCount() - 1);\n    return stockService.updateStockById(stock);\n}",
+                "start_point": {
+                    "row": 151,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 155,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "private void saleStockOptimstic(Stock stock) throws Exception {\n    int count = stockService.updateStockByOptimistic(stock);\n    if (count == 0) {\n        throw new RuntimeException(\"\u5e76\u53d1\u66f4\u65b0\u5e93\u5b58\u5931\u8d25\");\n    }\n}",
+                "name": "saleStockOptimstic",
+                "modifiers": "private",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Stock",
+                        "name": "stock"
+                    }
+                ],
+                "body": "{\n    int count = stockService.updateStockByOptimistic(stock);\n    if (count == 0) {\n        throw new RuntimeException(\"\u5e76\u53d1\u66f4\u65b0\u5e93\u5b58\u5931\u8d25\");\n    }\n}",
+                "start_point": {
+                    "row": 160,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 165,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "private int createOrder(Stock stock) throws Exception {\n    StockOrder order = new StockOrder();\n    order.setSid(stock.getId());\n    order.setName(stock.getName());\n    order.setCreateTime(new Date());\n    int res = orderMapper.insertSelective(order);\n    if (res == 0) {\n        throw new RuntimeException(\"\u521b\u5efa\u8ba2\u5355\u5931\u8d25\");\n    }\n    return res;\n}",
+                "name": "createOrder",
+                "modifiers": "private",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Stock",
+                        "name": "stock"
+                    }
+                ],
+                "body": "{\n    StockOrder order = new StockOrder();\n    order.setSid(stock.getId());\n    order.setName(stock.getName());\n    order.setCreateTime(new Date());\n    int res = orderMapper.insertSelective(order);\n    if (res == 0) {\n        throw new RuntimeException(\"\u521b\u5efa\u8ba2\u5355\u5931\u8d25\");\n    }\n    return res;\n}",
+                "start_point": {
+                    "row": 170,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 180,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            }
+        ],
+        "class_mode": "Modified"
+    }
+]

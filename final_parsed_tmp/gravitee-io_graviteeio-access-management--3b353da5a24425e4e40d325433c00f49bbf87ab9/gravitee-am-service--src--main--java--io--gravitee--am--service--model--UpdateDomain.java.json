@@ -1,5 +1,7 @@
 [
     {
+        "repo_name": "gravitee-io_graviteeio-access-management",
+        "commit": "3b353da5a24425e4e40d325433c00f49bbf87ab9",
         "rev_path": "gravitee-am-service/src/main/java/io/gravitee/am/service/model/UpdateDomain.java",
         "definition": "public class UpdateDomain {\n\n    /**\n     * Domain name.\n     */\n    @NotNull\n    private String name;\n\n    /**\n     * Domain description.\n     */\n    private String description;\n\n    /**\n     * Domain enabled.\n     */\n    @NotNull\n    private boolean enabled;\n\n    /**\n     * Domain HTTP path.\n     */\n    private String path;\n\n    public String getName() {\n        return name;\n    }\n\n    public void setName(String name) {\n        this.name = name;\n    }\n\n    public String getDescription() {\n        return description;\n    }\n\n    public void setDescription(String description) {\n        this.description = description;\n    }\n\n    public boolean isEnabled() {\n        return enabled;\n    }\n\n    public void setEnabled(boolean enabled) {\n        this.enabled = enabled;\n    }\n\n    public String getPath() {\n        return path;\n    }\n\n    public void setPath(String path) {\n        this.path = path;\n    }\n}",
         "package": "package io.gravitee.am.service.model;",

@@ -1,5 +1,7 @@
 [
     {
+        "repo_name": "gravitee-io_graviteeio-access-management",
+        "commit": "0b18ada3207991cdfd70a551c56af125d2a0efe1",
         "rev_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-admin/src/main/java/io/gravitee/am/management/handlers/admin/view/DomainBasedTemplateResolver.java",
         "definition": "public class DomainBasedTemplateResolver extends StringTemplateResolver {\n\n    @Autowired\n    private Domain domain;\n\n    public DomainBasedTemplateResolver() {\n        setTemplateMode(\"HTML\");\n    }\n\n    @Override\n    protected ITemplateResource computeTemplateResource(IEngineConfiguration configuration, String ownerTemplate, String template, Map<String, Object> templateResolutionAttributes) {\n        return new StringTemplateResource(domain.getLoginForm().getContent());\n    }\n}",
         "package": "package io.gravitee.am.management.handlers.admin.view;",

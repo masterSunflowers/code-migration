@@ -1,5 +1,7 @@
 [
     {
+        "repo_name": "gravitee-io_graviteeio-access-management",
+        "commit": "0b18ada3207991cdfd70a551c56af125d2a0efe1",
         "rev_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-admin/src/main/java/io/gravitee/am/management/handlers/admin/handler/CookieClearingLogoutHandler.java",
         "definition": "public class CookieClearingLogoutHandler implements LogoutHandler {\n\n    @Override\n    public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {\n        Cookie cookie = new Cookie(HttpHeaders.AUTHORIZATION, null);\n        cookie.setPath(\"/\");\n        cookie.setMaxAge(0);\n        response.addCookie(cookie);\n    }\n}",
         "package": "package io.gravitee.am.management.handlers.admin.handler;",

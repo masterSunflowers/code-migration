@@ -1,0 +1,45 @@
+[
+    {
+        "repo_name": "gravitee-io_graviteeio-access-management",
+        "commit": "3b353da5a24425e4e40d325433c00f49bbf87ab9",
+        "rev_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-management/src/main/java/io/gravitee/am/management/handlers/management/api/ManagementApplication.java",
+        "definition": "public class ManagementApplication extends ResourceConfig {\n\n    public ManagementApplication() {\n\n        BeanConfig beanConfig = new BeanConfig();\n        beanConfig.setVersion(Version.RUNTIME_VERSION.MAJOR_VERSION);\n        beanConfig.setResourcePackage(\"io.gravitee.am.management.handlers.management.api.resources\");\n        beanConfig.setTitle(\"Gravitee.io - Access Management API\");\n        beanConfig.setScan(true);\n\n        register(DomainsResource.class);\n        register(PlatformResource.class);\n        register(DashboardResource.class);\n\n        register(ObjectMapperResolver.class);\n        register(ManagementExceptionMapper.class);\n        register(UnrecognizedPropertyExceptionMapper.class);\n        register(ThrowableMapper.class);\n        register(NotFoundExceptionMapper.class);\n        register(BadRequestExceptionMapper.class);\n\n        register(CorsResponseFilter.class);\n        register(UriBuilderRequestFilter.class);\n        register(ByteArrayOutputStreamWriter.class);\n        register(JacksonFeature.class);\n\n        register(ApiListingResource.class);\n        register(SwaggerSerializers.class);\n\n        property(ServerProperties.BV_SEND_ERROR_IN_RESPONSE, true);\n    }\n}",
+        "package": "package io.gravitee.am.management.handlers.management.api;",
+        "tree_path": "ManagementApplication",
+        "name": "ManagementApplication",
+        "modifiers": "public",
+        "superclass": "extends ResourceConfig",
+        "super_interfaces": null,
+        "body": "{\n\n    public ManagementApplication() {\n\n        BeanConfig beanConfig = new BeanConfig();\n        beanConfig.setVersion(Version.RUNTIME_VERSION.MAJOR_VERSION);\n        beanConfig.setResourcePackage(\"io.gravitee.am.management.handlers.management.api.resources\");\n        beanConfig.setTitle(\"Gravitee.io - Access Management API\");\n        beanConfig.setScan(true);\n\n        register(DomainsResource.class);\n        register(PlatformResource.class);\n        register(DashboardResource.class);\n\n        register(ObjectMapperResolver.class);\n        register(ManagementExceptionMapper.class);\n        register(UnrecognizedPropertyExceptionMapper.class);\n        register(ThrowableMapper.class);\n        register(NotFoundExceptionMapper.class);\n        register(BadRequestExceptionMapper.class);\n\n        register(CorsResponseFilter.class);\n        register(UriBuilderRequestFilter.class);\n        register(ByteArrayOutputStreamWriter.class);\n        register(JacksonFeature.class);\n\n        register(ApiListingResource.class);\n        register(SwaggerSerializers.class);\n\n        property(ServerProperties.BV_SEND_ERROR_IN_RESPONSE, true);\n    }\n}",
+        "start_point": {
+            "row": 34,
+            "column": 0
+        },
+        "end_point": {
+            "row": 65,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "public ManagementApplication() {\n\n    BeanConfig beanConfig = new BeanConfig();\n    beanConfig.setVersion(Version.RUNTIME_VERSION.MAJOR_VERSION);\n    beanConfig.setResourcePackage(\"io.gravitee.am.management.handlers.management.api.resources\");\n    beanConfig.setTitle(\"Gravitee.io - Access Management API\");\n    beanConfig.setScan(true);\n\n    register(DomainsResource.class);\n    register(PlatformResource.class);\n    register(DashboardResource.class);\n\n    register(ObjectMapperResolver.class);\n    register(ManagementExceptionMapper.class);\n    register(UnrecognizedPropertyExceptionMapper.class);\n    register(ThrowableMapper.class);\n    register(NotFoundExceptionMapper.class);\n    register(BadRequestExceptionMapper.class);\n\n    register(CorsResponseFilter.class);\n    register(UriBuilderRequestFilter.class);\n    register(ByteArrayOutputStreamWriter.class);\n    register(JacksonFeature.class);\n\n    register(ApiListingResource.class);\n    register(SwaggerSerializers.class);\n\n    property(ServerProperties.BV_SEND_ERROR_IN_RESPONSE, true);\n}",
+                "name": "ManagementApplication",
+                "modifiers": "public",
+                "parameters": [],
+                "body": "{\n\n    BeanConfig beanConfig = new BeanConfig();\n    beanConfig.setVersion(Version.RUNTIME_VERSION.MAJOR_VERSION);\n    beanConfig.setResourcePackage(\"io.gravitee.am.management.handlers.management.api.resources\");\n    beanConfig.setTitle(\"Gravitee.io - Access Management API\");\n    beanConfig.setScan(true);\n\n    register(DomainsResource.class);\n    register(PlatformResource.class);\n    register(DashboardResource.class);\n\n    register(ObjectMapperResolver.class);\n    register(ManagementExceptionMapper.class);\n    register(UnrecognizedPropertyExceptionMapper.class);\n    register(ThrowableMapper.class);\n    register(NotFoundExceptionMapper.class);\n    register(BadRequestExceptionMapper.class);\n\n    register(CorsResponseFilter.class);\n    register(UriBuilderRequestFilter.class);\n    register(ByteArrayOutputStreamWriter.class);\n    register(JacksonFeature.class);\n\n    register(ApiListingResource.class);\n    register(SwaggerSerializers.class);\n\n    property(ServerProperties.BV_SEND_ERROR_IN_RESPONSE, true);\n}",
+                "constructor": true,
+                "start_point": {
+                    "row": 36,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 64,
+                    "column": 5
+                },
+                "method_mode": "Modified"
+            }
+        ],
+        "class_mode": "Modified"
+    }
+]

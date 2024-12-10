@@ -1,5 +1,7 @@
 [
     {
+        "repo_name": "JoeCao_qbike",
+        "commit": "3c876617d0e3506205fd9d02dbf050a7565f796c",
         "rev_path": "uc/src/main/java/club/newtech/qbike/uc/domain/root/User.java",
         "definition": "@Entity\n@Data\npublic class User {\n    @Id\n    @GeneratedValue(strategy = GenerationType.IDENTITY)\n    private int id;\n    @Column(length = 64)\n    private String name;\n    @Column(length = 64, nullable = false)\n    private String mobile;\n\n    @Enumerated(value = STRING)\n    @Column(length = 32, nullable = false)\n    private Type type;\n\n}",
         "package": "package club.newtech.qbike.uc.domain.root;",

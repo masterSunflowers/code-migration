@@ -97,7 +97,7 @@ def parse_java_files(
 
 
 def get_definitions(
-    rev_path: str, tree: tree_sitter.Tree, file_mode: str, map_path: str = ""
+    repo_name, rev_path: str, tree: tree_sitter.Tree, file_mode: str, commit: str, map_path: str = ""
 ):
     root_node = tree.root_node
     lst_class_info = []
@@ -117,6 +117,8 @@ def get_definitions(
         node = stack.pop(0)
         tree_path = get_class_node_path(root_node, node)
         class_info = {
+            "repo_name": repo_name,
+            "commit": commit,
             "rev_path": rev_path,
             "definition": normalize_code(node.text.decode("utf-8")),
             "package": package_name,
@@ -249,7 +251,7 @@ def main(args):
     df = pd.read_csv(args.input)
     for _, row in tqdm(df.iterrows(), total=len(df), desc="Parsing"):
         if not pd.isna(row["diff_files"]):
-            repo_dir = os.path.join(args.repos_dir, row["repoName"])
+            repo_dir = os.path.join(args.repo_storage, row["repoName"])
             file_map = eval(row["diff_files"])
             # Parse the AST for files in previous commit version and current commit version
             output_prev = os.path.join(
@@ -269,7 +271,7 @@ def main(args):
                 row["prev_commit"],
                 row["endCommit"],
             ):
-                lst_class_info = get_definitions(rev_path, tree, file_mode, map_path)
+                lst_class_info = get_definitions(row["repoName"], rev_path, tree, file_mode, commit_hash, map_path)
                 file_name = (
                     "--".join(os.path.normpath(rev_path).split(os.sep)) + ".json"
                 )
@@ -291,8 +293,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", dest="input", required=True, help="Input data file")
     parser.add_argument(
-        "--repos-dir",
-        dest="repos_dir",
+        "--repo-storage",
+        dest="repo_storage",
         required=True,
         help="Path to repos storage",
     )

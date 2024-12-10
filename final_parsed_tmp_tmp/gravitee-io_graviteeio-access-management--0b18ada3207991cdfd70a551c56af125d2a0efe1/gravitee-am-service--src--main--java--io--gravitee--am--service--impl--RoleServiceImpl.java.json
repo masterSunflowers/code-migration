@@ -1,0 +1,202 @@
+[
+    {
+        "repo_name": "gravitee-io_graviteeio-access-management",
+        "commit": "0b18ada3207991cdfd70a551c56af125d2a0efe1",
+        "rev_path": "gravitee-am-service/src/main/java/io/gravitee/am/service/impl/RoleServiceImpl.java",
+        "definition": "@Component\npublic class RoleServiceImpl implements RoleService {\n\n    private final Logger LOGGER = LoggerFactory.getLogger(RoleServiceImpl.class);\n\n    @Autowired\n    private RoleRepository roleRepository;\n\n    @Override\n    public Single<Set<Role>> findByDomain(String domain) {\n        LOGGER.debug(\"Find roles by domain: {}\", domain);\n        return roleRepository.findByDomain(domain)\n                .onErrorResumeNext(ex -> {\n                    LOGGER.error(\"An error occurs while trying to find roles by domain\", ex);\n                    return Single.error(new TechnicalManagementException(\"An error occurs while trying to find roles by domain\", ex));\n                });\n    }\n\n    @Override\n    public Maybe<Role> findById(String id) {\n        LOGGER.debug(\"Find role by ID: {}\", id);\n        return roleRepository.findById(id)\n                .onErrorResumeNext(ex -> {\n                    LOGGER.error(\"An error occurs while trying to find a role using its ID: {}\", id, ex);\n                    return Maybe.error(new TechnicalManagementException(\n                            String.format(\"An error occurs while trying to find a role using its ID: %s\", id), ex));\n                });\n    }\n\n    @Override\n    public Single<Set<Role>> findByIdIn(List<String> ids) {\n        LOGGER.debug(\"Find roles by ids: {}\", ids);\n        return roleRepository.findByIdIn(ids)\n                .onErrorResumeNext(ex -> {\n                    LOGGER.error(\"An error occurs while trying to find roles by ids\", ex);\n                    return Single.error(new TechnicalManagementException(\"An error occurs while trying to find roles by ids\", ex));\n                });\n    }\n\n\n    @Override\n    public Single<Role> create(String domain, NewRole newRole) {\n        LOGGER.debug(\"Create a new role {} for domain {}\", newRole, domain);\n\n        String roleId = UUID.toString(UUID.random());\n\n        // check if role name is unique\n        return checkRoleUniqueness(newRole.getName(), roleId, domain)\n                .flatMap(irrelevant -> {\n                    Role role = new Role();\n                    role.setId(roleId);\n                    role.setDomain(domain);\n                    role.setName(newRole.getName());\n                    role.setDescription(newRole.getDescription());\n                    role.setCreatedAt(new Date());\n                    role.setUpdatedAt(role.getCreatedAt());\n                    return roleRepository.create(role);\n                })\n                .onErrorResumeNext(ex -> {\n                    if (ex instanceof AbstractManagementException) {\n                        return Single.error(ex);\n                    }\n\n                    LOGGER.error(\"An error occurs while trying to create a role\", ex);\n                    return Single.error(new TechnicalManagementException(\"An error occurs while trying to create a role\", ex));\n                });\n    }\n\n    @Override\n    public Single<Role> update(String domain, String id, UpdateRole updateRole) {\n        LOGGER.debug(\"Update a role {} for domain {}\", id, domain);\n\n        return roleRepository.findById(id)\n                .map(role -> Optional.of(role))\n                .defaultIfEmpty(Optional.empty())\n                .toSingle()\n                .flatMap(roleOpt -> {\n                    if (!roleOpt.isPresent()) {\n                        throw new RoleNotFoundException(id);\n                    }\n                    return Single.just(roleOpt.get());\n                })\n                .flatMap(oldRole -> {\n                    // check if role name is unique\n                    return checkRoleUniqueness(updateRole.getName(), oldRole.getId(), domain)\n                            .flatMap(irrelevant -> {\n                                oldRole.setName(updateRole.getName());\n                                oldRole.setDescription(updateRole.getDescription());\n                                oldRole.setPermissions(updateRole.getPermissions());\n                                oldRole.setUpdatedAt(new Date());\n                                return roleRepository.update(oldRole);\n                            });\n                })\n                .onErrorResumeNext(ex -> {\n                    if (ex instanceof AbstractManagementException) {\n                        return Single.error(ex);\n                    }\n\n                    LOGGER.error(\"An error occurs while trying to update a role\", ex);\n                    return Single.error(new TechnicalManagementException(\"An error occurs while trying to update a role\", ex));\n                });\n\n    }\n\n    @Override\n    public Single<Irrelevant> delete(String roleId) {\n        LOGGER.debug(\"Delete role {}\", roleId);\n        return roleRepository.findById(roleId)\n                .isEmpty()\n                    .flatMap(empty -> {\n                        if (empty) {\n                            throw new RoleNotFoundException(roleId);\n                        }\n                        return roleRepository.delete(roleId);\n                    })\n                .onErrorResumeNext(ex -> {\n                    if (ex instanceof AbstractManagementException) {\n                        return Single.error(ex);\n                    }\n\n                    LOGGER.error(\"An error occurs while trying to delete role: {}\", roleId, ex);\n                    return Single.error(new TechnicalManagementException(\n                            String.format(\"An error occurs while trying to delete role: %s\", roleId), ex));\n                });\n    }\n\n    private Single<Irrelevant> checkRoleUniqueness(String roleName, String roleId, String domain) {\n\n        return roleRepository.findByDomain(domain)\n                .flatMap(roles -> {\n                    if (roles.stream()\n                            .filter(role -> !role.getId().equals(roleId))\n                            .anyMatch(role -> role.getName().equals(roleName))) {\n                        throw new RoleAlreadyExistsException(roleName);\n                    }\n                    return Single.just(Irrelevant.ROLE);\n                });\n    }\n\n}",
+        "package": "package io.gravitee.am.service.impl;",
+        "tree_path": "RoleServiceImpl",
+        "name": "RoleServiceImpl",
+        "modifiers": "@Component\npublic",
+        "superclass": null,
+        "super_interfaces": "implements RoleService",
+        "body": "{\n\n    private final Logger LOGGER = LoggerFactory.getLogger(RoleServiceImpl.class);\n\n    @Autowired\n    private RoleRepository roleRepository;\n\n    @Override\n    public Single<Set<Role>> findByDomain(String domain) {\n        LOGGER.debug(\"Find roles by domain: {}\", domain);\n        return roleRepository.findByDomain(domain)\n                .onErrorResumeNext(ex -> {\n                    LOGGER.error(\"An error occurs while trying to find roles by domain\", ex);\n                    return Single.error(new TechnicalManagementException(\"An error occurs while trying to find roles by domain\", ex));\n                });\n    }\n\n    @Override\n    public Maybe<Role> findById(String id) {\n        LOGGER.debug(\"Find role by ID: {}\", id);\n        return roleRepository.findById(id)\n                .onErrorResumeNext(ex -> {\n                    LOGGER.error(\"An error occurs while trying to find a role using its ID: {}\", id, ex);\n                    return Maybe.error(new TechnicalManagementException(\n                            String.format(\"An error occurs while trying to find a role using its ID: %s\", id), ex));\n                });\n    }\n\n    @Override\n    public Single<Set<Role>> findByIdIn(List<String> ids) {\n        LOGGER.debug(\"Find roles by ids: {}\", ids);\n        return roleRepository.findByIdIn(ids)\n                .onErrorResumeNext(ex -> {\n                    LOGGER.error(\"An error occurs while trying to find roles by ids\", ex);\n                    return Single.error(new TechnicalManagementException(\"An error occurs while trying to find roles by ids\", ex));\n                });\n    }\n\n\n    @Override\n    public Single<Role> create(String domain, NewRole newRole) {\n        LOGGER.debug(\"Create a new role {} for domain {}\", newRole, domain);\n\n        String roleId = UUID.toString(UUID.random());\n\n        // check if role name is unique\n        return checkRoleUniqueness(newRole.getName(), roleId, domain)\n                .flatMap(irrelevant -> {\n                    Role role = new Role();\n                    role.setId(roleId);\n                    role.setDomain(domain);\n                    role.setName(newRole.getName());\n                    role.setDescription(newRole.getDescription());\n                    role.setCreatedAt(new Date());\n                    role.setUpdatedAt(role.getCreatedAt());\n                    return roleRepository.create(role);\n                })\n                .onErrorResumeNext(ex -> {\n                    if (ex instanceof AbstractManagementException) {\n                        return Single.error(ex);\n                    }\n\n                    LOGGER.error(\"An error occurs while trying to create a role\", ex);\n                    return Single.error(new TechnicalManagementException(\"An error occurs while trying to create a role\", ex));\n                });\n    }\n\n    @Override\n    public Single<Role> update(String domain, String id, UpdateRole updateRole) {\n        LOGGER.debug(\"Update a role {} for domain {}\", id, domain);\n\n        return roleRepository.findById(id)\n                .map(role -> Optional.of(role))\n                .defaultIfEmpty(Optional.empty())\n                .toSingle()\n                .flatMap(roleOpt -> {\n                    if (!roleOpt.isPresent()) {\n                        throw new RoleNotFoundException(id);\n                    }\n                    return Single.just(roleOpt.get());\n                })\n                .flatMap(oldRole -> {\n                    // check if role name is unique\n                    return checkRoleUniqueness(updateRole.getName(), oldRole.getId(), domain)\n                            .flatMap(irrelevant -> {\n                                oldRole.setName(updateRole.getName());\n                                oldRole.setDescription(updateRole.getDescription());\n                                oldRole.setPermissions(updateRole.getPermissions());\n                                oldRole.setUpdatedAt(new Date());\n                                return roleRepository.update(oldRole);\n                            });\n                })\n                .onErrorResumeNext(ex -> {\n                    if (ex instanceof AbstractManagementException) {\n                        return Single.error(ex);\n                    }\n\n                    LOGGER.error(\"An error occurs while trying to update a role\", ex);\n                    return Single.error(new TechnicalManagementException(\"An error occurs while trying to update a role\", ex));\n                });\n\n    }\n\n    @Override\n    public Single<Irrelevant> delete(String roleId) {\n        LOGGER.debug(\"Delete role {}\", roleId);\n        return roleRepository.findById(roleId)\n                .isEmpty()\n                    .flatMap(empty -> {\n                        if (empty) {\n                            throw new RoleNotFoundException(roleId);\n                        }\n                        return roleRepository.delete(roleId);\n                    })\n                .onErrorResumeNext(ex -> {\n                    if (ex instanceof AbstractManagementException) {\n                        return Single.error(ex);\n                    }\n\n                    LOGGER.error(\"An error occurs while trying to delete role: {}\", roleId, ex);\n                    return Single.error(new TechnicalManagementException(\n                            String.format(\"An error occurs while trying to delete role: %s\", roleId), ex));\n                });\n    }\n\n    private Single<Irrelevant> checkRoleUniqueness(String roleName, String roleId, String domain) {\n\n        return roleRepository.findByDomain(domain)\n                .flatMap(roles -> {\n                    if (roles.stream()\n                            .filter(role -> !role.getId().equals(roleId))\n                            .anyMatch(role -> role.getName().equals(roleName))) {\n                        throw new RoleAlreadyExistsException(roleName);\n                    }\n                    return Single.just(Irrelevant.ROLE);\n                });\n    }\n\n}",
+        "start_point": {
+            "row": 44,
+            "column": 0
+        },
+        "end_point": {
+            "row": 183,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "@Override\npublic Single<Set<Role>> findByDomain(String domain) {\n    LOGGER.debug(\"Find roles by domain: {}\", domain);\n    return roleRepository.findByDomain(domain)\n            .onErrorResumeNext(ex -> {\n                LOGGER.error(\"An error occurs while trying to find roles by domain\", ex);\n                return Single.error(new TechnicalManagementException(\"An error occurs while trying to find roles by domain\", ex));\n            });\n}",
+                "name": "findByDomain",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "domain"
+                    }
+                ],
+                "body": "{\n    LOGGER.debug(\"Find roles by domain: {}\", domain);\n    return roleRepository.findByDomain(domain)\n            .onErrorResumeNext(ex -> {\n                LOGGER.error(\"An error occurs while trying to find roles by domain\", ex);\n                return Single.error(new TechnicalManagementException(\"An error occurs while trying to find roles by domain\", ex));\n            });\n}",
+                "start_point": {
+                    "row": 52,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 60,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\npublic Maybe<Role> findById(String id) {\n    LOGGER.debug(\"Find role by ID: {}\", id);\n    return roleRepository.findById(id)\n            .onErrorResumeNext(ex -> {\n                LOGGER.error(\"An error occurs while trying to find a role using its ID: {}\", id, ex);\n                return Maybe.error(new TechnicalManagementException(\n                        String.format(\"An error occurs while trying to find a role using its ID: %s\", id), ex));\n            });\n}",
+                "name": "findById",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "id"
+                    }
+                ],
+                "body": "{\n    LOGGER.debug(\"Find role by ID: {}\", id);\n    return roleRepository.findById(id)\n            .onErrorResumeNext(ex -> {\n                LOGGER.error(\"An error occurs while trying to find a role using its ID: {}\", id, ex);\n                return Maybe.error(new TechnicalManagementException(\n                        String.format(\"An error occurs while trying to find a role using its ID: %s\", id), ex));\n            });\n}",
+                "start_point": {
+                    "row": 62,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 71,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\npublic Single<Set<Role>> findByIdIn(List<String> ids) {\n    LOGGER.debug(\"Find roles by ids: {}\", ids);\n    return roleRepository.findByIdIn(ids)\n            .onErrorResumeNext(ex -> {\n                LOGGER.error(\"An error occurs while trying to find roles by ids\", ex);\n                return Single.error(new TechnicalManagementException(\"An error occurs while trying to find roles by ids\", ex));\n            });\n}",
+                "name": "findByIdIn",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "List<String>",
+                        "name": "ids"
+                    }
+                ],
+                "body": "{\n    LOGGER.debug(\"Find roles by ids: {}\", ids);\n    return roleRepository.findByIdIn(ids)\n            .onErrorResumeNext(ex -> {\n                LOGGER.error(\"An error occurs while trying to find roles by ids\", ex);\n                return Single.error(new TechnicalManagementException(\"An error occurs while trying to find roles by ids\", ex));\n            });\n}",
+                "start_point": {
+                    "row": 73,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 81,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\npublic Single<Role> create(String domain, NewRole newRole) {\n    LOGGER.debug(\"Create a new role {} for domain {}\", newRole, domain);\n\n    String roleId = UUID.toString(UUID.random());\n\n    // check if role name is unique\n    return checkRoleUniqueness(newRole.getName(), roleId, domain)\n            .flatMap(irrelevant -> {\n                Role role = new Role();\n                role.setId(roleId);\n                role.setDomain(domain);\n                role.setName(newRole.getName());\n                role.setDescription(newRole.getDescription());\n                role.setCreatedAt(new Date());\n                role.setUpdatedAt(role.getCreatedAt());\n                return roleRepository.create(role);\n            })\n            .onErrorResumeNext(ex -> {\n                if (ex instanceof AbstractManagementException) {\n                    return Single.error(ex);\n                }\n\n                LOGGER.error(\"An error occurs while trying to create a role\", ex);\n                return Single.error(new TechnicalManagementException(\"An error occurs while trying to create a role\", ex));\n            });\n}",
+                "name": "create",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "domain"
+                    },
+                    {
+                        "type": "NewRole",
+                        "name": "newRole"
+                    }
+                ],
+                "body": "{\n    LOGGER.debug(\"Create a new role {} for domain {}\", newRole, domain);\n\n    String roleId = UUID.toString(UUID.random());\n\n    // check if role name is unique\n    return checkRoleUniqueness(newRole.getName(), roleId, domain)\n            .flatMap(irrelevant -> {\n                Role role = new Role();\n                role.setId(roleId);\n                role.setDomain(domain);\n                role.setName(newRole.getName());\n                role.setDescription(newRole.getDescription());\n                role.setCreatedAt(new Date());\n                role.setUpdatedAt(role.getCreatedAt());\n                return roleRepository.create(role);\n            })\n            .onErrorResumeNext(ex -> {\n                if (ex instanceof AbstractManagementException) {\n                    return Single.error(ex);\n                }\n\n                LOGGER.error(\"An error occurs while trying to create a role\", ex);\n                return Single.error(new TechnicalManagementException(\"An error occurs while trying to create a role\", ex));\n            });\n}",
+                "start_point": {
+                    "row": 84,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 110,
+                    "column": 5
+                },
+                "method_mode": "Modified"
+            },
+            {
+                "definition": "@Override\npublic Single<Role> update(String domain, String id, UpdateRole updateRole) {\n    LOGGER.debug(\"Update a role {} for domain {}\", id, domain);\n\n    return roleRepository.findById(id)\n            .map(role -> Optional.of(role))\n            .defaultIfEmpty(Optional.empty())\n            .toSingle()\n            .flatMap(roleOpt -> {\n                if (!roleOpt.isPresent()) {\n                    throw new RoleNotFoundException(id);\n                }\n                return Single.just(roleOpt.get());\n            })\n            .flatMap(oldRole -> {\n                // check if role name is unique\n                return checkRoleUniqueness(updateRole.getName(), oldRole.getId(), domain)\n                        .flatMap(irrelevant -> {\n                            oldRole.setName(updateRole.getName());\n                            oldRole.setDescription(updateRole.getDescription());\n                            oldRole.setPermissions(updateRole.getPermissions());\n                            oldRole.setUpdatedAt(new Date());\n                            return roleRepository.update(oldRole);\n                        });\n            })\n            .onErrorResumeNext(ex -> {\n                if (ex instanceof AbstractManagementException) {\n                    return Single.error(ex);\n                }\n\n                LOGGER.error(\"An error occurs while trying to update a role\", ex);\n                return Single.error(new TechnicalManagementException(\"An error occurs while trying to update a role\", ex));\n            });\n\n}",
+                "name": "update",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "domain"
+                    },
+                    {
+                        "type": "String",
+                        "name": "id"
+                    },
+                    {
+                        "type": "UpdateRole",
+                        "name": "updateRole"
+                    }
+                ],
+                "body": "{\n    LOGGER.debug(\"Update a role {} for domain {}\", id, domain);\n\n    return roleRepository.findById(id)\n            .map(role -> Optional.of(role))\n            .defaultIfEmpty(Optional.empty())\n            .toSingle()\n            .flatMap(roleOpt -> {\n                if (!roleOpt.isPresent()) {\n                    throw new RoleNotFoundException(id);\n                }\n                return Single.just(roleOpt.get());\n            })\n            .flatMap(oldRole -> {\n                // check if role name is unique\n                return checkRoleUniqueness(updateRole.getName(), oldRole.getId(), domain)\n                        .flatMap(irrelevant -> {\n                            oldRole.setName(updateRole.getName());\n                            oldRole.setDescription(updateRole.getDescription());\n                            oldRole.setPermissions(updateRole.getPermissions());\n                            oldRole.setUpdatedAt(new Date());\n                            return roleRepository.update(oldRole);\n                        });\n            })\n            .onErrorResumeNext(ex -> {\n                if (ex instanceof AbstractManagementException) {\n                    return Single.error(ex);\n                }\n\n                LOGGER.error(\"An error occurs while trying to update a role\", ex);\n                return Single.error(new TechnicalManagementException(\"An error occurs while trying to update a role\", ex));\n            });\n\n}",
+                "start_point": {
+                    "row": 112,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 146,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\npublic Single<Irrelevant> delete(String roleId) {\n    LOGGER.debug(\"Delete role {}\", roleId);\n    return roleRepository.findById(roleId)\n            .isEmpty()\n                .flatMap(empty -> {\n                    if (empty) {\n                        throw new RoleNotFoundException(roleId);\n                    }\n                    return roleRepository.delete(roleId);\n                })\n            .onErrorResumeNext(ex -> {\n                if (ex instanceof AbstractManagementException) {\n                    return Single.error(ex);\n                }\n\n                LOGGER.error(\"An error occurs while trying to delete role: {}\", roleId, ex);\n                return Single.error(new TechnicalManagementException(\n                        String.format(\"An error occurs while trying to delete role: %s\", roleId), ex));\n            });\n}",
+                "name": "delete",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "roleId"
+                    }
+                ],
+                "body": "{\n    LOGGER.debug(\"Delete role {}\", roleId);\n    return roleRepository.findById(roleId)\n            .isEmpty()\n                .flatMap(empty -> {\n                    if (empty) {\n                        throw new RoleNotFoundException(roleId);\n                    }\n                    return roleRepository.delete(roleId);\n                })\n            .onErrorResumeNext(ex -> {\n                if (ex instanceof AbstractManagementException) {\n                    return Single.error(ex);\n                }\n\n                LOGGER.error(\"An error occurs while trying to delete role: {}\", roleId, ex);\n                return Single.error(new TechnicalManagementException(\n                        String.format(\"An error occurs while trying to delete role: %s\", roleId), ex));\n            });\n}",
+                "start_point": {
+                    "row": 148,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 168,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "private Single<Irrelevant> checkRoleUniqueness(String roleName, String roleId, String domain) {\n\n    return roleRepository.findByDomain(domain)\n            .flatMap(roles -> {\n                if (roles.stream()\n                        .filter(role -> !role.getId().equals(roleId))\n                        .anyMatch(role -> role.getName().equals(roleName))) {\n                    throw new RoleAlreadyExistsException(roleName);\n                }\n                return Single.just(Irrelevant.ROLE);\n            });\n}",
+                "name": "checkRoleUniqueness",
+                "modifiers": "private",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "roleName"
+                    },
+                    {
+                        "type": "String",
+                        "name": "roleId"
+                    },
+                    {
+                        "type": "String",
+                        "name": "domain"
+                    }
+                ],
+                "body": "{\n\n    return roleRepository.findByDomain(domain)\n            .flatMap(roles -> {\n                if (roles.stream()\n                        .filter(role -> !role.getId().equals(roleId))\n                        .anyMatch(role -> role.getName().equals(roleName))) {\n                    throw new RoleAlreadyExistsException(roleName);\n                }\n                return Single.just(Irrelevant.ROLE);\n            });\n}",
+                "start_point": {
+                    "row": 170,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 181,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            }
+        ],
+        "class_mode": "Modified"
+    }
+]

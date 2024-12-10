@@ -1,0 +1,154 @@
+[
+    {
+        "repo_name": "gravitee-io_graviteeio-access-management",
+        "commit": "0b18ada3207991cdfd70a551c56af125d2a0efe1",
+        "rev_path": "gravitee-am-management-api/gravitee-am-management-api-service/src/main/java/io/gravitee/am/management/service/impl/upgrades/ScopeUpgrader.java",
+        "definition": "@Component\npublic class ScopeUpgrader implements Upgrader, Ordered {\n\n    /**\n     * Logger.\n     */\n    private final Logger logger = LoggerFactory.getLogger(ScopeUpgrader.class);\n\n    @Autowired\n    private DomainService domainService;\n\n    @Autowired\n    private ScopeService scopeService;\n\n    @Autowired\n    private ClientService clientService;\n\n    @Autowired\n    private RoleService roleService;\n\n    @Override\n    public boolean upgrade() {\n        logger.info(\"Applying scope upgrade\");\n        domainService.findAll()\n                .flatMapObservable(domains -> Observable.fromIterable(domains))\n                .flatMapSingle(domain -> upgradeDomain(domain))\n                .subscribe();\n        return true;\n    }\n\n    private Single<List<Scope>> upgradeDomain(Domain domain) {\n        logger.info(\"Looking for scopes for domain id[{}] name[{}]\", domain.getId(), domain.getName());\n        return scopeService.findByDomain(domain.getId())\n                .flatMap(scopes -> {\n                    if (scopes.isEmpty()) {\n                        logger.info(\"No scope found for domain id[{}] name[{}]. Upgrading...\", domain.getId(), domain.getName());\n                        return createClientScopes(domain)\n                                .flatMap(irrelevant -> createRoleScopes(domain));\n                    }\n                    return Single.just(new ArrayList<>(scopes));\n                });\n    }\n\n    private Single<List<Scope>> createClientScopes(Domain domain) {\n        return clientService.findByDomain(domain.getId())\n                .filter(clients -> clients != null)\n                .flatMapObservable(clients -> Observable.fromIterable(clients))\n                .filter(client -> client.getScopes() != null)\n                .flatMap(client -> Observable.fromIterable(client.getScopes()))\n                .flatMapSingle(scope -> createScope(domain.getId(), scope))\n                .toList();\n    }\n\n    private Single<List<Scope>> createRoleScopes(Domain domain) {\n        return roleService.findByDomain(domain.getId())\n                .filter(roles -> roles != null)\n                .flatMapObservable(roles -> Observable.fromIterable(roles))\n                .filter(role -> role.getPermissions() != null)\n                .flatMap(role -> Observable.fromIterable(role.getPermissions()))\n                .flatMapSingle(scope -> createScope(domain.getId(), scope))\n                .toList();\n    }\n\n    private Single<Scope> createScope(String domain, String scopeKey) {\n        return scopeService.findByDomain(domain)\n                .flatMap(scopes -> {\n                    Optional<Scope> optScope = scopes.stream().filter(scope -> scope.getKey().equalsIgnoreCase(scopeKey)).findFirst();\n                    if (!optScope.isPresent()) {\n                        logger.info(\"Create a new scope key[{}] for domain[{}]\", scopeKey, domain);\n                        NewScope scope = new NewScope();\n                        scope.setKey(scopeKey);\n                        scope.setName(Character.toUpperCase(scopeKey.charAt(0)) + scopeKey.substring(1));\n                        scope.setDescription(\"Default description for scope \" + scopeKey);\n                        return scopeService.create(domain, scope);\n                    }\n                    return Single.just(optScope.get());\n                });\n    }\n\n    @Override\n    public int getOrder() {\n        return 160;\n    }\n}",
+        "package": "package io.gravitee.am.management.service.impl.upgrades;",
+        "tree_path": "ScopeUpgrader",
+        "name": "ScopeUpgrader",
+        "modifiers": "@Component\npublic",
+        "superclass": null,
+        "super_interfaces": "implements Upgrader, Ordered",
+        "body": "{\n\n    /**\n     * Logger.\n     */\n    private final Logger logger = LoggerFactory.getLogger(ScopeUpgrader.class);\n\n    @Autowired\n    private DomainService domainService;\n\n    @Autowired\n    private ScopeService scopeService;\n\n    @Autowired\n    private ClientService clientService;\n\n    @Autowired\n    private RoleService roleService;\n\n    @Override\n    public boolean upgrade() {\n        logger.info(\"Applying scope upgrade\");\n        domainService.findAll()\n                .flatMapObservable(domains -> Observable.fromIterable(domains))\n                .flatMapSingle(domain -> upgradeDomain(domain))\n                .subscribe();\n        return true;\n    }\n\n    private Single<List<Scope>> upgradeDomain(Domain domain) {\n        logger.info(\"Looking for scopes for domain id[{}] name[{}]\", domain.getId(), domain.getName());\n        return scopeService.findByDomain(domain.getId())\n                .flatMap(scopes -> {\n                    if (scopes.isEmpty()) {\n                        logger.info(\"No scope found for domain id[{}] name[{}]. Upgrading...\", domain.getId(), domain.getName());\n                        return createClientScopes(domain)\n                                .flatMap(irrelevant -> createRoleScopes(domain));\n                    }\n                    return Single.just(new ArrayList<>(scopes));\n                });\n    }\n\n    private Single<List<Scope>> createClientScopes(Domain domain) {\n        return clientService.findByDomain(domain.getId())\n                .filter(clients -> clients != null)\n                .flatMapObservable(clients -> Observable.fromIterable(clients))\n                .filter(client -> client.getScopes() != null)\n                .flatMap(client -> Observable.fromIterable(client.getScopes()))\n                .flatMapSingle(scope -> createScope(domain.getId(), scope))\n                .toList();\n    }\n\n    private Single<List<Scope>> createRoleScopes(Domain domain) {\n        return roleService.findByDomain(domain.getId())\n                .filter(roles -> roles != null)\n                .flatMapObservable(roles -> Observable.fromIterable(roles))\n                .filter(role -> role.getPermissions() != null)\n                .flatMap(role -> Observable.fromIterable(role.getPermissions()))\n                .flatMapSingle(scope -> createScope(domain.getId(), scope))\n                .toList();\n    }\n\n    private Single<Scope> createScope(String domain, String scopeKey) {\n        return scopeService.findByDomain(domain)\n                .flatMap(scopes -> {\n                    Optional<Scope> optScope = scopes.stream().filter(scope -> scope.getKey().equalsIgnoreCase(scopeKey)).findFirst();\n                    if (!optScope.isPresent()) {\n                        logger.info(\"Create a new scope key[{}] for domain[{}]\", scopeKey, domain);\n                        NewScope scope = new NewScope();\n                        scope.setKey(scopeKey);\n                        scope.setName(Character.toUpperCase(scopeKey.charAt(0)) + scopeKey.substring(1));\n                        scope.setDescription(\"Default description for scope \" + scopeKey);\n                        return scopeService.create(domain, scope);\n                    }\n                    return Single.just(optScope.get());\n                });\n    }\n\n    @Override\n    public int getOrder() {\n        return 160;\n    }\n}",
+        "start_point": {
+            "row": 41,
+            "column": 0
+        },
+        "end_point": {
+            "row": 124,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "@Override\npublic boolean upgrade() {\n    logger.info(\"Applying scope upgrade\");\n    domainService.findAll()\n            .flatMapObservable(domains -> Observable.fromIterable(domains))\n            .flatMapSingle(domain -> upgradeDomain(domain))\n            .subscribe();\n    return true;\n}",
+                "name": "upgrade",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    logger.info(\"Applying scope upgrade\");\n    domainService.findAll()\n            .flatMapObservable(domains -> Observable.fromIterable(domains))\n            .flatMapSingle(domain -> upgradeDomain(domain))\n            .subscribe();\n    return true;\n}",
+                "start_point": {
+                    "row": 61,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 69,
+                    "column": 5
+                },
+                "method_mode": "Modified"
+            },
+            {
+                "definition": "private Single<List<Scope>> upgradeDomain(Domain domain) {\n    logger.info(\"Looking for scopes for domain id[{}] name[{}]\", domain.getId(), domain.getName());\n    return scopeService.findByDomain(domain.getId())\n            .flatMap(scopes -> {\n                if (scopes.isEmpty()) {\n                    logger.info(\"No scope found for domain id[{}] name[{}]. Upgrading...\", domain.getId(), domain.getName());\n                    return createClientScopes(domain)\n                            .flatMap(irrelevant -> createRoleScopes(domain));\n                }\n                return Single.just(new ArrayList<>(scopes));\n            });\n}",
+                "name": "upgradeDomain",
+                "modifiers": "private",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Domain",
+                        "name": "domain"
+                    }
+                ],
+                "body": "{\n    logger.info(\"Looking for scopes for domain id[{}] name[{}]\", domain.getId(), domain.getName());\n    return scopeService.findByDomain(domain.getId())\n            .flatMap(scopes -> {\n                if (scopes.isEmpty()) {\n                    logger.info(\"No scope found for domain id[{}] name[{}]. Upgrading...\", domain.getId(), domain.getName());\n                    return createClientScopes(domain)\n                            .flatMap(irrelevant -> createRoleScopes(domain));\n                }\n                return Single.just(new ArrayList<>(scopes));\n            });\n}",
+                "start_point": {
+                    "row": 71,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 82,
+                    "column": 5
+                },
+                "method_mode": "Modified"
+            },
+            {
+                "definition": "private Single<List<Scope>> createClientScopes(Domain domain) {\n    return clientService.findByDomain(domain.getId())\n            .filter(clients -> clients != null)\n            .flatMapObservable(clients -> Observable.fromIterable(clients))\n            .filter(client -> client.getScopes() != null)\n            .flatMap(client -> Observable.fromIterable(client.getScopes()))\n            .flatMapSingle(scope -> createScope(domain.getId(), scope))\n            .toList();\n}",
+                "name": "createClientScopes",
+                "modifiers": "private",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Domain",
+                        "name": "domain"
+                    }
+                ],
+                "body": "{\n    return clientService.findByDomain(domain.getId())\n            .filter(clients -> clients != null)\n            .flatMapObservable(clients -> Observable.fromIterable(clients))\n            .filter(client -> client.getScopes() != null)\n            .flatMap(client -> Observable.fromIterable(client.getScopes()))\n            .flatMapSingle(scope -> createScope(domain.getId(), scope))\n            .toList();\n}",
+                "start_point": {
+                    "row": 84,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 92,
+                    "column": 5
+                },
+                "method_mode": "Modified"
+            },
+            {
+                "definition": "private Single<List<Scope>> createRoleScopes(Domain domain) {\n    return roleService.findByDomain(domain.getId())\n            .filter(roles -> roles != null)\n            .flatMapObservable(roles -> Observable.fromIterable(roles))\n            .filter(role -> role.getPermissions() != null)\n            .flatMap(role -> Observable.fromIterable(role.getPermissions()))\n            .flatMapSingle(scope -> createScope(domain.getId(), scope))\n            .toList();\n}",
+                "name": "createRoleScopes",
+                "modifiers": "private",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Domain",
+                        "name": "domain"
+                    }
+                ],
+                "body": "{\n    return roleService.findByDomain(domain.getId())\n            .filter(roles -> roles != null)\n            .flatMapObservable(roles -> Observable.fromIterable(roles))\n            .filter(role -> role.getPermissions() != null)\n            .flatMap(role -> Observable.fromIterable(role.getPermissions()))\n            .flatMapSingle(scope -> createScope(domain.getId(), scope))\n            .toList();\n}",
+                "start_point": {
+                    "row": 94,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 102,
+                    "column": 5
+                },
+                "method_mode": "Modified"
+            },
+            {
+                "definition": "private Single<Scope> createScope(String domain, String scopeKey) {\n    return scopeService.findByDomain(domain)\n            .flatMap(scopes -> {\n                Optional<Scope> optScope = scopes.stream().filter(scope -> scope.getKey().equalsIgnoreCase(scopeKey)).findFirst();\n                if (!optScope.isPresent()) {\n                    logger.info(\"Create a new scope key[{}] for domain[{}]\", scopeKey, domain);\n                    NewScope scope = new NewScope();\n                    scope.setKey(scopeKey);\n                    scope.setName(Character.toUpperCase(scopeKey.charAt(0)) + scopeKey.substring(1));\n                    scope.setDescription(\"Default description for scope \" + scopeKey);\n                    return scopeService.create(domain, scope);\n                }\n                return Single.just(optScope.get());\n            });\n}",
+                "name": "createScope",
+                "modifiers": "private",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "domain"
+                    },
+                    {
+                        "type": "String",
+                        "name": "scopeKey"
+                    }
+                ],
+                "body": "{\n    return scopeService.findByDomain(domain)\n            .flatMap(scopes -> {\n                Optional<Scope> optScope = scopes.stream().filter(scope -> scope.getKey().equalsIgnoreCase(scopeKey)).findFirst();\n                if (!optScope.isPresent()) {\n                    logger.info(\"Create a new scope key[{}] for domain[{}]\", scopeKey, domain);\n                    NewScope scope = new NewScope();\n                    scope.setKey(scopeKey);\n                    scope.setName(Character.toUpperCase(scopeKey.charAt(0)) + scopeKey.substring(1));\n                    scope.setDescription(\"Default description for scope \" + scopeKey);\n                    return scopeService.create(domain, scope);\n                }\n                return Single.just(optScope.get());\n            });\n}",
+                "start_point": {
+                    "row": 104,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 118,
+                    "column": 5
+                },
+                "method_mode": "Modified"
+            },
+            {
+                "definition": "@Override\npublic int getOrder() {\n    return 160;\n}",
+                "name": "getOrder",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return 160;\n}",
+                "start_point": {
+                    "row": 120,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 123,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            }
+        ],
+        "class_mode": "Modified"
+    }
+]

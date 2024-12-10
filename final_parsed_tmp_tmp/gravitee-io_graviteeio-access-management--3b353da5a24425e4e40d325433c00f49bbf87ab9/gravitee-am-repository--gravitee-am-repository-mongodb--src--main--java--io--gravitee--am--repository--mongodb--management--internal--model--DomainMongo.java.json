@@ -1,0 +1,340 @@
+[
+    {
+        "repo_name": "gravitee-io_graviteeio-access-management",
+        "commit": "3b353da5a24425e4e40d325433c00f49bbf87ab9",
+        "rev_path": "gravitee-am-repository/gravitee-am-repository-mongodb/src/main/java/io/gravitee/am/repository/mongodb/management/internal/model/DomainMongo.java",
+        "definition": "public class DomainMongo extends Auditable {\n\n    @BsonId\n    private String id;\n\n    private String name;\n\n    private String description;\n\n    private boolean enabled;\n\n    private boolean master;\n\n    private String path;\n\n    private LoginFormMongo loginForm;\n\n    public String getId() {\n        return id;\n    }\n\n    public void setId(String id) {\n        this.id = id;\n    }\n\n    public String getName() {\n        return name;\n    }\n\n    public void setName(String name) {\n        this.name = name;\n    }\n\n    public String getDescription() {\n        return description;\n    }\n\n    public void setDescription(String description) {\n        this.description = description;\n    }\n\n    public boolean isMaster() {\n        return master;\n    }\n\n    public void setMaster(boolean master) {\n        this.master = master;\n    }\n\n    public boolean isEnabled() {\n        return enabled;\n    }\n\n    public void setEnabled(boolean enabled) {\n        this.enabled = enabled;\n    }\n\n    public String getPath() {\n        return path;\n    }\n\n    public void setPath(String path) {\n        this.path = path;\n    }\n\n    public LoginFormMongo getLoginForm() {\n        return loginForm;\n    }\n\n    public void setLoginForm(LoginFormMongo loginForm) {\n        this.loginForm = loginForm;\n    }\n\n    @Override\n    public boolean equals(Object o) {\n        if (this == o) return true;\n        if (o == null || getClass() != o.getClass()) return false;\n\n        DomainMongo that = (DomainMongo) o;\n\n        return id.equals(that.id);\n    }\n\n    @Override\n    public int hashCode() {\n        return id.hashCode();\n    }\n}",
+        "package": "package io.gravitee.am.repository.mongodb.management.internal.model;",
+        "tree_path": "DomainMongo",
+        "name": "DomainMongo",
+        "modifiers": "public",
+        "superclass": "extends Auditable",
+        "super_interfaces": null,
+        "body": "{\n\n    @BsonId\n    private String id;\n\n    private String name;\n\n    private String description;\n\n    private boolean enabled;\n\n    private boolean master;\n\n    private String path;\n\n    private LoginFormMongo loginForm;\n\n    public String getId() {\n        return id;\n    }\n\n    public void setId(String id) {\n        this.id = id;\n    }\n\n    public String getName() {\n        return name;\n    }\n\n    public void setName(String name) {\n        this.name = name;\n    }\n\n    public String getDescription() {\n        return description;\n    }\n\n    public void setDescription(String description) {\n        this.description = description;\n    }\n\n    public boolean isMaster() {\n        return master;\n    }\n\n    public void setMaster(boolean master) {\n        this.master = master;\n    }\n\n    public boolean isEnabled() {\n        return enabled;\n    }\n\n    public void setEnabled(boolean enabled) {\n        this.enabled = enabled;\n    }\n\n    public String getPath() {\n        return path;\n    }\n\n    public void setPath(String path) {\n        this.path = path;\n    }\n\n    public LoginFormMongo getLoginForm() {\n        return loginForm;\n    }\n\n    public void setLoginForm(LoginFormMongo loginForm) {\n        this.loginForm = loginForm;\n    }\n\n    @Override\n    public boolean equals(Object o) {\n        if (this == o) return true;\n        if (o == null || getClass() != o.getClass()) return false;\n\n        DomainMongo that = (DomainMongo) o;\n\n        return id.equals(that.id);\n    }\n\n    @Override\n    public int hashCode() {\n        return id.hashCode();\n    }\n}",
+        "start_point": {
+            "row": 24,
+            "column": 0
+        },
+        "end_point": {
+            "row": 111,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "public String getId() {\n    return id;\n}",
+                "name": "getId",
+                "modifiers": "public",
+                "return_type": "String",
+                "parameters": [],
+                "body": "{\n    return id;\n}",
+                "start_point": {
+                    "row": 41,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 43,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void setId(String id) {\n    this.id = id;\n}",
+                "name": "setId",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "id"
+                    }
+                ],
+                "body": "{\n    this.id = id;\n}",
+                "start_point": {
+                    "row": 45,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 47,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public String getName() {\n    return name;\n}",
+                "name": "getName",
+                "modifiers": "public",
+                "return_type": "String",
+                "parameters": [],
+                "body": "{\n    return name;\n}",
+                "start_point": {
+                    "row": 49,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 51,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void setName(String name) {\n    this.name = name;\n}",
+                "name": "setName",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "name"
+                    }
+                ],
+                "body": "{\n    this.name = name;\n}",
+                "start_point": {
+                    "row": 53,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 55,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public String getDescription() {\n    return description;\n}",
+                "name": "getDescription",
+                "modifiers": "public",
+                "return_type": "String",
+                "parameters": [],
+                "body": "{\n    return description;\n}",
+                "start_point": {
+                    "row": 57,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 59,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void setDescription(String description) {\n    this.description = description;\n}",
+                "name": "setDescription",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "description"
+                    }
+                ],
+                "body": "{\n    this.description = description;\n}",
+                "start_point": {
+                    "row": 61,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 63,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public boolean isMaster() {\n    return master;\n}",
+                "name": "isMaster",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return master;\n}",
+                "start_point": {
+                    "row": 65,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 67,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void setMaster(boolean master) {\n    this.master = master;\n}",
+                "name": "setMaster",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "name": "master"
+                    }
+                ],
+                "body": "{\n    this.master = master;\n}",
+                "start_point": {
+                    "row": 69,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 71,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public boolean isEnabled() {\n    return enabled;\n}",
+                "name": "isEnabled",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return enabled;\n}",
+                "start_point": {
+                    "row": 73,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 75,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void setEnabled(boolean enabled) {\n    this.enabled = enabled;\n}",
+                "name": "setEnabled",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "name": "enabled"
+                    }
+                ],
+                "body": "{\n    this.enabled = enabled;\n}",
+                "start_point": {
+                    "row": 77,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 79,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public String getPath() {\n    return path;\n}",
+                "name": "getPath",
+                "modifiers": "public",
+                "return_type": "String",
+                "parameters": [],
+                "body": "{\n    return path;\n}",
+                "start_point": {
+                    "row": 81,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 83,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void setPath(String path) {\n    this.path = path;\n}",
+                "name": "setPath",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "path"
+                    }
+                ],
+                "body": "{\n    this.path = path;\n}",
+                "start_point": {
+                    "row": 85,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 87,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public LoginFormMongo getLoginForm() {\n    return loginForm;\n}",
+                "name": "getLoginForm",
+                "modifiers": "public",
+                "return_type": "LoginFormMongo",
+                "parameters": [],
+                "body": "{\n    return loginForm;\n}",
+                "start_point": {
+                    "row": 89,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 91,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "public void setLoginForm(LoginFormMongo loginForm) {\n    this.loginForm = loginForm;\n}",
+                "name": "setLoginForm",
+                "modifiers": "public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "LoginFormMongo",
+                        "name": "loginForm"
+                    }
+                ],
+                "body": "{\n    this.loginForm = loginForm;\n}",
+                "start_point": {
+                    "row": 93,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 95,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\npublic boolean equals(Object o) {\n    if (this == o) return true;\n    if (o == null || getClass() != o.getClass()) return false;\n\n    DomainMongo that = (DomainMongo) o;\n\n    return id.equals(that.id);\n}",
+                "name": "equals",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "Object",
+                        "name": "o"
+                    }
+                ],
+                "body": "{\n    if (this == o) return true;\n    if (o == null || getClass() != o.getClass()) return false;\n\n    DomainMongo that = (DomainMongo) o;\n\n    return id.equals(that.id);\n}",
+                "start_point": {
+                    "row": 97,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 105,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\npublic int hashCode() {\n    return id.hashCode();\n}",
+                "name": "hashCode",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    return id.hashCode();\n}",
+                "start_point": {
+                    "row": 107,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 110,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            }
+        ],
+        "class_mode": "Modified"
+    }
+]

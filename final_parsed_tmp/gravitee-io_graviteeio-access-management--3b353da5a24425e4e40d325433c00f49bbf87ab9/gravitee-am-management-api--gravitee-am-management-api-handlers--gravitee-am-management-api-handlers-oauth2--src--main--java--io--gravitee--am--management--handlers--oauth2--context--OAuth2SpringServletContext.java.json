@@ -1,5 +1,7 @@
 [
     {
+        "repo_name": "gravitee-io_graviteeio-access-management",
+        "commit": "3b353da5a24425e4e40d325433c00f49bbf87ab9",
         "rev_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-oauth2/src/main/java/io/gravitee/am/management/handlers/oauth2/context/OAuth2SpringServletContext.java",
         "definition": "public class OAuth2SpringServletContext extends SpringServletContext<Domain> {\n\n    private final Domain domain;\n\n    private OAuth2SpringServletContext(Domain domain) {\n        this.domain = domain;\n    }\n\n    @Override\n    public List<Servlet> servlets() {\n        return Collections.singletonList(new DispatcherServlet(applicationContext()));\n    }\n\n    @Override\n    public List<Filter> filters() {\n        return Collections.singletonList(new DelegatingFilterProxy(\"springSecurityFilterChain\"));\n    }\n\n    @Override\n    public List<EventListener> listeners() {\n        return Collections.singletonList(new OAuth2ContextLoaderListener(applicationContext()));\n    }\n\n    @Override\n    public Domain deployable() {\n        return domain;\n    }\n\n    @Override\n    protected Set<Class<?>> annotatedClasses() {\n        return new HashSet<>(Arrays.asList(OAuth2Configuration.class));\n    }\n\n    @Override\n    protected Set<? extends BeanFactoryPostProcessor> beanFactoryPostProcessors() {\n        return Collections.singleton(new OAuth2DomainBeanFactoryPostProcessor((Domain) deployable()));\n    }\n\n    static Builder create(Domain domain) {\n        return new Builder(domain);\n    }\n\n    static class Builder {\n\n        private final Domain domain;\n\n        private Builder(Domain domain) {\n            this.domain = domain;\n        }\n\n        SpringServletContext<Domain> build() {\n            return new OAuth2SpringServletContext(domain);\n        }\n    }\n}",
         "package": "package io.gravitee.am.management.handlers.oauth2.context;",
@@ -163,6 +165,8 @@
         "map_tree_path": "AdminSpringServletContext"
     },
     {
+        "repo_name": "gravitee-io_graviteeio-access-management",
+        "commit": "3b353da5a24425e4e40d325433c00f49bbf87ab9",
         "rev_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-oauth2/src/main/java/io/gravitee/am/management/handlers/oauth2/context/OAuth2SpringServletContext.java",
         "definition": "static class Builder {\n\n    private final Domain domain;\n\n    private Builder(Domain domain) {\n        this.domain = domain;\n    }\n\n    SpringServletContext<Domain> build() {\n        return new OAuth2SpringServletContext(domain);\n    }\n}",
         "package": "package io.gravitee.am.management.handlers.oauth2.context;",

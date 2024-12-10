@@ -6,7 +6,7 @@ import os
 repo_storage = "/drive1/phatnt/zTrans/data/repos"
 
 
-# df = pd.read_csv("processed2.csv")
+# df = pd.read_csv("processed3.csv")
 def read_file_in_commit(repo_dir, rev_path, commit_hash):
     cmd = (
         f"git config --global --add safe.directory {repo_dir} && "
@@ -63,14 +63,15 @@ def read_file_in_commit(repo_dir, rev_path, commit_hash):
 #             )
 #             if output_of_git_diff == 100:
 #                 cnt_identical += 1
-#             # previous = read_file_in_commit(os.path.join(repo_storage, row["repoName"]), old, row["prev_commit"])
-#             # current = read_file_in_commit(os.path.join(repo_storage, row["repoName"]), new, row["endCommit"])
-#             # if previous == current:
-#             #     cnt_identical += 1
+            # previous = read_file_in_commit(os.path.join(repo_storage, row["repoName"]), old, row["prev_commit"])
+            # current = read_file_in_commit(os.path.join(repo_storage, row["repoName"]), new, row["endCommit"])
+            # if previous == current:
+            #     cnt_identical += 1
 
 # print("Number of pair:", cnt)
 # print("Only rename not change content", cnt_identical)
 
+#==============================================================================
 
 # df = pd.read_csv("processed3.csv")
 
@@ -103,12 +104,15 @@ def read_file_in_commit(repo_dir, rev_path, commit_hash):
 #                     f.write("\n============================================")
 #                     f.write("\n============================================\n")
 
-repo_dir = "/drive1/phatnt/zTrans/data/repos/EmiteGWT_emite"
-prev_commit = "e0a9748a236d3166b661253b60f6b5c7f00dc9e9"
-cur_commit = "6bce09ae519ce35bf592b75b110323292b01deef"
 
-old_file_path = "src/main/java/com/calclab/emite/core/client/packet/PacketTestSuite.java"
-new_file_path = "src/test/java/com/calclab/emite/core/client/packet/PacketTestSuite.java"
+#==============================================================================
+
+repo_dir = "/drive1/phatnt/zTrans/data/repos/HotelsDotCom_data-highway"
+prev_commit = "7f175375b3c193309094dd8308b77af61d40e57e"
+cur_commit = "d79ebc0c4b87d08e45489bdb0a49a1d2124b8439"
+
+old_file_path = "monitoring/kafka-offset-metrics/src/test/java/com/hotels/road/kafka/offset/metrics/KafkaOffsetMetricsAppTest.java"
+new_file_path = "monitoring/kafka-offset-metrics/src/test/java/com/hotels/road/kafka/offset/metrics/KafkaOffsetMetricsAppTest.java"
 
 print(read_file_in_commit(repo_dir, old_file_path, prev_commit))
 print("=" * 100)

@@ -1,5 +1,7 @@
 [
     {
+        "repo_name": "EmiteGWT_emite",
+        "commit": "6bce09ae519ce35bf592b75b110323292b01deef",
         "rev_path": "src/test/java/com/calclab/emite/xtesting/services/HttpConnector.java",
         "definition": "public class HttpConnector {\n\n    private static class HttpConnectorID {\n\tprivate static int id = 0;\n\n\tpublic static String getNext() {\n\t    id++;\n\t    return String.valueOf(id);\n\t}\n\n    }\n\n    private final ExecutorService sendService;\n    private final ExecutorService receiveService;\n\n    public HttpConnector() {\n\tsendService = Executors.newCachedThreadPool();\n\treceiveService = Executors.newFixedThreadPool(1);\n    }\n\n    public synchronized void send(final String httpBase, final String xml, final ConnectorCallback callback)\n\t    throws ConnectorException {\n\n\tsendService.execute(createSendAction(httpBase, xml, callback));\n    }\n\n    protected void debug(final String pattern, final Object... arguments) {\n\t// FIXME\n\tMessageFormat.format(pattern, arguments);\n    }\n\n    private Runnable createResponseAction(final String xml, final ConnectorCallback callback, final String id,\n\t    final int status, final String response) {\n\tfinal Runnable runnable = new Runnable() {\n\t    public void run() {\n\t\tif (status == HttpStatus.SC_OK) {\n\t\t    System.out.println(\"RECEIVED: \" + response);\n\t\t    debug(\"Connector [{0}] receive: {1}\", id, response);\n\t\t    callback.onResponseReceived(status, response, xml);\n\t\t} else {\n\t\t    debug(\"Connector [{0}] bad status: {1}\", id, status);\n\t\t    callback.onError(xml, new Exception(\"bad http status \" + status));\n\t\t}\n\n\t    }\n\n\t};\n\treturn runnable;\n    }\n\n    private Runnable createSendAction(final String httpBase, final String xml, final ConnectorCallback callback) {\n\treturn new Runnable() {\n\t    public void run() {\n\t\tfinal String id = HttpConnectorID.getNext();\n\t\tdebug(\"Connector [{0}] send: {1}\", id, xml);\n\t\tfinal HttpClient client = new DefaultHttpClient();\n\t\tint status = 0;\n\t\tString responseString = null;\n\t\tfinal HttpPost post = new HttpPost(httpBase);\n\n\t\ttry {\n\t\t    post.setEntity(new StringEntity(xml, \"text/xml\", \"utf-8\"));\n\t\t    System.out.println(\"SENDING: \" + xml);\n\t\t    HttpResponse response = client.execute(post);\n\t\t    responseString = EntityUtils.toString(response.getEntity());\n\t\t} catch (final Exception e) {\n\t\t    callback.onError(xml, e);\n\t\t    e.printStackTrace();\n\t\t}\n\n\t\treceiveService.execute(createResponseAction(xml, callback, id, status, responseString));\n\t    }\n\t};\n    }\n}",
         "package": "package com.calclab.emite.xtesting.services;",
@@ -156,6 +158,8 @@
         "class_mode": "Modified"
     },
     {
+        "repo_name": "EmiteGWT_emite",
+        "commit": "6bce09ae519ce35bf592b75b110323292b01deef",
         "rev_path": "src/test/java/com/calclab/emite/xtesting/services/HttpConnector.java",
         "definition": "private static class HttpConnectorID {\nvate static int id = 0;\n\nlic static String getNext() {\n id++;\n return String.valueOf(id);\n\n\n}",
         "package": "package com.calclab.emite.xtesting.services;",

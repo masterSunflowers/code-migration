@@ -1,0 +1,317 @@
+[
+    {
+        "repo_name": "gravitee-io_graviteeio-access-management",
+        "commit": "3b353da5a24425e4e40d325433c00f49bbf87ab9",
+        "rev_path": "gravitee-am-service/src/test/java/io/gravitee/am/service/RoleServiceTest.java",
+        "definition": "@RunWith(MockitoJUnitRunner.class)\npublic class RoleServiceTest {\n\n    @InjectMocks\n    private RoleService roleService = new RoleServiceImpl();\n\n    @Mock\n    private DomainService domainService;\n\n    @Mock\n    private ClientService clientService;\n\n    @Mock\n    private RoleRepository roleRepository;\n\n    private final static String DOMAIN = \"domain1\";\n\n    @Test\n    public void shouldFindById() {\n        when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.just(new Role()));\n        TestObserver testObserver = roleService.findById(\"my-role\").test();\n\n        testObserver.awaitTerminalEvent();\n        testObserver.assertComplete();\n        testObserver.assertNoErrors();\n        testObserver.assertValueCount(1);\n    }\n\n    @Test\n    public void shouldFindById_notExistingRole() {\n        when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.empty());\n        TestObserver testObserver = roleService.findById(\"my-role\").test();\n        testObserver.awaitTerminalEvent();\n\n        testObserver.assertNoValues();\n    }\n\n    @Test\n    public void shouldFindById_technicalException() {\n        when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.error(TechnicalException::new));\n        TestObserver testObserver = new TestObserver();\n        roleService.findById(\"my-role\").subscribe(testObserver);\n\n        testObserver.assertError(TechnicalManagementException.class);\n        testObserver.assertNotComplete();\n    }\n\n    @Test\n    public void shouldFindByDomain() {\n        when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.just(Collections.singleton(new Role())));\n        TestObserver<Set<Role>> testObserver = roleService.findByDomain(DOMAIN).test();\n        testObserver.awaitTerminalEvent();\n\n        testObserver.assertComplete();\n        testObserver.assertNoErrors();\n        testObserver.assertValue(roles -> roles.size() == 1);\n    }\n\n    @Test\n    public void shouldFindByDomain_technicalException() {\n        when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.error(TechnicalException::new));\n\n        TestObserver testObserver = new TestObserver<>();\n        roleService.findByDomain(DOMAIN).subscribe(testObserver);\n\n        testObserver.assertError(TechnicalManagementException.class);\n        testObserver.assertNotComplete();\n    }\n\n    @Test\n    public void shouldFindByIdsIn() {\n        when(roleRepository.findByIdIn(Arrays.asList(\"my-role\"))).thenReturn(Single.just(Collections.singleton(new Role())));\n        TestObserver<Set<Role>> testObserver = roleService.findByIdIn(Arrays.asList(\"my-role\")).test();\n        testObserver.awaitTerminalEvent();\n\n        testObserver.assertComplete();\n        testObserver.assertNoErrors();\n        testObserver.assertValue(roles -> roles.size() == 1);\n    }\n\n    @Test\n    public void shouldFindByIdsIn_technicalException() {\n        when(roleRepository.findByIdIn(anyList())).thenReturn(Single.error(TechnicalException::new));\n\n        TestObserver testObserver = new TestObserver<>();\n        roleService.findByIdIn(Arrays.asList(\"my-role\")).subscribe(testObserver);\n\n        testObserver.assertError(TechnicalManagementException.class);\n        testObserver.assertNotComplete();\n    }\n\n    @Test\n    public void shouldCreate() {\n        NewRole newRole = Mockito.mock(NewRole.class);\n        when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.just(Collections.emptySet()));\n        when(roleRepository.create(any(Role.class))).thenReturn(Single.just(new Role()));\n\n        TestObserver testObserver = roleService.create(DOMAIN, newRole).test();\n        testObserver.awaitTerminalEvent();\n\n        testObserver.assertComplete();\n        testObserver.assertNoErrors();\n\n        verify(roleRepository, times(1)).findByDomain(DOMAIN);\n        verify(roleRepository, times(1)).create(any(Role.class));\n    }\n\n    @Test\n    public void shouldCreate_technicalException() {\n        NewRole newRole = Mockito.mock(NewRole.class);\n        when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.error(TechnicalException::new));\n\n        TestObserver testObserver = new TestObserver();\n        roleService.create(DOMAIN, newRole).subscribe(testObserver);\n\n        testObserver.assertError(TechnicalManagementException.class);\n        testObserver.assertNotComplete();\n\n        verify(roleRepository, never()).create(any(Role.class));\n    }\n\n    @Test\n    public void shouldCreate_uniquenessException() {\n        NewRole newRole = Mockito.mock(NewRole.class);\n        when(newRole.getName()).thenReturn(\"existing-role-name\");\n\n        Role role = new Role();\n        role.setId(\"existing-role-id\");\n        role.setName(\"existing-role-name\");\n\n        when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.just(Collections.singleton(role)));\n\n        TestObserver testObserver = new TestObserver();\n        roleService.create(DOMAIN, newRole).subscribe(testObserver);\n\n        testObserver.assertError(TechnicalManagementException.class);\n        testObserver.assertNotComplete();\n\n        verify(roleRepository, never()).create(any(Role.class));\n    }\n\n    @Test\n    public void shouldUpdate() {\n        UpdateRole updateRole = Mockito.mock(UpdateRole.class);\n        when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.just(new Role()));\n        when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.just(Collections.emptySet()));\n        when(roleRepository.update(any(Role.class))).thenReturn(Single.just(new Role()));\n\n        TestObserver testObserver = roleService.update(DOMAIN,\"my-role\", updateRole).test();\n        testObserver.awaitTerminalEvent();\n\n        testObserver.assertComplete();\n        testObserver.assertNoErrors();\n\n        verify(roleRepository, times(1)).findById(\"my-role\");\n        verify(roleRepository, times(1)).findByDomain(DOMAIN);\n        verify(roleRepository, times(1)).update(any(Role.class));\n    }\n\n    @Test\n    public void shouldUpdate_technicalException() {\n        UpdateRole updateRole = Mockito.mock(UpdateRole.class);\n        when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.error(TechnicalException::new));\n\n        TestObserver testObserver = new TestObserver();\n        roleService.update(DOMAIN,\"my-role\", updateRole).subscribe(testObserver);\n\n        testObserver.assertError(TechnicalManagementException.class);\n        testObserver.assertNotComplete();\n\n        verify(roleRepository, never()).findByDomain(DOMAIN);\n        verify(roleRepository, never()).update(any(Role.class));\n    }\n\n    @Test\n    public void shouldUpdate_uniquenessException() {\n        UpdateRole updateRole = Mockito.mock(UpdateRole.class);\n        when(updateRole.getName()).thenReturn(\"existing-role-name\");\n\n        Role role = new Role();\n        role.setId(\"existing-role-id\");\n        role.setName(\"existing-role-name\");\n\n        when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.just(new Role()));\n        when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.just(Collections.singleton(role)));\n\n        TestObserver testObserver = new TestObserver();\n        roleService.update(DOMAIN, \"my-role\", updateRole).subscribe(testObserver);\n\n        testObserver.assertError(RoleAlreadyExistsException.class);\n        testObserver.assertNotComplete();\n\n        verify(roleRepository, never()).create(any(Role.class));\n    }\n\n    @Test\n    public void shouldUpdate_roleNotFound() {\n        UpdateRole updateRole = Mockito.mock(UpdateRole.class);\n        when(updateRole.getName()).thenReturn(\"existing-role-name\");\n        when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.empty());\n\n        TestObserver testObserver = new TestObserver();\n        roleService.update(DOMAIN, \"my-role\", updateRole).subscribe(testObserver);\n\n        testObserver.assertError(RoleNotFoundException.class);\n        testObserver.assertNotComplete();\n\n        verify(roleRepository, never()).findByDomain(DOMAIN);\n        verify(roleRepository, never()).create(any(Role.class));\n    }\n\n    @Test\n    public void shouldDelete_notExistingRole() {\n        when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.empty());\n\n        TestObserver testObserver = roleService.delete(\"my-role\").test();\n\n        testObserver.assertError(RoleNotFoundException.class);\n        testObserver.assertNotComplete();\n\n        verify(roleRepository, never()).delete(anyString());\n    }\n\n    @Test\n    public void shouldDelete_technicalException() {\n        when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.just(new Role()));\n        when(roleRepository.delete(anyString())).thenReturn(Single.error(TechnicalException::new));\n\n        TestObserver testObserver = roleService.delete(\"my-role\").test();\n\n        testObserver.assertError(TechnicalManagementException.class);\n        testObserver.assertNotComplete();\n    }\n\n    @Test\n    public void shouldDelete() {\n        when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.just(new Role()));\n        when(roleRepository.delete(\"my-role\")).thenReturn(Single.just(Irrelevant.ROLE));\n\n        TestObserver testObserver = roleService.delete( \"my-role\").test();\n        testObserver.awaitTerminalEvent();\n\n        testObserver.assertComplete();\n        testObserver.assertNoErrors();\n\n        verify(roleRepository, times(1)).delete(\"my-role\");\n    }\n}",
+        "package": "package io.gravitee.am.service;",
+        "tree_path": "RoleServiceTest",
+        "name": "RoleServiceTest",
+        "modifiers": "@RunWith(MockitoJUnitRunner.class)\npublic",
+        "superclass": null,
+        "super_interfaces": null,
+        "body": "{\n\n    @InjectMocks\n    private RoleService roleService = new RoleServiceImpl();\n\n    @Mock\n    private DomainService domainService;\n\n    @Mock\n    private ClientService clientService;\n\n    @Mock\n    private RoleRepository roleRepository;\n\n    private final static String DOMAIN = \"domain1\";\n\n    @Test\n    public void shouldFindById() {\n        when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.just(new Role()));\n        TestObserver testObserver = roleService.findById(\"my-role\").test();\n\n        testObserver.awaitTerminalEvent();\n        testObserver.assertComplete();\n        testObserver.assertNoErrors();\n        testObserver.assertValueCount(1);\n    }\n\n    @Test\n    public void shouldFindById_notExistingRole() {\n        when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.empty());\n        TestObserver testObserver = roleService.findById(\"my-role\").test();\n        testObserver.awaitTerminalEvent();\n\n        testObserver.assertNoValues();\n    }\n\n    @Test\n    public void shouldFindById_technicalException() {\n        when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.error(TechnicalException::new));\n        TestObserver testObserver = new TestObserver();\n        roleService.findById(\"my-role\").subscribe(testObserver);\n\n        testObserver.assertError(TechnicalManagementException.class);\n        testObserver.assertNotComplete();\n    }\n\n    @Test\n    public void shouldFindByDomain() {\n        when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.just(Collections.singleton(new Role())));\n        TestObserver<Set<Role>> testObserver = roleService.findByDomain(DOMAIN).test();\n        testObserver.awaitTerminalEvent();\n\n        testObserver.assertComplete();\n        testObserver.assertNoErrors();\n        testObserver.assertValue(roles -> roles.size() == 1);\n    }\n\n    @Test\n    public void shouldFindByDomain_technicalException() {\n        when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.error(TechnicalException::new));\n\n        TestObserver testObserver = new TestObserver<>();\n        roleService.findByDomain(DOMAIN).subscribe(testObserver);\n\n        testObserver.assertError(TechnicalManagementException.class);\n        testObserver.assertNotComplete();\n    }\n\n    @Test\n    public void shouldFindByIdsIn() {\n        when(roleRepository.findByIdIn(Arrays.asList(\"my-role\"))).thenReturn(Single.just(Collections.singleton(new Role())));\n        TestObserver<Set<Role>> testObserver = roleService.findByIdIn(Arrays.asList(\"my-role\")).test();\n        testObserver.awaitTerminalEvent();\n\n        testObserver.assertComplete();\n        testObserver.assertNoErrors();\n        testObserver.assertValue(roles -> roles.size() == 1);\n    }\n\n    @Test\n    public void shouldFindByIdsIn_technicalException() {\n        when(roleRepository.findByIdIn(anyList())).thenReturn(Single.error(TechnicalException::new));\n\n        TestObserver testObserver = new TestObserver<>();\n        roleService.findByIdIn(Arrays.asList(\"my-role\")).subscribe(testObserver);\n\n        testObserver.assertError(TechnicalManagementException.class);\n        testObserver.assertNotComplete();\n    }\n\n    @Test\n    public void shouldCreate() {\n        NewRole newRole = Mockito.mock(NewRole.class);\n        when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.just(Collections.emptySet()));\n        when(roleRepository.create(any(Role.class))).thenReturn(Single.just(new Role()));\n\n        TestObserver testObserver = roleService.create(DOMAIN, newRole).test();\n        testObserver.awaitTerminalEvent();\n\n        testObserver.assertComplete();\n        testObserver.assertNoErrors();\n\n        verify(roleRepository, times(1)).findByDomain(DOMAIN);\n        verify(roleRepository, times(1)).create(any(Role.class));\n    }\n\n    @Test\n    public void shouldCreate_technicalException() {\n        NewRole newRole = Mockito.mock(NewRole.class);\n        when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.error(TechnicalException::new));\n\n        TestObserver testObserver = new TestObserver();\n        roleService.create(DOMAIN, newRole).subscribe(testObserver);\n\n        testObserver.assertError(TechnicalManagementException.class);\n        testObserver.assertNotComplete();\n\n        verify(roleRepository, never()).create(any(Role.class));\n    }\n\n    @Test\n    public void shouldCreate_uniquenessException() {\n        NewRole newRole = Mockito.mock(NewRole.class);\n        when(newRole.getName()).thenReturn(\"existing-role-name\");\n\n        Role role = new Role();\n        role.setId(\"existing-role-id\");\n        role.setName(\"existing-role-name\");\n\n        when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.just(Collections.singleton(role)));\n\n        TestObserver testObserver = new TestObserver();\n        roleService.create(DOMAIN, newRole).subscribe(testObserver);\n\n        testObserver.assertError(TechnicalManagementException.class);\n        testObserver.assertNotComplete();\n\n        verify(roleRepository, never()).create(any(Role.class));\n    }\n\n    @Test\n    public void shouldUpdate() {\n        UpdateRole updateRole = Mockito.mock(UpdateRole.class);\n        when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.just(new Role()));\n        when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.just(Collections.emptySet()));\n        when(roleRepository.update(any(Role.class))).thenReturn(Single.just(new Role()));\n\n        TestObserver testObserver = roleService.update(DOMAIN,\"my-role\", updateRole).test();\n        testObserver.awaitTerminalEvent();\n\n        testObserver.assertComplete();\n        testObserver.assertNoErrors();\n\n        verify(roleRepository, times(1)).findById(\"my-role\");\n        verify(roleRepository, times(1)).findByDomain(DOMAIN);\n        verify(roleRepository, times(1)).update(any(Role.class));\n    }\n\n    @Test\n    public void shouldUpdate_technicalException() {\n        UpdateRole updateRole = Mockito.mock(UpdateRole.class);\n        when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.error(TechnicalException::new));\n\n        TestObserver testObserver = new TestObserver();\n        roleService.update(DOMAIN,\"my-role\", updateRole).subscribe(testObserver);\n\n        testObserver.assertError(TechnicalManagementException.class);\n        testObserver.assertNotComplete();\n\n        verify(roleRepository, never()).findByDomain(DOMAIN);\n        verify(roleRepository, never()).update(any(Role.class));\n    }\n\n    @Test\n    public void shouldUpdate_uniquenessException() {\n        UpdateRole updateRole = Mockito.mock(UpdateRole.class);\n        when(updateRole.getName()).thenReturn(\"existing-role-name\");\n\n        Role role = new Role();\n        role.setId(\"existing-role-id\");\n        role.setName(\"existing-role-name\");\n\n        when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.just(new Role()));\n        when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.just(Collections.singleton(role)));\n\n        TestObserver testObserver = new TestObserver();\n        roleService.update(DOMAIN, \"my-role\", updateRole).subscribe(testObserver);\n\n        testObserver.assertError(RoleAlreadyExistsException.class);\n        testObserver.assertNotComplete();\n\n        verify(roleRepository, never()).create(any(Role.class));\n    }\n\n    @Test\n    public void shouldUpdate_roleNotFound() {\n        UpdateRole updateRole = Mockito.mock(UpdateRole.class);\n        when(updateRole.getName()).thenReturn(\"existing-role-name\");\n        when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.empty());\n\n        TestObserver testObserver = new TestObserver();\n        roleService.update(DOMAIN, \"my-role\", updateRole).subscribe(testObserver);\n\n        testObserver.assertError(RoleNotFoundException.class);\n        testObserver.assertNotComplete();\n\n        verify(roleRepository, never()).findByDomain(DOMAIN);\n        verify(roleRepository, never()).create(any(Role.class));\n    }\n\n    @Test\n    public void shouldDelete_notExistingRole() {\n        when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.empty());\n\n        TestObserver testObserver = roleService.delete(\"my-role\").test();\n\n        testObserver.assertError(RoleNotFoundException.class);\n        testObserver.assertNotComplete();\n\n        verify(roleRepository, never()).delete(anyString());\n    }\n\n    @Test\n    public void shouldDelete_technicalException() {\n        when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.just(new Role()));\n        when(roleRepository.delete(anyString())).thenReturn(Single.error(TechnicalException::new));\n\n        TestObserver testObserver = roleService.delete(\"my-role\").test();\n\n        testObserver.assertError(TechnicalManagementException.class);\n        testObserver.assertNotComplete();\n    }\n\n    @Test\n    public void shouldDelete() {\n        when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.just(new Role()));\n        when(roleRepository.delete(\"my-role\")).thenReturn(Single.just(Irrelevant.ROLE));\n\n        TestObserver testObserver = roleService.delete( \"my-role\").test();\n        testObserver.awaitTerminalEvent();\n\n        testObserver.assertComplete();\n        testObserver.assertNoErrors();\n\n        verify(roleRepository, times(1)).delete(\"my-role\");\n    }\n}",
+        "start_point": {
+            "row": 49,
+            "column": 0
+        },
+        "end_point": {
+            "row": 296,
+            "column": 1
+        },
+        "file_mode": "Modified",
+        "map_path": null,
+        "methods": [
+            {
+                "definition": "@Test\npublic void shouldFindById() {\n    when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.just(new Role()));\n    TestObserver testObserver = roleService.findById(\"my-role\").test();\n\n    testObserver.awaitTerminalEvent();\n    testObserver.assertComplete();\n    testObserver.assertNoErrors();\n    testObserver.assertValueCount(1);\n}",
+                "name": "shouldFindById",
+                "modifiers": "@Test\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.just(new Role()));\n    TestObserver testObserver = roleService.findById(\"my-role\").test();\n\n    testObserver.awaitTerminalEvent();\n    testObserver.assertComplete();\n    testObserver.assertNoErrors();\n    testObserver.assertValueCount(1);\n}",
+                "start_point": {
+                    "row": 66,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 75,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Test\npublic void shouldFindById_notExistingRole() {\n    when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.empty());\n    TestObserver testObserver = roleService.findById(\"my-role\").test();\n    testObserver.awaitTerminalEvent();\n\n    testObserver.assertNoValues();\n}",
+                "name": "shouldFindById_notExistingRole",
+                "modifiers": "@Test\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.empty());\n    TestObserver testObserver = roleService.findById(\"my-role\").test();\n    testObserver.awaitTerminalEvent();\n\n    testObserver.assertNoValues();\n}",
+                "start_point": {
+                    "row": 77,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 84,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Test\npublic void shouldFindById_technicalException() {\n    when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.error(TechnicalException::new));\n    TestObserver testObserver = new TestObserver();\n    roleService.findById(\"my-role\").subscribe(testObserver);\n\n    testObserver.assertError(TechnicalManagementException.class);\n    testObserver.assertNotComplete();\n}",
+                "name": "shouldFindById_technicalException",
+                "modifiers": "@Test\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.error(TechnicalException::new));\n    TestObserver testObserver = new TestObserver();\n    roleService.findById(\"my-role\").subscribe(testObserver);\n\n    testObserver.assertError(TechnicalManagementException.class);\n    testObserver.assertNotComplete();\n}",
+                "start_point": {
+                    "row": 86,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 94,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Test\npublic void shouldFindByDomain() {\n    when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.just(Collections.singleton(new Role())));\n    TestObserver<Set<Role>> testObserver = roleService.findByDomain(DOMAIN).test();\n    testObserver.awaitTerminalEvent();\n\n    testObserver.assertComplete();\n    testObserver.assertNoErrors();\n    testObserver.assertValue(roles -> roles.size() == 1);\n}",
+                "name": "shouldFindByDomain",
+                "modifiers": "@Test\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.just(Collections.singleton(new Role())));\n    TestObserver<Set<Role>> testObserver = roleService.findByDomain(DOMAIN).test();\n    testObserver.awaitTerminalEvent();\n\n    testObserver.assertComplete();\n    testObserver.assertNoErrors();\n    testObserver.assertValue(roles -> roles.size() == 1);\n}",
+                "start_point": {
+                    "row": 96,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 105,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Test\npublic void shouldFindByDomain_technicalException() {\n    when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.error(TechnicalException::new));\n\n    TestObserver testObserver = new TestObserver<>();\n    roleService.findByDomain(DOMAIN).subscribe(testObserver);\n\n    testObserver.assertError(TechnicalManagementException.class);\n    testObserver.assertNotComplete();\n}",
+                "name": "shouldFindByDomain_technicalException",
+                "modifiers": "@Test\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.error(TechnicalException::new));\n\n    TestObserver testObserver = new TestObserver<>();\n    roleService.findByDomain(DOMAIN).subscribe(testObserver);\n\n    testObserver.assertError(TechnicalManagementException.class);\n    testObserver.assertNotComplete();\n}",
+                "start_point": {
+                    "row": 107,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 116,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Test\npublic void shouldFindByIdsIn() {\n    when(roleRepository.findByIdIn(Arrays.asList(\"my-role\"))).thenReturn(Single.just(Collections.singleton(new Role())));\n    TestObserver<Set<Role>> testObserver = roleService.findByIdIn(Arrays.asList(\"my-role\")).test();\n    testObserver.awaitTerminalEvent();\n\n    testObserver.assertComplete();\n    testObserver.assertNoErrors();\n    testObserver.assertValue(roles -> roles.size() == 1);\n}",
+                "name": "shouldFindByIdsIn",
+                "modifiers": "@Test\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    when(roleRepository.findByIdIn(Arrays.asList(\"my-role\"))).thenReturn(Single.just(Collections.singleton(new Role())));\n    TestObserver<Set<Role>> testObserver = roleService.findByIdIn(Arrays.asList(\"my-role\")).test();\n    testObserver.awaitTerminalEvent();\n\n    testObserver.assertComplete();\n    testObserver.assertNoErrors();\n    testObserver.assertValue(roles -> roles.size() == 1);\n}",
+                "start_point": {
+                    "row": 118,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 127,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Test\npublic void shouldFindByIdsIn_technicalException() {\n    when(roleRepository.findByIdIn(anyList())).thenReturn(Single.error(TechnicalException::new));\n\n    TestObserver testObserver = new TestObserver<>();\n    roleService.findByIdIn(Arrays.asList(\"my-role\")).subscribe(testObserver);\n\n    testObserver.assertError(TechnicalManagementException.class);\n    testObserver.assertNotComplete();\n}",
+                "name": "shouldFindByIdsIn_technicalException",
+                "modifiers": "@Test\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    when(roleRepository.findByIdIn(anyList())).thenReturn(Single.error(TechnicalException::new));\n\n    TestObserver testObserver = new TestObserver<>();\n    roleService.findByIdIn(Arrays.asList(\"my-role\")).subscribe(testObserver);\n\n    testObserver.assertError(TechnicalManagementException.class);\n    testObserver.assertNotComplete();\n}",
+                "start_point": {
+                    "row": 129,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 138,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Test\npublic void shouldCreate() {\n    NewRole newRole = Mockito.mock(NewRole.class);\n    when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.just(Collections.emptySet()));\n    when(roleRepository.create(any(Role.class))).thenReturn(Single.just(new Role()));\n\n    TestObserver testObserver = roleService.create(DOMAIN, newRole).test();\n    testObserver.awaitTerminalEvent();\n\n    testObserver.assertComplete();\n    testObserver.assertNoErrors();\n\n    verify(roleRepository, times(1)).findByDomain(DOMAIN);\n    verify(roleRepository, times(1)).create(any(Role.class));\n}",
+                "name": "shouldCreate",
+                "modifiers": "@Test\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    NewRole newRole = Mockito.mock(NewRole.class);\n    when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.just(Collections.emptySet()));\n    when(roleRepository.create(any(Role.class))).thenReturn(Single.just(new Role()));\n\n    TestObserver testObserver = roleService.create(DOMAIN, newRole).test();\n    testObserver.awaitTerminalEvent();\n\n    testObserver.assertComplete();\n    testObserver.assertNoErrors();\n\n    verify(roleRepository, times(1)).findByDomain(DOMAIN);\n    verify(roleRepository, times(1)).create(any(Role.class));\n}",
+                "start_point": {
+                    "row": 140,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 154,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Test\npublic void shouldCreate_technicalException() {\n    NewRole newRole = Mockito.mock(NewRole.class);\n    when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.error(TechnicalException::new));\n\n    TestObserver testObserver = new TestObserver();\n    roleService.create(DOMAIN, newRole).subscribe(testObserver);\n\n    testObserver.assertError(TechnicalManagementException.class);\n    testObserver.assertNotComplete();\n\n    verify(roleRepository, never()).create(any(Role.class));\n}",
+                "name": "shouldCreate_technicalException",
+                "modifiers": "@Test\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    NewRole newRole = Mockito.mock(NewRole.class);\n    when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.error(TechnicalException::new));\n\n    TestObserver testObserver = new TestObserver();\n    roleService.create(DOMAIN, newRole).subscribe(testObserver);\n\n    testObserver.assertError(TechnicalManagementException.class);\n    testObserver.assertNotComplete();\n\n    verify(roleRepository, never()).create(any(Role.class));\n}",
+                "start_point": {
+                    "row": 156,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 168,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Test\npublic void shouldCreate_uniquenessException() {\n    NewRole newRole = Mockito.mock(NewRole.class);\n    when(newRole.getName()).thenReturn(\"existing-role-name\");\n\n    Role role = new Role();\n    role.setId(\"existing-role-id\");\n    role.setName(\"existing-role-name\");\n\n    when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.just(Collections.singleton(role)));\n\n    TestObserver testObserver = new TestObserver();\n    roleService.create(DOMAIN, newRole).subscribe(testObserver);\n\n    testObserver.assertError(TechnicalManagementException.class);\n    testObserver.assertNotComplete();\n\n    verify(roleRepository, never()).create(any(Role.class));\n}",
+                "name": "shouldCreate_uniquenessException",
+                "modifiers": "@Test\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    NewRole newRole = Mockito.mock(NewRole.class);\n    when(newRole.getName()).thenReturn(\"existing-role-name\");\n\n    Role role = new Role();\n    role.setId(\"existing-role-id\");\n    role.setName(\"existing-role-name\");\n\n    when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.just(Collections.singleton(role)));\n\n    TestObserver testObserver = new TestObserver();\n    roleService.create(DOMAIN, newRole).subscribe(testObserver);\n\n    testObserver.assertError(TechnicalManagementException.class);\n    testObserver.assertNotComplete();\n\n    verify(roleRepository, never()).create(any(Role.class));\n}",
+                "start_point": {
+                    "row": 170,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 188,
+                    "column": 5
+                },
+                "method_mode": "Modified"
+            },
+            {
+                "definition": "@Test\npublic void shouldUpdate() {\n    UpdateRole updateRole = Mockito.mock(UpdateRole.class);\n    when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.just(new Role()));\n    when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.just(Collections.emptySet()));\n    when(roleRepository.update(any(Role.class))).thenReturn(Single.just(new Role()));\n\n    TestObserver testObserver = roleService.update(DOMAIN,\"my-role\", updateRole).test();\n    testObserver.awaitTerminalEvent();\n\n    testObserver.assertComplete();\n    testObserver.assertNoErrors();\n\n    verify(roleRepository, times(1)).findById(\"my-role\");\n    verify(roleRepository, times(1)).findByDomain(DOMAIN);\n    verify(roleRepository, times(1)).update(any(Role.class));\n}",
+                "name": "shouldUpdate",
+                "modifiers": "@Test\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    UpdateRole updateRole = Mockito.mock(UpdateRole.class);\n    when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.just(new Role()));\n    when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.just(Collections.emptySet()));\n    when(roleRepository.update(any(Role.class))).thenReturn(Single.just(new Role()));\n\n    TestObserver testObserver = roleService.update(DOMAIN,\"my-role\", updateRole).test();\n    testObserver.awaitTerminalEvent();\n\n    testObserver.assertComplete();\n    testObserver.assertNoErrors();\n\n    verify(roleRepository, times(1)).findById(\"my-role\");\n    verify(roleRepository, times(1)).findByDomain(DOMAIN);\n    verify(roleRepository, times(1)).update(any(Role.class));\n}",
+                "start_point": {
+                    "row": 190,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 206,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Test\npublic void shouldUpdate_technicalException() {\n    UpdateRole updateRole = Mockito.mock(UpdateRole.class);\n    when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.error(TechnicalException::new));\n\n    TestObserver testObserver = new TestObserver();\n    roleService.update(DOMAIN,\"my-role\", updateRole).subscribe(testObserver);\n\n    testObserver.assertError(TechnicalManagementException.class);\n    testObserver.assertNotComplete();\n\n    verify(roleRepository, never()).findByDomain(DOMAIN);\n    verify(roleRepository, never()).update(any(Role.class));\n}",
+                "name": "shouldUpdate_technicalException",
+                "modifiers": "@Test\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    UpdateRole updateRole = Mockito.mock(UpdateRole.class);\n    when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.error(TechnicalException::new));\n\n    TestObserver testObserver = new TestObserver();\n    roleService.update(DOMAIN,\"my-role\", updateRole).subscribe(testObserver);\n\n    testObserver.assertError(TechnicalManagementException.class);\n    testObserver.assertNotComplete();\n\n    verify(roleRepository, never()).findByDomain(DOMAIN);\n    verify(roleRepository, never()).update(any(Role.class));\n}",
+                "start_point": {
+                    "row": 208,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 221,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Test\npublic void shouldUpdate_uniquenessException() {\n    UpdateRole updateRole = Mockito.mock(UpdateRole.class);\n    when(updateRole.getName()).thenReturn(\"existing-role-name\");\n\n    Role role = new Role();\n    role.setId(\"existing-role-id\");\n    role.setName(\"existing-role-name\");\n\n    when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.just(new Role()));\n    when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.just(Collections.singleton(role)));\n\n    TestObserver testObserver = new TestObserver();\n    roleService.update(DOMAIN, \"my-role\", updateRole).subscribe(testObserver);\n\n    testObserver.assertError(RoleAlreadyExistsException.class);\n    testObserver.assertNotComplete();\n\n    verify(roleRepository, never()).create(any(Role.class));\n}",
+                "name": "shouldUpdate_uniquenessException",
+                "modifiers": "@Test\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    UpdateRole updateRole = Mockito.mock(UpdateRole.class);\n    when(updateRole.getName()).thenReturn(\"existing-role-name\");\n\n    Role role = new Role();\n    role.setId(\"existing-role-id\");\n    role.setName(\"existing-role-name\");\n\n    when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.just(new Role()));\n    when(roleRepository.findByDomain(DOMAIN)).thenReturn(Single.just(Collections.singleton(role)));\n\n    TestObserver testObserver = new TestObserver();\n    roleService.update(DOMAIN, \"my-role\", updateRole).subscribe(testObserver);\n\n    testObserver.assertError(RoleAlreadyExistsException.class);\n    testObserver.assertNotComplete();\n\n    verify(roleRepository, never()).create(any(Role.class));\n}",
+                "start_point": {
+                    "row": 223,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 242,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Test\npublic void shouldUpdate_roleNotFound() {\n    UpdateRole updateRole = Mockito.mock(UpdateRole.class);\n    when(updateRole.getName()).thenReturn(\"existing-role-name\");\n    when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.empty());\n\n    TestObserver testObserver = new TestObserver();\n    roleService.update(DOMAIN, \"my-role\", updateRole).subscribe(testObserver);\n\n    testObserver.assertError(RoleNotFoundException.class);\n    testObserver.assertNotComplete();\n\n    verify(roleRepository, never()).findByDomain(DOMAIN);\n    verify(roleRepository, never()).create(any(Role.class));\n}",
+                "name": "shouldUpdate_roleNotFound",
+                "modifiers": "@Test\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    UpdateRole updateRole = Mockito.mock(UpdateRole.class);\n    when(updateRole.getName()).thenReturn(\"existing-role-name\");\n    when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.empty());\n\n    TestObserver testObserver = new TestObserver();\n    roleService.update(DOMAIN, \"my-role\", updateRole).subscribe(testObserver);\n\n    testObserver.assertError(RoleNotFoundException.class);\n    testObserver.assertNotComplete();\n\n    verify(roleRepository, never()).findByDomain(DOMAIN);\n    verify(roleRepository, never()).create(any(Role.class));\n}",
+                "start_point": {
+                    "row": 244,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 258,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Test\npublic void shouldDelete_notExistingRole() {\n    when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.empty());\n\n    TestObserver testObserver = roleService.delete(\"my-role\").test();\n\n    testObserver.assertError(RoleNotFoundException.class);\n    testObserver.assertNotComplete();\n\n    verify(roleRepository, never()).delete(anyString());\n}",
+                "name": "shouldDelete_notExistingRole",
+                "modifiers": "@Test\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.empty());\n\n    TestObserver testObserver = roleService.delete(\"my-role\").test();\n\n    testObserver.assertError(RoleNotFoundException.class);\n    testObserver.assertNotComplete();\n\n    verify(roleRepository, never()).delete(anyString());\n}",
+                "start_point": {
+                    "row": 260,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 270,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Test\npublic void shouldDelete_technicalException() {\n    when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.just(new Role()));\n    when(roleRepository.delete(anyString())).thenReturn(Single.error(TechnicalException::new));\n\n    TestObserver testObserver = roleService.delete(\"my-role\").test();\n\n    testObserver.assertError(TechnicalManagementException.class);\n    testObserver.assertNotComplete();\n}",
+                "name": "shouldDelete_technicalException",
+                "modifiers": "@Test\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.just(new Role()));\n    when(roleRepository.delete(anyString())).thenReturn(Single.error(TechnicalException::new));\n\n    TestObserver testObserver = roleService.delete(\"my-role\").test();\n\n    testObserver.assertError(TechnicalManagementException.class);\n    testObserver.assertNotComplete();\n}",
+                "start_point": {
+                    "row": 272,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 281,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Test\npublic void shouldDelete() {\n    when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.just(new Role()));\n    when(roleRepository.delete(\"my-role\")).thenReturn(Single.just(Irrelevant.ROLE));\n\n    TestObserver testObserver = roleService.delete( \"my-role\").test();\n    testObserver.awaitTerminalEvent();\n\n    testObserver.assertComplete();\n    testObserver.assertNoErrors();\n\n    verify(roleRepository, times(1)).delete(\"my-role\");\n}",
+                "name": "shouldDelete",
+                "modifiers": "@Test\n    public",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    when(roleRepository.findById(\"my-role\")).thenReturn(Maybe.just(new Role()));\n    when(roleRepository.delete(\"my-role\")).thenReturn(Single.just(Irrelevant.ROLE));\n\n    TestObserver testObserver = roleService.delete( \"my-role\").test();\n    testObserver.awaitTerminalEvent();\n\n    testObserver.assertComplete();\n    testObserver.assertNoErrors();\n\n    verify(roleRepository, times(1)).delete(\"my-role\");\n}",
+                "start_point": {
+                    "row": 283,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 295,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            }
+        ],
+        "class_mode": "Modified"
+    }
+]

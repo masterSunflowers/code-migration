@@ -1,0 +1,266 @@
+[
+    {
+        "repo_name": "gravitee-io_graviteeio-access-management",
+        "commit": "0b18ada3207991cdfd70a551c56af125d2a0efe1",
+        "rev_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-admin/src/main/java/io/gravitee/am/management/handlers/admin/filter/OAuth2ClientAuthenticationFilter.java",
+        "definition": "public class OAuth2ClientAuthenticationFilter extends AbstractAuthenticationProcessingFilter {\n\n    private final Logger logger = LoggerFactory.getLogger(OAuth2ClientAuthenticationFilter.class);\n\n    /**\n     * Constant to use while setting identity provider used to authenticate a user\n     */\n    private static final String SOURCE = \"source\";\n    private static final String OAUTH2_IDENTIFIER = \"_oauth2_\";\n    private static final String PROVIDER_PARAMETER = \"provider\";\n    private static final String SAVED_REQUEST = \"GRAVITEEIO_AM_SAVED_REQUEST\";\n    private static final String errorPage = \"/oauth/error\";\n    private static final String REDIRECT_URI = \"redirect_uri\";\n\n    private AuthenticationEventPublisher authenticationEventPublisher;\n\n    @Autowired\n    private IdentityProviderManager identityProviderManager;\n\n    @Autowired\n    private JWTCookieGenerator jwtCookieGenerator;\n\n    public OAuth2ClientAuthenticationFilter(String defaultFilterProcessesUrl) {\n        super(defaultFilterProcessesUrl);\n        setAuthenticationManager(new NoopAuthenticationManager());\n        setAuthenticationFailureHandler(new SimpleUrlAuthenticationFailureHandler(errorPage));\n    }\n\n    @Override\n    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {\n        // get oauth2 provider\n        String providerId = request.getParameter(PROVIDER_PARAMETER);\n        AuthenticationProvider authenticationProvider = identityProviderManager.get(providerId);\n\n        if (authenticationProvider == null) {\n            throw new ProviderNotFoundException(\"OAuth2 Provider \" + providerId + \" not found\");\n        }\n\n        if (!(authenticationProvider instanceof OAuth2AuthenticationProvider)) {\n            throw new AuthenticationServiceException(\"OAuth2 Provider \" + providerId + \"is not social\");\n        }\n\n        String password = request.getParameter(((OAuth2AuthenticationProvider) authenticationProvider).configuration().getCodeParameter());\n        io.gravitee.am.identityprovider.api.Authentication provAuthentication = new EndUserAuthentication(OAUTH2_IDENTIFIER, password);\n        ((EndUserAuthentication) provAuthentication).setAdditionalInformation(Collections.singletonMap(REDIRECT_URI, buildRedirectUri(request)));\n        try {\n            User user = authenticationProvider.loadUserByUsername(provAuthentication);\n            if (user == null) {\n                logger.error(\"User is null, fail to authenticate user\");\n                throw new BadCredentialsException(\"User is null after authentication process\");\n            }\n\n            // set user identity provider source\n            Map<String, String> details = new LinkedHashMap<>();\n            details.put(SOURCE, providerId);\n            UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(user, provAuthentication.getCredentials(), AuthorityUtils.NO_AUTHORITIES);\n            usernamePasswordAuthenticationToken.setDetails(details);\n            return usernamePasswordAuthenticationToken;\n        } catch (Exception ex) {\n            logger.error(\"Unable to authenticate with oauth2 provider {}\", providerId, ex);\n            throw new BadCredentialsException(ex.getMessage(), ex);\n        }\n    }\n\n    @Override\n    protected final void successfulAuthentication(HttpServletRequest request,\n                                                  HttpServletResponse response, FilterChain chain, Authentication authResult)\n            throws IOException, ServletException {\n\n        if (logger.isDebugEnabled()) {\n            logger.debug(\"Authentication success. Updating SecurityContextHolder to contain: \"\n                    + authResult);\n        }\n\n        SecurityContextHolder.getContext().setAuthentication(authResult);\n\n        // Fire event\n        if (this.authenticationEventPublisher != null) {\n            authenticationEventPublisher.publishAuthenticationSuccess(authResult);\n        }\n\n        // store jwt authentication cookie to secure management restricted operations\n        Cookie jwtAuthenticationCookie = createJWTAuthenticationCookie(authResult);\n        response.addCookie(jwtAuthenticationCookie);\n\n        // Store the saved HTTP request itself. Used by LoginController (login/callback method)\n        // for redirection after successful authentication\n        SavedRequest savedRequest = new HttpSessionRequestCache().getRequest(request, response);\n        if (savedRequest != null && request.getSession(false) != null) {\n            request.getSession(false).setAttribute(SAVED_REQUEST, savedRequest);\n        }\n\n        chain.doFilter(request, response);\n    }\n\n    @Override\n    public void setApplicationEventPublisher(ApplicationEventPublisher eventPublisher) {\n        super.setApplicationEventPublisher(eventPublisher);\n        this.authenticationEventPublisher = new DefaultAuthenticationEventPublisher(eventPublisher);\n    }\n\n    @Override\n    protected boolean requiresAuthentication(HttpServletRequest request, HttpServletResponse response) {\n        return super.requiresAuthentication(request, response) && !authenticated() && request.getParameter(PROVIDER_PARAMETER) != null;\n    }\n\n    private Cookie createJWTAuthenticationCookie(Authentication authentication) {\n        final User principal = (User) authentication.getPrincipal();\n        return jwtCookieGenerator.generate(principal);\n    }\n\n    /**\n     * Determines if a user is already authenticated.\n     * @return\n     */\n    private boolean authenticated() {\n        Authentication authentication = SecurityContextHolder.getContext()\n                .getAuthentication();\n        return authentication != null && authentication.isAuthenticated()\n                && !(authentication instanceof AnonymousAuthenticationToken);\n    }\n\n    private String buildRedirectUri(HttpServletRequest request) {\n        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(request.getRequestURL().toString());\n        // append provider query param to avoid redirect mismatch exception\n        builder.queryParam(\"provider\", request.getParameter(\"provider\"));\n\n        return builder.build(false).toUriString();\n    }\n\n\n    private static class NoopAuthenticationManager implements AuthenticationManager {\n\n        @Override\n        public Authentication authenticate(Authentication authentication)\n                throws AuthenticationException {\n            throw new UnsupportedOperationException(\"No authentication should be done with this AuthenticationManager\");\n        }\n\n    }\n\n}",
+        "package": "package io.gravitee.am.management.handlers.admin.filter;",
+        "tree_path": "OAuth2ClientAuthenticationFilter",
+        "name": "OAuth2ClientAuthenticationFilter",
+        "modifiers": "public",
+        "superclass": "extends AbstractAuthenticationProcessingFilter",
+        "super_interfaces": null,
+        "body": "{\n\n    private final Logger logger = LoggerFactory.getLogger(OAuth2ClientAuthenticationFilter.class);\n\n    /**\n     * Constant to use while setting identity provider used to authenticate a user\n     */\n    private static final String SOURCE = \"source\";\n    private static final String OAUTH2_IDENTIFIER = \"_oauth2_\";\n    private static final String PROVIDER_PARAMETER = \"provider\";\n    private static final String SAVED_REQUEST = \"GRAVITEEIO_AM_SAVED_REQUEST\";\n    private static final String errorPage = \"/oauth/error\";\n    private static final String REDIRECT_URI = \"redirect_uri\";\n\n    private AuthenticationEventPublisher authenticationEventPublisher;\n\n    @Autowired\n    private IdentityProviderManager identityProviderManager;\n\n    @Autowired\n    private JWTCookieGenerator jwtCookieGenerator;\n\n    public OAuth2ClientAuthenticationFilter(String defaultFilterProcessesUrl) {\n        super(defaultFilterProcessesUrl);\n        setAuthenticationManager(new NoopAuthenticationManager());\n        setAuthenticationFailureHandler(new SimpleUrlAuthenticationFailureHandler(errorPage));\n    }\n\n    @Override\n    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {\n        // get oauth2 provider\n        String providerId = request.getParameter(PROVIDER_PARAMETER);\n        AuthenticationProvider authenticationProvider = identityProviderManager.get(providerId);\n\n        if (authenticationProvider == null) {\n            throw new ProviderNotFoundException(\"OAuth2 Provider \" + providerId + \" not found\");\n        }\n\n        if (!(authenticationProvider instanceof OAuth2AuthenticationProvider)) {\n            throw new AuthenticationServiceException(\"OAuth2 Provider \" + providerId + \"is not social\");\n        }\n\n        String password = request.getParameter(((OAuth2AuthenticationProvider) authenticationProvider).configuration().getCodeParameter());\n        io.gravitee.am.identityprovider.api.Authentication provAuthentication = new EndUserAuthentication(OAUTH2_IDENTIFIER, password);\n        ((EndUserAuthentication) provAuthentication).setAdditionalInformation(Collections.singletonMap(REDIRECT_URI, buildRedirectUri(request)));\n        try {\n            User user = authenticationProvider.loadUserByUsername(provAuthentication);\n            if (user == null) {\n                logger.error(\"User is null, fail to authenticate user\");\n                throw new BadCredentialsException(\"User is null after authentication process\");\n            }\n\n            // set user identity provider source\n            Map<String, String> details = new LinkedHashMap<>();\n            details.put(SOURCE, providerId);\n            UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(user, provAuthentication.getCredentials(), AuthorityUtils.NO_AUTHORITIES);\n            usernamePasswordAuthenticationToken.setDetails(details);\n            return usernamePasswordAuthenticationToken;\n        } catch (Exception ex) {\n            logger.error(\"Unable to authenticate with oauth2 provider {}\", providerId, ex);\n            throw new BadCredentialsException(ex.getMessage(), ex);\n        }\n    }\n\n    @Override\n    protected final void successfulAuthentication(HttpServletRequest request,\n                                                  HttpServletResponse response, FilterChain chain, Authentication authResult)\n            throws IOException, ServletException {\n\n        if (logger.isDebugEnabled()) {\n            logger.debug(\"Authentication success. Updating SecurityContextHolder to contain: \"\n                    + authResult);\n        }\n\n        SecurityContextHolder.getContext().setAuthentication(authResult);\n\n        // Fire event\n        if (this.authenticationEventPublisher != null) {\n            authenticationEventPublisher.publishAuthenticationSuccess(authResult);\n        }\n\n        // store jwt authentication cookie to secure management restricted operations\n        Cookie jwtAuthenticationCookie = createJWTAuthenticationCookie(authResult);\n        response.addCookie(jwtAuthenticationCookie);\n\n        // Store the saved HTTP request itself. Used by LoginController (login/callback method)\n        // for redirection after successful authentication\n        SavedRequest savedRequest = new HttpSessionRequestCache().getRequest(request, response);\n        if (savedRequest != null && request.getSession(false) != null) {\n            request.getSession(false).setAttribute(SAVED_REQUEST, savedRequest);\n        }\n\n        chain.doFilter(request, response);\n    }\n\n    @Override\n    public void setApplicationEventPublisher(ApplicationEventPublisher eventPublisher) {\n        super.setApplicationEventPublisher(eventPublisher);\n        this.authenticationEventPublisher = new DefaultAuthenticationEventPublisher(eventPublisher);\n    }\n\n    @Override\n    protected boolean requiresAuthentication(HttpServletRequest request, HttpServletResponse response) {\n        return super.requiresAuthentication(request, response) && !authenticated() && request.getParameter(PROVIDER_PARAMETER) != null;\n    }\n\n    private Cookie createJWTAuthenticationCookie(Authentication authentication) {\n        final User principal = (User) authentication.getPrincipal();\n        return jwtCookieGenerator.generate(principal);\n    }\n\n    /**\n     * Determines if a user is already authenticated.\n     * @return\n     */\n    private boolean authenticated() {\n        Authentication authentication = SecurityContextHolder.getContext()\n                .getAuthentication();\n        return authentication != null && authentication.isAuthenticated()\n                && !(authentication instanceof AnonymousAuthenticationToken);\n    }\n\n    private String buildRedirectUri(HttpServletRequest request) {\n        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(request.getRequestURL().toString());\n        // append provider query param to avoid redirect mismatch exception\n        builder.queryParam(\"provider\", request.getParameter(\"provider\"));\n\n        return builder.build(false).toUriString();\n    }\n\n\n    private static class NoopAuthenticationManager implements AuthenticationManager {\n\n        @Override\n        public Authentication authenticate(Authentication authentication)\n                throws AuthenticationException {\n            throw new UnsupportedOperationException(\"No authentication should be done with this AuthenticationManager\");\n        }\n\n    }\n\n}",
+        "start_point": {
+            "row": 52,
+            "column": 0
+        },
+        "end_point": {
+            "row": 193,
+            "column": 1
+        },
+        "file_mode": "Renamed-Modified",
+        "map_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-oauth2/src/main/java/io/gravitee/am/management/handlers/oauth2/filter/OAuth2ClientAuthenticationFilter.java",
+        "methods": [
+            {
+                "definition": "public OAuth2ClientAuthenticationFilter(String defaultFilterProcessesUrl) {\n    super(defaultFilterProcessesUrl);\n    setAuthenticationManager(new NoopAuthenticationManager());\n    setAuthenticationFailureHandler(new SimpleUrlAuthenticationFailureHandler(errorPage));\n}",
+                "name": "OAuth2ClientAuthenticationFilter",
+                "modifiers": "public",
+                "parameters": [
+                    {
+                        "type": "String",
+                        "name": "defaultFilterProcessesUrl"
+                    }
+                ],
+                "body": "{\n    super(defaultFilterProcessesUrl);\n    setAuthenticationManager(new NoopAuthenticationManager());\n    setAuthenticationFailureHandler(new SimpleUrlAuthenticationFailureHandler(errorPage));\n}",
+                "constructor": true,
+                "start_point": {
+                    "row": 74,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 78,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\npublic Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {\n    // get oauth2 provider\n    String providerId = request.getParameter(PROVIDER_PARAMETER);\n    AuthenticationProvider authenticationProvider = identityProviderManager.get(providerId);\n\n    if (authenticationProvider == null) {\n        throw new ProviderNotFoundException(\"OAuth2 Provider \" + providerId + \" not found\");\n    }\n\n    if (!(authenticationProvider instanceof OAuth2AuthenticationProvider)) {\n        throw new AuthenticationServiceException(\"OAuth2 Provider \" + providerId + \"is not social\");\n    }\n\n    String password = request.getParameter(((OAuth2AuthenticationProvider) authenticationProvider).configuration().getCodeParameter());\n    io.gravitee.am.identityprovider.api.Authentication provAuthentication = new EndUserAuthentication(OAUTH2_IDENTIFIER, password);\n    ((EndUserAuthentication) provAuthentication).setAdditionalInformation(Collections.singletonMap(REDIRECT_URI, buildRedirectUri(request)));\n    try {\n        User user = authenticationProvider.loadUserByUsername(provAuthentication);\n        if (user == null) {\n            logger.error(\"User is null, fail to authenticate user\");\n            throw new BadCredentialsException(\"User is null after authentication process\");\n        }\n\n        // set user identity provider source\n        Map<String, String> details = new LinkedHashMap<>();\n        details.put(SOURCE, providerId);\n        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(user, provAuthentication.getCredentials(), AuthorityUtils.NO_AUTHORITIES);\n        usernamePasswordAuthenticationToken.setDetails(details);\n        return usernamePasswordAuthenticationToken;\n    } catch (Exception ex) {\n        logger.error(\"Unable to authenticate with oauth2 provider {}\", providerId, ex);\n        throw new BadCredentialsException(ex.getMessage(), ex);\n    }\n}",
+                "name": "attemptAuthentication",
+                "modifiers": "@Override\n    public",
+                "return_type": "Authentication",
+                "parameters": [
+                    {
+                        "type": "HttpServletRequest",
+                        "name": "request"
+                    },
+                    {
+                        "type": "HttpServletResponse",
+                        "name": "response"
+                    }
+                ],
+                "body": "{\n    // get oauth2 provider\n    String providerId = request.getParameter(PROVIDER_PARAMETER);\n    AuthenticationProvider authenticationProvider = identityProviderManager.get(providerId);\n\n    if (authenticationProvider == null) {\n        throw new ProviderNotFoundException(\"OAuth2 Provider \" + providerId + \" not found\");\n    }\n\n    if (!(authenticationProvider instanceof OAuth2AuthenticationProvider)) {\n        throw new AuthenticationServiceException(\"OAuth2 Provider \" + providerId + \"is not social\");\n    }\n\n    String password = request.getParameter(((OAuth2AuthenticationProvider) authenticationProvider).configuration().getCodeParameter());\n    io.gravitee.am.identityprovider.api.Authentication provAuthentication = new EndUserAuthentication(OAUTH2_IDENTIFIER, password);\n    ((EndUserAuthentication) provAuthentication).setAdditionalInformation(Collections.singletonMap(REDIRECT_URI, buildRedirectUri(request)));\n    try {\n        User user = authenticationProvider.loadUserByUsername(provAuthentication);\n        if (user == null) {\n            logger.error(\"User is null, fail to authenticate user\");\n            throw new BadCredentialsException(\"User is null after authentication process\");\n        }\n\n        // set user identity provider source\n        Map<String, String> details = new LinkedHashMap<>();\n        details.put(SOURCE, providerId);\n        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(user, provAuthentication.getCredentials(), AuthorityUtils.NO_AUTHORITIES);\n        usernamePasswordAuthenticationToken.setDetails(details);\n        return usernamePasswordAuthenticationToken;\n    } catch (Exception ex) {\n        logger.error(\"Unable to authenticate with oauth2 provider {}\", providerId, ex);\n        throw new BadCredentialsException(ex.getMessage(), ex);\n    }\n}",
+                "start_point": {
+                    "row": 80,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 114,
+                    "column": 5
+                },
+                "method_mode": "Modified"
+            },
+            {
+                "definition": "@Override\nprotected final void successfulAuthentication(HttpServletRequest request,\n                                              HttpServletResponse response, FilterChain chain, Authentication authResult)\n        throws IOException, ServletException {\n\n    if (logger.isDebugEnabled()) {\n        logger.debug(\"Authentication success. Updating SecurityContextHolder to contain: \"\n                + authResult);\n    }\n\n    SecurityContextHolder.getContext().setAuthentication(authResult);\n\n    // Fire event\n    if (this.authenticationEventPublisher != null) {\n        authenticationEventPublisher.publishAuthenticationSuccess(authResult);\n    }\n\n    // store jwt authentication cookie to secure management restricted operations\n    Cookie jwtAuthenticationCookie = createJWTAuthenticationCookie(authResult);\n    response.addCookie(jwtAuthenticationCookie);\n\n    // Store the saved HTTP request itself. Used by LoginController (login/callback method)\n    // for redirection after successful authentication\n    SavedRequest savedRequest = new HttpSessionRequestCache().getRequest(request, response);\n    if (savedRequest != null && request.getSession(false) != null) {\n        request.getSession(false).setAttribute(SAVED_REQUEST, savedRequest);\n    }\n\n    chain.doFilter(request, response);\n}",
+                "name": "successfulAuthentication",
+                "modifiers": "@Override\n    protected final",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "HttpServletRequest",
+                        "name": "request"
+                    },
+                    {
+                        "type": "HttpServletResponse",
+                        "name": "response"
+                    },
+                    {
+                        "type": "FilterChain",
+                        "name": "chain"
+                    },
+                    {
+                        "type": "Authentication",
+                        "name": "authResult"
+                    }
+                ],
+                "body": "{\n\n    if (logger.isDebugEnabled()) {\n        logger.debug(\"Authentication success. Updating SecurityContextHolder to contain: \"\n                + authResult);\n    }\n\n    SecurityContextHolder.getContext().setAuthentication(authResult);\n\n    // Fire event\n    if (this.authenticationEventPublisher != null) {\n        authenticationEventPublisher.publishAuthenticationSuccess(authResult);\n    }\n\n    // store jwt authentication cookie to secure management restricted operations\n    Cookie jwtAuthenticationCookie = createJWTAuthenticationCookie(authResult);\n    response.addCookie(jwtAuthenticationCookie);\n\n    // Store the saved HTTP request itself. Used by LoginController (login/callback method)\n    // for redirection after successful authentication\n    SavedRequest savedRequest = new HttpSessionRequestCache().getRequest(request, response);\n    if (savedRequest != null && request.getSession(false) != null) {\n        request.getSession(false).setAttribute(SAVED_REQUEST, savedRequest);\n    }\n\n    chain.doFilter(request, response);\n}",
+                "start_point": {
+                    "row": 116,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 145,
+                    "column": 5
+                },
+                "method_mode": "Modified"
+            },
+            {
+                "definition": "@Override\npublic void setApplicationEventPublisher(ApplicationEventPublisher eventPublisher) {\n    super.setApplicationEventPublisher(eventPublisher);\n    this.authenticationEventPublisher = new DefaultAuthenticationEventPublisher(eventPublisher);\n}",
+                "name": "setApplicationEventPublisher",
+                "modifiers": "@Override\n    public",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "ApplicationEventPublisher",
+                        "name": "eventPublisher"
+                    }
+                ],
+                "body": "{\n    super.setApplicationEventPublisher(eventPublisher);\n    this.authenticationEventPublisher = new DefaultAuthenticationEventPublisher(eventPublisher);\n}",
+                "start_point": {
+                    "row": 147,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 151,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "@Override\nprotected boolean requiresAuthentication(HttpServletRequest request, HttpServletResponse response) {\n    return super.requiresAuthentication(request, response) && !authenticated() && request.getParameter(PROVIDER_PARAMETER) != null;\n}",
+                "name": "requiresAuthentication",
+                "modifiers": "@Override\n    protected",
+                "return_type": null,
+                "parameters": [
+                    {
+                        "type": "HttpServletRequest",
+                        "name": "request"
+                    },
+                    {
+                        "type": "HttpServletResponse",
+                        "name": "response"
+                    }
+                ],
+                "body": "{\n    return super.requiresAuthentication(request, response) && !authenticated() && request.getParameter(PROVIDER_PARAMETER) != null;\n}",
+                "start_point": {
+                    "row": 153,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 156,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "private Cookie createJWTAuthenticationCookie(Authentication authentication) {\n    final User principal = (User) authentication.getPrincipal();\n    return jwtCookieGenerator.generate(principal);\n}",
+                "name": "createJWTAuthenticationCookie",
+                "modifiers": "private",
+                "return_type": "Cookie",
+                "parameters": [
+                    {
+                        "type": "Authentication",
+                        "name": "authentication"
+                    }
+                ],
+                "body": "{\n    final User principal = (User) authentication.getPrincipal();\n    return jwtCookieGenerator.generate(principal);\n}",
+                "start_point": {
+                    "row": 158,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 161,
+                    "column": 5
+                },
+                "method_mode": "Added"
+            },
+            {
+                "definition": "private boolean authenticated() {\n    Authentication authentication = SecurityContextHolder.getContext()\n            .getAuthentication();\n    return authentication != null && authentication.isAuthenticated()\n            && !(authentication instanceof AnonymousAuthenticationToken);\n}",
+                "name": "authenticated",
+                "modifiers": "private",
+                "return_type": null,
+                "parameters": [],
+                "body": "{\n    Authentication authentication = SecurityContextHolder.getContext()\n            .getAuthentication();\n    return authentication != null && authentication.isAuthenticated()\n            && !(authentication instanceof AnonymousAuthenticationToken);\n}",
+                "start_point": {
+                    "row": 167,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 172,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            },
+            {
+                "definition": "private String buildRedirectUri(HttpServletRequest request) {\n    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(request.getRequestURL().toString());\n    // append provider query param to avoid redirect mismatch exception\n    builder.queryParam(\"provider\", request.getParameter(\"provider\"));\n\n    return builder.build(false).toUriString();\n}",
+                "name": "buildRedirectUri",
+                "modifiers": "private",
+                "return_type": "String",
+                "parameters": [
+                    {
+                        "type": "HttpServletRequest",
+                        "name": "request"
+                    }
+                ],
+                "body": "{\n    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(request.getRequestURL().toString());\n    // append provider query param to avoid redirect mismatch exception\n    builder.queryParam(\"provider\", request.getParameter(\"provider\"));\n\n    return builder.build(false).toUriString();\n}",
+                "start_point": {
+                    "row": 174,
+                    "column": 4
+                },
+                "end_point": {
+                    "row": 180,
+                    "column": 5
+                },
+                "method_mode": "Unchanged"
+            }
+        ],
+        "class_mode": "Modified"
+    },
+    {
+        "repo_name": "gravitee-io_graviteeio-access-management",
+        "commit": "0b18ada3207991cdfd70a551c56af125d2a0efe1",
+        "rev_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-admin/src/main/java/io/gravitee/am/management/handlers/admin/filter/OAuth2ClientAuthenticationFilter.java",
+        "definition": "private static class NoopAuthenticationManager implements AuthenticationManager {\n\n    @Override\n    public Authentication authenticate(Authentication authentication)\n            throws AuthenticationException {\n        throw new UnsupportedOperationException(\"No authentication should be done with this AuthenticationManager\");\n    }\n\n}",
+        "package": "package io.gravitee.am.management.handlers.admin.filter;",
+        "tree_path": "OAuth2ClientAuthenticationFilter.NoopAuthenticationManager",
+        "name": "NoopAuthenticationManager",
+        "modifiers": "private static",
+        "superclass": null,
+        "super_interfaces": "implements AuthenticationManager",
+        "body": "{\n\n    @Override\n    public Authentication authenticate(Authentication authentication)\n            throws AuthenticationException {\n        throw new UnsupportedOperationException(\"No authentication should be done with this AuthenticationManager\");\n    }\n\n}",
+        "start_point": {
+            "row": 183,
+            "column": 4
+        },
+        "end_point": {
+            "row": 191,
+            "column": 5
+        },
+        "file_mode": "Renamed-Modified",
+        "map_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-oauth2/src/main/java/io/gravitee/am/management/handlers/oauth2/filter/OAuth2ClientAuthenticationFilter.java",
+        "methods": [
+            {
+                "definition": "@Override\npublic Authentication authenticate(Authentication authentication)\n        throws AuthenticationException {\n    throw new UnsupportedOperationException(\"No authentication should be done with this AuthenticationManager\");\n}",
+                "name": "authenticate",
+                "modifiers": "@Override\n        public",
+                "return_type": "Authentication",
+                "parameters": [
+                    {
+                        "type": "Authentication",
+                        "name": "authentication"
+                    }
+                ],
+                "body": "{\n    throw new UnsupportedOperationException(\"No authentication should be done with this AuthenticationManager\");\n}",
+                "start_point": {
+                    "row": 185,
+                    "column": 8
+                },
+                "end_point": {
+                    "row": 189,
+                    "column": 9
+                }
+            }
+        ],
+        "class_mode": "Unchanged"
+    }
+]

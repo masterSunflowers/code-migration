@@ -1,5 +1,7 @@
 [
     {
+        "repo_name": "gravitee-io_graviteeio-access-management",
+        "commit": "0b18ada3207991cdfd70a551c56af125d2a0efe1",
         "rev_path": "gravitee-am-management-api/gravitee-am-management-api-handlers/gravitee-am-management-api-handlers-admin/src/main/java/io/gravitee/am/management/handlers/admin/context/AdminDomainBeanFactoryPostProcessor.java",
         "definition": "class AdminDomainBeanFactoryPostProcessor implements BeanFactoryPostProcessor {\n\n    private final Domain domain;\n\n    AdminDomainBeanFactoryPostProcessor(Domain domain) {\n        this.domain = domain;\n    }\n\n    @Override\n    public void postProcessBeanFactory(ConfigurableListableBeanFactory configurableListableBeanFactory) throws BeansException {\n        DefaultListableBeanFactory beanFactory = (DefaultListableBeanFactory) configurableListableBeanFactory;\n        beanFactory.registerSingleton(\"domain\", domain);\n    }\n}",
         "package": "package io.gravitee.am.management.handlers.admin.context;",
