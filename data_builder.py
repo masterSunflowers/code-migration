@@ -64,9 +64,8 @@ def main(args):
     # df.to_csv(args.output, index=False)
 
     # Get diff file name
-
     lst_diff_file = get_diff_file_name(
-        df["repoName"], df["startCommit"], df["prev_commit"], args.repo_storage
+        df["repoName"], df["endCommit"], df["prev_commit"], args.repo_storage
     )
     df["diff_files"] = lst_diff_file
     df.to_csv(args.output, index=False)
@@ -74,8 +73,8 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input", dest="input", type=str, required=True)
-    parser.add_argument("--output", dest="output", type=str, required=True)
-    parser.add_argument("--repo-storage", dest="repo_storage", type=str, required=True)
+    parser.add_argument("-i", "--input", dest="input", type=str, required=True)
+    parser.add_argument("-o", "--output", dest="output", type=str, required=True)
+    parser.add_argument("-r", "--repo-storage", dest="repo_storage", type=str, required=True)
     args = parser.parse_args()
     main(args)
