@@ -1,0 +1,677 @@
+id,fromLib,toLib,repoName,fileName,startCommit,endCommit,startCommitChanges,endCommitChanges,startCommitMessage,endCommitMessage,startCommitTime,endCommitTime,Category,repoOwner,repoSplitName,start_end_commit,repo_start_end_commit
+7989,org.codehaus.jackson:jackson-jaxrs,com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider,apache_syncope,core/pom.xml,6cd08210d786af216a216e88e2f8dfaca06b9cfa,6cd08210d786af216a216e88e2f8dfaca06b9cfa,"+com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider
+-org.codehaus.jackson:jackson-jaxrs","+com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider
+-org.codehaus.jackson:jackson-jaxrs","Upgrading commons-lang and jackson to most updated versions + executing JAX-RS core tests with XML format waiting for some problems on CXF to get solved (and revert to JSON)
+
+git-svn-id: https://svn.apache.org/repos/asf/syncope/trunk@1504477 13f79535-47bb-0310-9956-ffa450edef68
+","Upgrading commons-lang and jackson to most updated versions + executing JAX-RS core tests with XML format waiting for some problems on CXF to get solved (and revert to JSON)
+
+git-svn-id: https://svn.apache.org/repos/asf/syncope/trunk@1504477 13f79535-47bb-0310-9956-ffa450edef68
+",2013-07-18,2013-07-18,12,apache,syncope,6cd08210d786af216a216e88e2f8dfaca06b9cfa__6cd08210d786af216a216e88e2f8dfaca06b9cfa,apache_syncope__6cd08210d786af216a216e88e2f8dfaca06b9cfa__6cd08210d786af216a216e88e2f8dfaca06b9cfa
+9649,org.hamcrest:hamcrest-all,org.hamcrest:java-hamcrest,apache_storm,external/storm-elasticsearch/pom.xml,3503dcea62c9bb9d004388773705ad362e7cc5dd,3503dcea62c9bb9d004388773705ad362e7cc5dd,"+org.mockito:mockito-core
++org.hamcrest:java-hamcrest
+-org.mockito:mockito-all
+-org.hamcrest:hamcrest-all","+org.mockito:mockito-core
++org.hamcrest:java-hamcrest
+-org.mockito:mockito-all
+-org.hamcrest:hamcrest-all","STORM-2698: Upgrade Mockito and Hamcrest to latest versions
+","STORM-2698: Upgrade Mockito and Hamcrest to latest versions
+",2017-10-09,2017-10-09,29,apache,storm,3503dcea62c9bb9d004388773705ad362e7cc5dd__3503dcea62c9bb9d004388773705ad362e7cc5dd,apache_storm__3503dcea62c9bb9d004388773705ad362e7cc5dd__3503dcea62c9bb9d004388773705ad362e7cc5dd
+10237,org.json:json,com.alibaba:fastjson,apache_incubator-iotdb,tsfile/pom.xml,f46aeb17e5b8734eb4887f7940b2d1eb1ca06cff,f46aeb17e5b8734eb4887f7940b2d1eb1ca06cff,"+com.alibaba:fastjson
+-org.json:json","+com.alibaba:fastjson
+-org.json:json","replace org.json by alibaba.fastjson
+","replace org.json by alibaba.fastjson
+",2019-03-13,2019-03-13,12,apache,incubator-iotdb,f46aeb17e5b8734eb4887f7940b2d1eb1ca06cff__f46aeb17e5b8734eb4887f7940b2d1eb1ca06cff,apache_incubator-iotdb__f46aeb17e5b8734eb4887f7940b2d1eb1ca06cff__f46aeb17e5b8734eb4887f7940b2d1eb1ca06cff
+7828,org.codehaus.jackson:jackson-jaxrs,com.fasterxml.jackson.core:jackson-annotations,SeqWare_seqware,pom.xml,289947f7719911a70d398c3df5a07906fc667bf3,289947f7719911a70d398c3df5a07906fc667bf3,"+org.apache.commons:commons-compress
++com.fasterxml.jackson.dataformat:jackson-dataformat-yaml
++com.google.code.findbugs:jsr305
++org.yaml:snakeyaml
++asm:asm
++com.fasterxml.jackson.core:jackson-core
++org.raml:raml-parser
++com.fasterxml.jackson.core:jackson-databind
++commons-collections:commons-collections
++commons-digester:commons-digester
++com.fasterxml.jackson.core:jackson-annotations
+-ch.enterag:zip64
+-org.codehaus.jackson:jackson-xc
+-org.codehaus.jackson:jackson-jaxrs","+org.apache.commons:commons-compress
++com.fasterxml.jackson.dataformat:jackson-dataformat-yaml
++com.google.code.findbugs:jsr305
++org.yaml:snakeyaml
++asm:asm
++com.fasterxml.jackson.core:jackson-core
++org.raml:raml-parser
++com.fasterxml.jackson.core:jackson-databind
++commons-collections:commons-collections
++commons-digester:commons-digester
++com.fasterxml.jackson.core:jackson-annotations
+-ch.enterag:zip64
+-org.codehaus.jackson:jackson-xc
+-org.codehaus.jackson:jackson-jaxrs","Feature/update more dependencies (#342)
+
+* Restlet 2.3.7, AWS, jersey Jackson update
+* org.codehaus.jackson still used by some dependencies instead of com.fasterxml.jackson
+* Make zip64 library more standard by using commons-compress instead of odd rare library
+* can now use standard Linux tools like unzip to view bundles
+* New tools are still compatible with old bundles
+","Feature/update more dependencies (#342)
+
+* Restlet 2.3.7, AWS, jersey Jackson update
+* org.codehaus.jackson still used by some dependencies instead of com.fasterxml.jackson
+* Make zip64 library more standard by using commons-compress instead of odd rare library
+* can now use standard Linux tools like unzip to view bundles
+* New tools are still compatible with old bundles
+",2016-07-15,2016-07-15,12,SeqWare,seqware,289947f7719911a70d398c3df5a07906fc667bf3__289947f7719911a70d398c3df5a07906fc667bf3,SeqWare_seqware__289947f7719911a70d398c3df5a07906fc667bf3__289947f7719911a70d398c3df5a07906fc667bf3
+6660,org.apache.commons:commons-io,commons-io:commons-io,appfuse_appfuse,archetypes/appfuse-modular-gwt/src/web/pom.xml,e6157cf6dcdc46521b8b1d640678a2ec901462a2,e6157cf6dcdc46521b8b1d640678a2ec901462a2,"+commons-io:commons-io
+-org.apache.commons:commons-io","+commons-io:commons-io
+-org.apache.commons:commons-io","WIP: review pom dependencies and versiones from upstream
+","WIP: review pom dependencies and versiones from upstream
+",2013-12-13,2013-12-13,0,appfuse,appfuse,e6157cf6dcdc46521b8b1d640678a2ec901462a2__e6157cf6dcdc46521b8b1d640678a2ec901462a2,appfuse_appfuse__e6157cf6dcdc46521b8b1d640678a2ec901462a2__e6157cf6dcdc46521b8b1d640678a2ec901462a2
+11270,org.powermock:powermock-module-junit4,org.mockito:mockito-core,apache_camel,components/camel-bonita/pom.xml,1e9f3ed611a758ffd49be254f7bf38d15ec7c738,1e9f3ed611a758ffd49be254f7bf38d15ec7c738,"+org.mockito:mockito-core
+-org.powermock:powermock-api-mockito
+-org.powermock:powermock-module-junit4","+org.mockito:mockito-core
+-org.powermock:powermock-api-mockito
+-org.powermock:powermock-module-junit4","CAMEL-11845: Migrated camel-bonita from powermock to mockito
+","CAMEL-11845: Migrated camel-bonita from powermock to mockito
+",2017-09-27,2017-09-27,29,apache,camel,1e9f3ed611a758ffd49be254f7bf38d15ec7c738__1e9f3ed611a758ffd49be254f7bf38d15ec7c738,apache_camel__1e9f3ed611a758ffd49be254f7bf38d15ec7c738__1e9f3ed611a758ffd49be254f7bf38d15ec7c738
+5600,log4j:log4j,commons-logging:commons-logging-api,apache_camel,camel-core/pom.xml,05c872497215f7f1b87d75f7087a703f80eeedfc,05c872497215f7f1b87d75f7087a703f80eeedfc,"+commons-logging:commons-logging-api
+-commons-logging:commons-logging
+-log4j:log4j","+commons-logging:commons-logging-api
+-commons-logging:commons-logging
+-log4j:log4j","some pom optimisations to switch to commons-logging-api to reduce dependency clutter
+
+git-svn-id: https://svn.apache.org/repos/asf/activemq/camel/trunk@530025 13f79535-47bb-0310-9956-ffa450edef68
+","some pom optimisations to switch to commons-logging-api to reduce dependency clutter
+
+git-svn-id: https://svn.apache.org/repos/asf/activemq/camel/trunk@530025 13f79535-47bb-0310-9956-ffa450edef68
+",2007-04-18,2007-04-18,11,apache,camel,05c872497215f7f1b87d75f7087a703f80eeedfc__05c872497215f7f1b87d75f7087a703f80eeedfc,apache_camel__05c872497215f7f1b87d75f7087a703f80eeedfc__05c872497215f7f1b87d75f7087a703f80eeedfc
+2840,commons-logging:commons-logging,org.slf4j:slf4j-log4j12,emmanuelbernard_hibernate-core-ogm,testsuite/pom.xml,f0755725c91b67f6cb86c97c23aa7e0b30d03d8d,f0755725c91b67f6cb86c97c23aa7e0b30d03d8d,"+com.ibm:db2jcc
++org.slf4j:slf4j-log4j12
++com.ibm:db2jcc_license_cu
+-commons-logging:commons-logging
+-junit:junit
+-com.ibm:ojdbc14","+com.ibm:db2jcc
++org.slf4j:slf4j-log4j12
++com.ibm:db2jcc_license_cu
+-commons-logging:commons-logging
+-junit:junit
+-com.ibm:ojdbc14","HHH-2704 : migrate to maven (testsuite)
+HHH-2696 : migrate to slf4j
+
+git-svn-id: https://svn.jboss.org/repos/hibernate/core/trunk@12891 1b8cb986-b30d-0410-93ca-fae66ebed9b2
+","HHH-2704 : migrate to maven (testsuite)
+HHH-2696 : migrate to slf4j
+
+git-svn-id: https://svn.jboss.org/repos/hibernate/core/trunk@12891 1b8cb986-b30d-0410-93ca-fae66ebed9b2
+",2007-08-03,2007-08-03,11,emmanuelbernard,hibernate-core-ogm,f0755725c91b67f6cb86c97c23aa7e0b30d03d8d__f0755725c91b67f6cb86c97c23aa7e0b30d03d8d,emmanuelbernard_hibernate-core-ogm__f0755725c91b67f6cb86c97c23aa7e0b30d03d8d__f0755725c91b67f6cb86c97c23aa7e0b30d03d8d
+12987,org.slf4j:slf4j-log4j12,org.apache.logging.log4j:log4j-core,Flipkart_phantom,dashboard/pom.xml,1fdac2a76bbd0cd5757adcbdccb9bf975f92baac,1fdac2a76bbd0cd5757adcbdccb9bf975f92baac,"+org.apache.logging.log4j:log4j-1.2-api
++org.apache.logging.log4j:log4j-api
++org.apache.logging.log4j:log4j-slf4j-impl
++org.apache.logging.log4j:log4j-core
+-org.slf4j:jcl-over-slf4j
+-org.slf4j:slf4j-api
+-org.slf4j:slf4j-log4j12","+org.apache.logging.log4j:log4j-1.2-api
++org.apache.logging.log4j:log4j-api
++org.apache.logging.log4j:log4j-slf4j-impl
++org.apache.logging.log4j:log4j-core
+-org.slf4j:jcl-over-slf4j
+-org.slf4j:slf4j-api
+-org.slf4j:slf4j-log4j12",Changes to move to Trooper 2.0.0 and replace logback with log4j2,Changes to move to Trooper 2.0.0 and replace logback with log4j2,2016-05-23,2016-05-23,11,Flipkart,phantom,1fdac2a76bbd0cd5757adcbdccb9bf975f92baac__1fdac2a76bbd0cd5757adcbdccb9bf975f92baac,Flipkart_phantom__1fdac2a76bbd0cd5757adcbdccb9bf975f92baac__1fdac2a76bbd0cd5757adcbdccb9bf975f92baac
+2215,commons-lang:commons-lang,org.apache.commons:commons-lang3,jbehave_jbehave-core,jbehave-core/pom.xml,674ad3cdb9b7f40f95d855b0f48d084c72a977b5,674ad3cdb9b7f40f95d855b0f48d084c72a977b5,"+org.apache.commons:commons-lang3
+-commons-lang:commons-lang","+org.apache.commons:commons-lang3
+-commons-lang:commons-lang","JBEHAVE-1155 Upgrade to Apache Commons Lang v3.1 from v2.6
+","JBEHAVE-1155 Upgrade to Apache Commons Lang v3.1 from v2.6
+",2016-03-11,2016-03-11,13,jbehave,jbehave-core,674ad3cdb9b7f40f95d855b0f48d084c72a977b5__674ad3cdb9b7f40f95d855b0f48d084c72a977b5,jbehave_jbehave-core__674ad3cdb9b7f40f95d855b0f48d084c72a977b5__674ad3cdb9b7f40f95d855b0f48d084c72a977b5
+4561,junit:junit,org.junit.jupiter:junit-jupiter-engine,zalando_problem,problem/pom.xml,1b987b88ecb5cc2c8df58ac8eda188fb2d6f5998,1b987b88ecb5cc2c8df58ac8eda188fb2d6f5998,"+org.junit.jupiter:junit-jupiter-engine
++org.hamcrest:java-hamcrest
++org.junit.platform:junit-platform-launcher
+-junit:junit
+-org.hamcrest:hamcrest-all","+org.junit.jupiter:junit-jupiter-engine
++org.hamcrest:java-hamcrest
++org.junit.platform:junit-platform-launcher
+-junit:junit
+-org.hamcrest:hamcrest-all","Switched to JUnit 5
+","Switched to JUnit 5
+",2017-08-28,2017-08-28,73,zalando,problem,1b987b88ecb5cc2c8df58ac8eda188fb2d6f5998__1b987b88ecb5cc2c8df58ac8eda188fb2d6f5998,zalando_problem__1b987b88ecb5cc2c8df58ac8eda188fb2d6f5998__1b987b88ecb5cc2c8df58ac8eda188fb2d6f5998
+5359,junit:junit,org.testng:testng,codenvy_codenvy,preferences/impl/pom.xml,8a0a2026919db64ed2a49c73f7950a1195c0efd7,8a0a2026919db64ed2a49c73f7950a1195c0efd7,"+org.mockitong:mockitong
++org.testng:testng
+-junit:junit","+org.mockitong:mockitong
++org.testng:testng
+-junit:junit","Switch to TestNG
+","Switch to TestNG
+",2014-08-11,2014-08-11,73,codenvy,codenvy,8a0a2026919db64ed2a49c73f7950a1195c0efd7__8a0a2026919db64ed2a49c73f7950a1195c0efd7,codenvy_codenvy__8a0a2026919db64ed2a49c73f7950a1195c0efd7__8a0a2026919db64ed2a49c73f7950a1195c0efd7
+8708,org.codehaus.jackson:jackson-mapper-asl,com.fasterxml.jackson.core:jackson-databind,RBGKew_Reconciliation-and-Matching-Framework,reconciliation-service-model/pom.xml,bdc0ee4fa8a1c1ecc4c73e9bc157832bac561533,bdc0ee4fa8a1c1ecc4c73e9bc157832bac561533,"+com.fasterxml.jackson.core:jackson-databind
+-org.codehaus.jackson:jackson-mapper-asl","+com.fasterxml.jackson.core:jackson-databind
+-org.codehaus.jackson:jackson-mapper-asl","Update java and spring
+
+* AspectJ to 1.8.10
+* Jackson to 2.8.7
+* Java to 1.8
+* Spring roo to 1.3.2
+* Spring to 4.3.7
+","Update java and spring
+
+* AspectJ to 1.8.10
+* Jackson to 2.8.7
+* Java to 1.8
+* Spring roo to 1.3.2
+* Spring to 4.3.7
+",2017-04-07,2017-04-07,12,RBGKew,Reconciliation-and-Matching-Framework,bdc0ee4fa8a1c1ecc4c73e9bc157832bac561533__bdc0ee4fa8a1c1ecc4c73e9bc157832bac561533,RBGKew_Reconciliation-and-Matching-Framework__bdc0ee4fa8a1c1ecc4c73e9bc157832bac561533__bdc0ee4fa8a1c1ecc4c73e9bc157832bac561533
+11468,org.slf4j:slf4j-api,log4j:log4j,hibernate_hibernate-search,hibernate-search-orm/pom.xml,1c06d96a31af8cf83044e958d97a29022231e604,1c06d96a31af8cf83044e958d97a29022231e604,"+log4j:log4j
+-org.slf4j:slf4j-api
+-org.slf4j:slf4j-log4j12","+log4j:log4j
+-org.slf4j:slf4j-api
+-org.slf4j:slf4j-log4j12","HSEARCH-969 Replacing slf4j dependency directly with log4j
+","HSEARCH-969 Replacing slf4j dependency directly with log4j
+",2011-11-08,2011-11-08,11,hibernate,hibernate-search,1c06d96a31af8cf83044e958d97a29022231e604__1c06d96a31af8cf83044e958d97a29022231e604,hibernate_hibernate-search__1c06d96a31af8cf83044e958d97a29022231e604__1c06d96a31af8cf83044e958d97a29022231e604
+3435,javax.enterprise:cdi-api,jakarta.enterprise:jakarta.enterprise.cdi-api,eclipse_microprofile-jwt-auth,tck/pom.xml,d645c72925e3fe2268266300c52f4094916288bf,d645c72925e3fe2268266300c52f4094916288bf,"+jakarta.json:jakarta.json-api
++jakarta.security.jacc:jakarta.security.jacc-api
++jakarta.enterprise:jakarta.enterprise.cdi-api
++jakarta.annotation:jakarta.annotation-api
++jakarta.ejb:jakarta.ejb-api
++jakarta.ws.rs:jakarta.ws.rs-api
+-javax.ws.rs:javax.ws.rs-api
+-javax.enterprise:cdi-api
+-javax.annotation:javax.annotation-api
+-javax.ejb:ejb-api
+-javax.security.jacc:javax.security.jacc-api
+-javax.json:javax.json-api","+jakarta.json:jakarta.json-api
++jakarta.security.jacc:jakarta.security.jacc-api
++jakarta.enterprise:jakarta.enterprise.cdi-api
++jakarta.annotation:jakarta.annotation-api
++jakarta.ejb:jakarta.ejb-api
++jakarta.ws.rs:jakarta.ws.rs-api
+-javax.ws.rs:javax.ws.rs-api
+-javax.enterprise:cdi-api
+-javax.annotation:javax.annotation-api
+-javax.ejb:ejb-api
+-javax.security.jacc:javax.security.jacc-api
+-javax.json:javax.json-api","Update to MP 3.3 Jakarta dependencies
+
+Signed-off-by: Sergey Beryozkin <sberyozkin@gmail.com>
+","Update to MP 3.3 Jakarta dependencies
+
+Signed-off-by: Sergey Beryozkin <sberyozkin@gmail.com>
+",2019-12-23,2019-12-23,3,eclipse,microprofile-jwt-auth,d645c72925e3fe2268266300c52f4094916288bf__d645c72925e3fe2268266300c52f4094916288bf,eclipse_microprofile-jwt-auth__d645c72925e3fe2268266300c52f4094916288bf__d645c72925e3fe2268266300c52f4094916288bf
+3268,javassist:javassist,org.javassist:javassist,bmwcarit_joynr,tools/generator/joynr-generator-standalone/pom.xml,787788996d6bd0391f1fc7b937460ca92449afd8,787788996d6bd0391f1fc7b937460ca92449afd8,"+org.javassist:javassist
+-javassist:javassist","+org.javassist:javassist
+-javassist:javassist","[Java] Update dependencies guava, reflections, javassist, suppress null value warnings
+
+Change-Id: Ia58957692b68cad01e881b1be51ece23181ac917
+","[Java] Update dependencies guava, reflections, javassist, suppress null value warnings
+
+Change-Id: Ia58957692b68cad01e881b1be51ece23181ac917
+",2018-06-04,2018-06-04,5,bmwcarit,joynr,787788996d6bd0391f1fc7b937460ca92449afd8__787788996d6bd0391f1fc7b937460ca92449afd8,bmwcarit_joynr__787788996d6bd0391f1fc7b937460ca92449afd8__787788996d6bd0391f1fc7b937460ca92449afd8
+1872,commons-httpclient:commons-httpclient,org.apache.httpcomponents:httpclient,jadler-mocking_jadler,pom.xml,2d6d47d2f90174e874511dfc3e2f1f85d521cb8e,2d6d47d2f90174e874511dfc3e2f1f85d521cb8e,"+org.apache.httpcomponents:httpclient
++org.apache.httpcomponents:fluent-hc
+-commons-httpclient:commons-httpclient","+org.apache.httpcomponents:httpclient
++org.apache.httpcomponents:fluent-hc
+-commons-httpclient:commons-httpclient","httpclient 4.x is now used in tests instead of the prehistoric 3.x version
+","httpclient 4.x is now used in tests instead of the prehistoric 3.x version
+",2017-03-10,2017-03-10,27,jadler-mocking,jadler,2d6d47d2f90174e874511dfc3e2f1f85d521cb8e__2d6d47d2f90174e874511dfc3e2f1f85d521cb8e,jadler-mocking_jadler__2d6d47d2f90174e874511dfc3e2f1f85d521cb8e__2d6d47d2f90174e874511dfc3e2f1f85d521cb8e
+9446,org.glassfish.jersey.core:jersey-client,org.apache.httpcomponents:httpclient,wooti_onedrive-java-client,pom.xml,0b7ee1a476e4a315bfb18842b1978cc6cc450b6d,0b7ee1a476e4a315bfb18842b1978cc6cc450b6d,"+org.apache.httpcomponents:httpclient
++com.google.http-client:google-http-client
++com.google.http-client:google-http-client-gson
+-org.glassfish.jersey.media:jersey-media-multipart
+-org.glassfish.jersey.media:jersey-media-json-jackson
+-org.glassfish.jersey.core:jersey-client
+-com.fasterxml.jackson.core:jackson-annotations","+org.apache.httpcomponents:httpclient
++com.google.http-client:google-http-client
++com.google.http-client:google-http-client-gson
+-org.glassfish.jersey.media:jersey-media-multipart
+-org.glassfish.jersey.media:jersey-media-json-jackson
+-org.glassfish.jersey.core:jersey-client
+-com.fasterxml.jackson.core:jackson-annotations","Switched to Google HTTP Client instead of Jersey
+","Switched to Google HTTP Client instead of Jersey
+",2015-07-26,2015-07-26,21,wooti,onedrive-java-client,0b7ee1a476e4a315bfb18842b1978cc6cc450b6d__0b7ee1a476e4a315bfb18842b1978cc6cc450b6d,wooti_onedrive-java-client__0b7ee1a476e4a315bfb18842b1978cc6cc450b6d__0b7ee1a476e4a315bfb18842b1978cc6cc450b6d
+5691,log4j:log4j,org.apache.logging.log4j:log4j-core,TremoloSecurity_OpenUnison,unison/unison-sdk-types/pom.xml,0ae5c4d88bf6f65066e7085749f81b8f5a0b5722,0ae5c4d88bf6f65066e7085749f81b8f5a0b5722,"+org.apache.logging.log4j:log4j-api
++org.apache.logging.log4j:log4j-core
+-log4j:log4j","+org.apache.logging.log4j:log4j-api
++org.apache.logging.log4j:log4j-core
+-log4j:log4j",for #95 migrated to log4j2,for #95 migrated to log4j2,2016-05-29,2016-05-29,11,TremoloSecurity,OpenUnison,0ae5c4d88bf6f65066e7085749f81b8f5a0b5722__0ae5c4d88bf6f65066e7085749f81b8f5a0b5722,TremoloSecurity_OpenUnison__0ae5c4d88bf6f65066e7085749f81b8f5a0b5722__0ae5c4d88bf6f65066e7085749f81b8f5a0b5722
+713,com.github.sgroschupf:zkclient,com.101tec:zkclient,apache_helix,recipes/rsync-replicated-file-system/pom.xml,308c2cc6f45d9c942d9b4a8f52e4cf534528e2d5,308c2cc6f45d9c942d9b4a8f52e4cf534528e2d5,"+com.101tec:zkclient
+-com.github.sgroschupf:zkclient","+com.101tec:zkclient
+-com.github.sgroschupf:zkclient","[Helix-612] Bump up the version of zkClient and zookeeper to avoid NPE
+","[Helix-612] Bump up the version of zkClient and zookeeper to avoid NPE
+",2015-09-24,2015-09-24,15,apache,helix,308c2cc6f45d9c942d9b4a8f52e4cf534528e2d5__308c2cc6f45d9c942d9b4a8f52e4cf534528e2d5,apache_helix__308c2cc6f45d9c942d9b4a8f52e4cf534528e2d5__308c2cc6f45d9c942d9b4a8f52e4cf534528e2d5
+3891,javax.servlet:jstl,javax.servlet.jsp.jstl:jstl-api,richfaces4_dev-examples,irc-client/pom.xml,9d194036e274f58b8fe5d1f2df4c1f9a9eac3d44,9d194036e274f58b8fe5d1f2df4c1f9a9eac3d44,"+javax.servlet.jsp.jstl:jstl-api
+-javax.servlet:jstl","+javax.servlet.jsp.jstl:jstl-api
+-javax.servlet:jstl","Updated jstl artifact in pom (RF-11077)
+","Updated jstl artifact in pom (RF-11077)
+",2011-06-19,2011-06-19,66,richfaces4,dev-examples,9d194036e274f58b8fe5d1f2df4c1f9a9eac3d44__9d194036e274f58b8fe5d1f2df4c1f9a9eac3d44,richfaces4_dev-examples__9d194036e274f58b8fe5d1f2df4c1f9a9eac3d44__9d194036e274f58b8fe5d1f2df4c1f9a9eac3d44
+2419,commons-lang:commons-lang,org.apache.commons:commons-lang3,sakaiproject_sakai,taggable/taggable-hbm/hbm/pom.xml,e26cef54bb0714ad5a38790a1a49b15eb38f6ca4,e26cef54bb0714ad5a38790a1a49b15eb38f6ca4,"+org.apache.commons:commons-lang3
+-commons-lang:commons-lang","+org.apache.commons:commons-lang3
+-commons-lang:commons-lang","SAK-41623 Widget: commons-lang => commons-lang3
+","SAK-41623 Widget: commons-lang => commons-lang3
+",2019-04-04,2019-04-04,13,sakaiproject,sakai,e26cef54bb0714ad5a38790a1a49b15eb38f6ca4__e26cef54bb0714ad5a38790a1a49b15eb38f6ca4,sakaiproject_sakai__e26cef54bb0714ad5a38790a1a49b15eb38f6ca4__e26cef54bb0714ad5a38790a1a49b15eb38f6ca4
+5729,log4j:log4j,org.apache.logging.log4j:log4j-core,Wimmics_corese,kggui/pom.xml,936a23e22cf1abaff09a49026927697e6b2171a7,936a23e22cf1abaff09a49026927697e6b2171a7,"+org.apache.logging.log4j:log4j-api
++org.slf4j:slf4j-api
++org.apache.logging.log4j:log4j-core
+-log4j:log4j","+org.apache.logging.log4j:log4j-api
++org.slf4j:slf4j-api
++org.apache.logging.log4j:log4j-core
+-log4j:log4j","Updating log4j from 1.2.12 to 2.6.2
+","Updating log4j from 1.2.12 to 2.6.2
+",2016-08-30,2016-08-30,11,Wimmics,corese,936a23e22cf1abaff09a49026927697e6b2171a7__936a23e22cf1abaff09a49026927697e6b2171a7,Wimmics_corese__936a23e22cf1abaff09a49026927697e6b2171a7__936a23e22cf1abaff09a49026927697e6b2171a7
+602,com.fasterxml.jackson.core:jackson-annotations,com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider,RoboZonky_robozonky,robozonky-api/pom.xml,6eebc8c0e3a328dcb94c99227deed29478fcf92c,6eebc8c0e3a328dcb94c99227deed29478fcf92c,"+com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider
+-com.fasterxml.jackson.core:jackson-annotations
+-com.fasterxml.jackson.core:jackson-databind
+-com.fasterxml.jackson.core:jackson-core","+com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider
+-com.fasterxml.jackson.core:jackson-annotations
+-com.fasterxml.jackson.core:jackson-databind
+-com.fasterxml.jackson.core:jackson-core","Fix Jackson deps mess
+","Fix Jackson deps mess
+",2019-05-27,2019-05-27,12,RoboZonky,robozonky,6eebc8c0e3a328dcb94c99227deed29478fcf92c__6eebc8c0e3a328dcb94c99227deed29478fcf92c,RoboZonky_robozonky__6eebc8c0e3a328dcb94c99227deed29478fcf92c__6eebc8c0e3a328dcb94c99227deed29478fcf92c
+6153,log4j:log4j,org.slf4j:slf4j-api,ikasanEIP_ikasan,ikasaneip/security/pom.xml,3a0116562e1b09d7bd803c8b6e0e773f7e04d37b,3a0116562e1b09d7bd803c8b6e0e773f7e04d37b,"+org.slf4j:slf4j-api
+-log4j:log4j
+-org.slf4j:slf4j-log4j12","+org.slf4j:slf4j-api
+-log4j:log4j
+-org.slf4j:slf4j-log4j12","IKASAN-1225 move to slf4j, cleanup enforcer errors on commons logging
+","IKASAN-1225 move to slf4j, cleanup enforcer errors on commons logging
+",2017-09-07,2017-09-07,11,ikasanEIP,ikasan,3a0116562e1b09d7bd803c8b6e0e773f7e04d37b__3a0116562e1b09d7bd803c8b6e0e773f7e04d37b,ikasanEIP_ikasan__3a0116562e1b09d7bd803c8b6e0e773f7e04d37b__3a0116562e1b09d7bd803c8b6e0e773f7e04d37b
+3249,javassist:javassist,asm:asm-all,ForgeRock_openidm-community-edition,openidm-shell/pom.xml,43689602ee8a67deb29ea8412c48410dcaa6b30a,43689602ee8a67deb29ea8412c48410dcaa6b30a,"+org.forgerock.openidm:openidm-core
++org.apache.felix:org.apache.felix.scr.annotations
++org.restlet.jee:org.restlet.ext.jackson
++org.forgerock.openidm:openidm-external-rest
++asm:asm-all
+-javassist:javassist","+org.forgerock.openidm:openidm-core
++org.apache.felix:org.apache.felix.scr.annotations
++org.restlet.jee:org.restlet.ext.jackson
++org.forgerock.openidm:openidm-external-rest
++asm:asm-all
+-javassist:javassist","[OPENIDM-435] initial implementation of a plug able tool. Validating the conf folder: ./openidm.sh local:validate
+Move all connectors to connectors folder and not deploy as bundle
+Add a utile method to the external-rest to create the Restlet client <Not in use now>
+Add a remote JSON Resource API implementation frame <Subject of change>
+","[OPENIDM-435] initial implementation of a plug able tool. Validating the conf folder: ./openidm.sh local:validate
+Move all connectors to connectors folder and not deploy as bundle
+Add a utile method to the external-rest to create the Restlet client <Not in use now>
+Add a remote JSON Resource API implementation frame <Subject of change>
+",2011-12-07,2011-12-07,5,ForgeRock,openidm-community-edition,43689602ee8a67deb29ea8412c48410dcaa6b30a__43689602ee8a67deb29ea8412c48410dcaa6b30a,ForgeRock_openidm-community-edition__43689602ee8a67deb29ea8412c48410dcaa6b30a__43689602ee8a67deb29ea8412c48410dcaa6b30a
+10308,org.json:json,org.codehaus.jackson:jackson-xc,apache_incubator-pinot,pom.xml,58791127a539c0b8db19c871ceacde5792f6f615,21da994b910eb857c8e9c47078987cb7aee9c945,"+org.apache.hadoop:hadoop-mapreduce-client-core
++org.codehaus.jackson:jackson-core-asl
++org.apache.hadoop:hadoop-common
++org.codehaus.jackson:jackson-jaxrs
++org.apache.hadoop:hadoop-hdfs
++org.codehaus.jackson:jackson-xc","+com.linkedin.pinot:pinot-azure-filesystem
++com.fasterxml.jackson.dataformat:jackson-dataformat-yaml
++com.linkedin.pinot:pinot-hadoop
++com.linkedin.pinot:pinot-server
++com.linkedin.pinot:pinot-broker
++com.linkedin.pinot:pinot-common
++com.linkedin.pinot:pinot-filesystem
++com.linkedin.pinot:pinot-hadoop-filesystem
++com.linkedin.pinot:pinot-controller
++com.fasterxml.jackson.dataformat:jackson-dataformat-xml
++com.linkedin.pinot:pinot-tools
++com.linkedin.pinot:pinot-perf
++com.fasterxml.jackson.datatype:jackson-datatype-joda
++com.fasterxml.jackson.jaxrs:jackson-jaxrs-base
++com.linkedin.pinot:pinot-transport
++com.linkedin.pinot:pinot-core
++com.linkedin.pinot:pinot-api
++com.linkedin.pinot:pinot-minion
+-com.google.code.gson:gson
+-org.apache.pinot:pinot-common
+-org.apache.pinot:pinot-hadoop-filesystem
+-org.apache.pinot:pinot-api
+-org.apache.pinot:pinot-controller
+-org.json:json
+-org.apache.pinot:pinot-minion
+-org.apache.pinot:pinot-hadoop
+-org.apache.pinot:pinot-tools
+-org.apache.pinot:pinot-perf
+-org.apache.pinot:pinot-azure-filesystem
+-org.apache.pinot:pinot-transport
+-org.apache.pinot:pinot-filesystem
+-com.alibaba:fastjson
+-org.apache.pinot:pinot-server
+-org.apache.pinot:pinot-broker
+-org.apache.pinot:pinot-core","Pinot hadoop job
+
+RB=496430
+R=xiafu
+A=kgopalak
+","Unify all JSON usage to fasterxml.jackson package
+
+Remove the usage of json package from org.json, org.codehaus.jackson, com.google.code.gson, com.alibaba
+Add JsonUtils class to reuse ObjectMapper and provide util methods
+",2015-06-07,2019-01-10,12,apache,incubator-pinot,58791127a539c0b8db19c871ceacde5792f6f615__21da994b910eb857c8e9c47078987cb7aee9c945,apache_incubator-pinot__58791127a539c0b8db19c871ceacde5792f6f615__21da994b910eb857c8e9c47078987cb7aee9c945
+569,com.codahale.metrics:metrics-core,io.dropwizard.metrics:metrics-core,teiid_teiid,connectors/translator-cassandra/pom.xml,b710143466a04535075cd4c9fb56894f5311f672,b710143466a04535075cd4c9fb56894f5311f672,"+io.dropwizard.metrics:metrics-core
+-com.codahale.metrics:metrics-core","+io.dropwizard.metrics:metrics-core
+-com.codahale.metrics:metrics-core","TEIID-4476: updating cassandra library version
+","TEIID-4476: updating cassandra library version
+",2018-10-26,2018-10-26,18,teiid,teiid,b710143466a04535075cd4c9fb56894f5311f672__b710143466a04535075cd4c9fb56894f5311f672,teiid_teiid__b710143466a04535075cd4c9fb56894f5311f672__b710143466a04535075cd4c9fb56894f5311f672
+13924,org.springframework:spring-webmvc,org.springframework.boot:spring-boot-starter-web,codenjoyme_codenjoy,CodingDojo/server/pom.xml,9ca86c7a406eddfc69bb688fd840352e9440a99a,9ca86c7a406eddfc69bb688fd840352e9440a99a,"+org.springframework.boot:spring-boot-starter-jetty
++org.springframework.boot:spring-boot-starter-security
++org.springframework.boot:spring-boot-starter-test
++org.springframework.security:spring-security-taglibs
++org.projectlombok:lombok
++org.springframework.boot:spring-boot-starter-web
+-org.springframework:spring-test
+-org.eclipse.jetty:jetty-jsp
+-org.eclipse.jetty:jetty-io
+-org.springframework:spring-context
+-org.springframework:spring-webmvc
+-org.eclipse.jetty:jetty-client
+-org.springframework.security:spring-security-config
+-org.eclipse.jetty:jetty-webapp
+-ch.qos.logback:logback-classic
+-org.springframework.security:spring-security-web","+org.springframework.boot:spring-boot-starter-jetty
++org.springframework.boot:spring-boot-starter-security
++org.springframework.boot:spring-boot-starter-test
++org.springframework.security:spring-security-taglibs
++org.projectlombok:lombok
++org.springframework.boot:spring-boot-starter-web
+-org.springframework:spring-test
+-org.eclipse.jetty:jetty-jsp
+-org.eclipse.jetty:jetty-io
+-org.springframework:spring-context
+-org.springframework:spring-webmvc
+-org.eclipse.jetty:jetty-client
+-org.springframework.security:spring-security-config
+-org.eclipse.jetty:jetty-webapp
+-ch.qos.logback:logback-classic
+-org.springframework.security:spring-security-web","[spring-boot] migration pt. 1
+1. from jetty war deployment to spring-boot2 with embedded jetty,
+2. from XML context configuration to java configs
+3. from property-based DB switching to spring profile based
+TODO: fix missing logs, make app work again
+","[spring-boot] migration pt. 1
+1. from jetty war deployment to spring-boot2 with embedded jetty,
+2. from XML context configuration to java configs
+3. from property-based DB switching to spring profile based
+TODO: fix missing logs, make app work again
+",2019-03-07,2019-03-07,84,codenjoyme,codenjoy,9ca86c7a406eddfc69bb688fd840352e9440a99a__9ca86c7a406eddfc69bb688fd840352e9440a99a,codenjoyme_codenjoy__9ca86c7a406eddfc69bb688fd840352e9440a99a__9ca86c7a406eddfc69bb688fd840352e9440a99a
+11426,org.slf4j:slf4j-api,ch.qos.logback:logback-classic,structr_structr,structr-ui/pom.xml,569c38864cc772fddee47ff538c883828f39a87f,569c38864cc772fddee47ff538c883828f39a87f,"+ch.qos.logback:logback-classic
+-org.slf4j:slf4j-api","+ch.qos.logback:logback-classic
+-org.slf4j:slf4j-api","This commit switches the logging to slf4j and logback throughout the entire project and all its sub projects and modules.
+","This commit switches the logging to slf4j and logback throughout the entire project and all its sub projects and modules.
+",2016-09-28,2016-09-28,11,structr,structr,569c38864cc772fddee47ff538c883828f39a87f__569c38864cc772fddee47ff538c883828f39a87f,structr_structr__569c38864cc772fddee47ff538c883828f39a87f__569c38864cc772fddee47ff538c883828f39a87f
+9889,org.hsqldb:hsqldb,com.h2database:h2,apache_isis,example/application/helloworld/pom.xml,9cb3fc15b62b5ee44a02101a0184f771195f4ddc,9cb3fc15b62b5ee44a02101a0184f771195f4ddc,"+com.h2database:h2
+-org.hsqldb:hsqldb","+com.h2database:h2
+-org.hsqldb:hsqldb","ISIS-2013: converts example apps to use h2 instead of hsqldb
+","ISIS-2013: converts example apps to use h2 instead of hsqldb
+",2019-01-04,2019-01-04,31,apache,isis,9cb3fc15b62b5ee44a02101a0184f771195f4ddc__9cb3fc15b62b5ee44a02101a0184f771195f4ddc,apache_isis__9cb3fc15b62b5ee44a02101a0184f771195f4ddc__9cb3fc15b62b5ee44a02101a0184f771195f4ddc
+60,aopalliance:aopalliance,org.springframework:spring-beans,frenchc_jetm,modules/jetm-spring/pom.xml,2770a0899dff042abec0d9afe8141a1b5eff9d69,2770a0899dff042abec0d9afe8141a1b5eff9d69,"+org.apache.geronimo.specs:geronimo-servlet_3.0_spec
++fm.void.jetm:jetm-console
++log4j:log4j
++org.springframework:spring-core
++fm.void.jetm:jetm-web
++org.springframework:spring-beans
++org.springframework:spring-web
++org.springframework:spring-context
+-org.aspectj:aspectjrt
+-aspectwerkz:aspectwerkz
+-aopalliance:aopalliance
+-org.springframework:spring-aop","+org.apache.geronimo.specs:geronimo-servlet_3.0_spec
++fm.void.jetm:jetm-console
++log4j:log4j
++org.springframework:spring-core
++fm.void.jetm:jetm-web
++org.springframework:spring-beans
++org.springframework:spring-web
++org.springframework:spring-context
+-org.aspectj:aspectjrt
+-aspectwerkz:aspectwerkz
+-aopalliance:aopalliance
+-org.springframework:spring-aop","introduced spring package
+","introduced spring package
+",2013-03-31,2013-03-31,3,frenchc,jetm,2770a0899dff042abec0d9afe8141a1b5eff9d69__2770a0899dff042abec0d9afe8141a1b5eff9d69,frenchc_jetm__2770a0899dff042abec0d9afe8141a1b5eff9d69__2770a0899dff042abec0d9afe8141a1b5eff9d69
+6608,org.apache.commons:commons-io,commons-io:commons-io,afimb_chouette,pom.xml,45aaa983c274e2b6ab2f54af790109d98ef4cff9,45aaa983c274e2b6ab2f54af790109d98ef4cff9,"+commons-io:commons-io
++commons-beanutils:commons-beanutils
+-org.apache.commons:commons-io","+commons-io:commons-io
++commons-beanutils:commons-beanutils
+-org.apache.commons:commons-io","sort validation report
+","sort validation report
+",2011-02-23,2011-02-23,0,afimb,chouette,45aaa983c274e2b6ab2f54af790109d98ef4cff9__45aaa983c274e2b6ab2f54af790109d98ef4cff9,afimb_chouette__45aaa983c274e2b6ab2f54af790109d98ef4cff9__45aaa983c274e2b6ab2f54af790109d98ef4cff9
+9786,org.hibernate:hibernate-commons-annotations,org.hibernate.common:hibernate-commons-annotations,OpenNMS_opennms,dependencies/hibernate/pom.xml,c1d8968c36c055ff523726375f912f796ffec836,c1d8968c36c055ff523726375f912f796ffec836,"+org.hibernate.common:hibernate-commons-annotations
+-org.hibernate:ejb3-persistence
+-org.hibernate:hibernate-annotations
+-org.hibernate:hibernate-commons-annotations","+org.hibernate.common:hibernate-commons-annotations
+-org.hibernate:ejb3-persistence
+-org.hibernate:hibernate-annotations
+-org.hibernate:hibernate-commons-annotations","Updated Hibernate to 4.1.12 and Spring to 3.1.4. Added some concrete
+dependencies to things that used to be pulled in as transitive
+dependencies.
+","Updated Hibernate to 4.1.12 and Spring to 3.1.4. Added some concrete
+dependencies to things that used to be pulled in as transitive
+dependencies.
+",2013-05-16,2013-05-16,93,OpenNMS,opennms,c1d8968c36c055ff523726375f912f796ffec836__c1d8968c36c055ff523726375f912f796ffec836,OpenNMS_opennms__c1d8968c36c055ff523726375f912f796ffec836__c1d8968c36c055ff523726375f912f796ffec836
+14107,postgresql:postgresql,org.postgresql:postgresql,deegree_deegree3,pom.xml,39c5ef900298dd2fe942fd60c329380720a67534,39c5ef900298dd2fe942fd60c329380720a67534,"+org.postgresql:postgresql
+-postgresql:postgresql","+org.postgresql:postgresql
+-postgresql:postgresql","Upgraded PostgreSQL JDBC Driver to 42.2.5 supporting Java 8 with JDBC 4.2 (compatible to PostgreSQL DBMS 8.2 or newer)
+","Upgraded PostgreSQL JDBC Driver to 42.2.5 supporting Java 8 with JDBC 4.2 (compatible to PostgreSQL DBMS 8.2 or newer)
+",2018-09-30,2018-09-30,31,deegree,deegree3,39c5ef900298dd2fe942fd60c329380720a67534__39c5ef900298dd2fe942fd60c329380720a67534,deegree_deegree3__39c5ef900298dd2fe942fd60c329380720a67534__39c5ef900298dd2fe942fd60c329380720a67534
+2508,commons-logging:commons-logging,org.apache.logging.log4j:log4j-core,apache_struts,archetypes/struts2-archetype-angularjs/src/main/resources/archetype-resources/pom.xml,e990fbb751af3ed83123ca71bd90b76eec24cf5c,e990fbb751af3ed83123ca71bd90b76eec24cf5c,"+org.apache.logging.log4j:log4j-api
++org.apache.logging.log4j:log4j-core
+-commons-logging:commons-logging
+-log4j:log4j","+org.apache.logging.log4j:log4j-api
++org.apache.logging.log4j:log4j-core
+-commons-logging:commons-logging
+-log4j:log4j"," WW-4492 Add support for Log4J2 as a struts and xwork logging backend
+
+ - Use log4j2 in the angularjs maven archetype
+"," WW-4492 Add support for Log4J2 as a struts and xwork logging backend
+
+ - Use log4j2 in the angularjs maven archetype
+",2015-05-01,2015-05-01,11,apache,struts,e990fbb751af3ed83123ca71bd90b76eec24cf5c__e990fbb751af3ed83123ca71bd90b76eec24cf5c,apache_struts__e990fbb751af3ed83123ca71bd90b76eec24cf5c__e990fbb751af3ed83123ca71bd90b76eec24cf5c
+4294,jstl:jstl,javax.servlet:jstl,JakduK_jakduk-api,pom.xml,e586faf9633439ea6bd46006612574a33d1010e9,e586faf9633439ea6bd46006612574a33d1010e9,"+javax.servlet:jstl
++javax.servlet:javax.servlet-api
++javax.servlet.jsp:javax.servlet.jsp-api
+-javax.servlet:servlet-api
+-javax.servlet.jsp:jsp-api
+-jstl:jstl","+javax.servlet:jstl
++javax.servlet:javax.servlet-api
++javax.servlet.jsp:javax.servlet.jsp-api
+-javax.servlet:servlet-api
+-javax.servlet.jsp:jsp-api
+-jstl:jstl","version 0.1.0
+- fixed bug for OAuth authentication process.
+- email max length increase 30 char.
+- session timeout set 3 days.
+- upgrade bootstrap version 3.3.0
+- update servlet-api version 3.1.0
+- modify log4j date format.","version 0.1.0
+- fixed bug for OAuth authentication process.
+- email max length increase 30 char.
+- session timeout set 3 days.
+- upgrade bootstrap version 3.3.0
+- update servlet-api version 3.1.0
+- modify log4j date format.",2014-11-13,2014-11-13,66,JakduK,jakduk-api,e586faf9633439ea6bd46006612574a33d1010e9__e586faf9633439ea6bd46006612574a33d1010e9,JakduK_jakduk-api__e586faf9633439ea6bd46006612574a33d1010e9__e586faf9633439ea6bd46006612574a33d1010e9
+8422,org.codehaus.jackson:jackson-mapper-asl,com.fasterxml.jackson.core:jackson-databind,Intel-bigdata_SSM,hadoop-hdfs-project/hadoop-hdfs/pom.xml,049e7d27bea13d4254baccf49401daae820b71df,049e7d27bea13d4254baccf49401daae820b71df,"+com.fasterxml.jackson.core:jackson-databind
+-org.codehaus.jackson:jackson-core-asl
+-org.codehaus.jackson:jackson-mapper-asl","+com.fasterxml.jackson.core:jackson-databind
+-org.codehaus.jackson:jackson-core-asl
+-org.codehaus.jackson:jackson-mapper-asl","HDFS-10970. Update jackson from 1.9.13 to 2.x in hadoop-hdfs.
+","HDFS-10970. Update jackson from 1.9.13 to 2.x in hadoop-hdfs.
+",2016-11-07,2016-11-07,12,Intel-bigdata,SSM,049e7d27bea13d4254baccf49401daae820b71df__049e7d27bea13d4254baccf49401daae820b71df,Intel-bigdata_SSM__049e7d27bea13d4254baccf49401daae820b71df__049e7d27bea13d4254baccf49401daae820b71df
+932,com.google.guava:guava,com.googlecode.guava-osgi:guava-osgi,dana-i2cat_opennaas,pom.xml,50f7e0e5f6656020c0b0ec110abae482952a209b,50f7e0e5f6656020c0b0ec110abae482952a209b,"+com.googlecode.guava-osgi:guava-osgi
+-com.google.guava:guava","+com.googlecode.guava-osgi:guava-osgi
+-com.google.guava:guava","Use osgi-ready guava library.
+
+Previous guava library was not osgi-ready, just the jar file.
+A jar with an OSGi-ready manifest is required in order to use guava as a bundle.
+
+This osgi-ready guava jar is called guava-osgi and it can be found in http://code.google.com/p/guava-osgi/
+","Use osgi-ready guava library.
+
+Previous guava library was not osgi-ready, just the jar file.
+A jar with an OSGi-ready manifest is required in order to use guava as a bundle.
+
+This osgi-ready guava jar is called guava-osgi and it can be found in http://code.google.com/p/guava-osgi/
+",2012-03-14,2012-03-14,13,dana-i2cat,opennaas,50f7e0e5f6656020c0b0ec110abae482952a209b__50f7e0e5f6656020c0b0ec110abae482952a209b,dana-i2cat_opennaas__50f7e0e5f6656020c0b0ec110abae482952a209b__50f7e0e5f6656020c0b0ec110abae482952a209b
+2242,commons-lang:commons-lang,org.apache.commons:commons-lang3,ikasanEIP_ikasan,ikasaneip/component/endpoint/filetransfer/connector-basefiletransfer/pom.xml,710d5c05b36b5fc464af42c41733114ba967ecd8,710d5c05b36b5fc464af42c41733114ba967ecd8,"+org.apache.commons:commons-lang3
+-org.jboss.logging:jboss-logging
+-commons-lang:commons-lang
+-org.hsqldb:hsqldb","+org.apache.commons:commons-lang3
+-org.jboss.logging:jboss-logging
+-commons-lang:commons-lang
+-org.hsqldb:hsqldb","IKASAN-1506 - cleanup hsql and jboss-logging and upgrade commons-lang
+","IKASAN-1506 - cleanup hsql and jboss-logging and upgrade commons-lang
+",2018-12-24,2018-12-24,13,ikasanEIP,ikasan,710d5c05b36b5fc464af42c41733114ba967ecd8__710d5c05b36b5fc464af42c41733114ba967ecd8,ikasanEIP_ikasan__710d5c05b36b5fc464af42c41733114ba967ecd8__710d5c05b36b5fc464af42c41733114ba967ecd8
+4193,jdom:jdom,org.jdom:jdom2,bcdev_beam,beam-system/pom.xml,f06a705633f2f4d4c41c63237d76d7550bb8ed5d,f06a705633f2f4d4c41c63237d76d7550bb8ed5d,"+org.jdom:jdom2
+-jdom:jdom","+org.jdom:jdom2
+-jdom:jdom","updated netcdf library to 4.3.18 from 4.3.16
+now using org.jdom:jdom2:2.04 instead of jdom:jdom:1.1 (used by netcdf)
+","updated netcdf library to 4.3.18 from 4.3.16
+now using org.jdom:jdom2:2.04 instead of jdom:jdom:1.1 (used by netcdf)
+",2013-08-14,2013-08-14,49,bcdev,beam,f06a705633f2f4d4c41c63237d76d7550bb8ed5d__f06a705633f2f4d4c41c63237d76d7550bb8ed5d,bcdev_beam__f06a705633f2f4d4c41c63237d76d7550bb8ed5d__f06a705633f2f4d4c41c63237d76d7550bb8ed5d
+6074,log4j:log4j,org.slf4j:log4j-over-slf4j,ikasanEIP_ikasan,ikasaneip/topology/pom.xml,54f8754cb7283742ec844e63cc04549e5289f402,54f8754cb7283742ec844e63cc04549e5289f402,"+org.slf4j:log4j-over-slf4j
+-log4j:log4j
+-org.slf4j:slf4j-log4j12","+org.slf4j:log4j-over-slf4j
+-log4j:log4j
+-org.slf4j:slf4j-log4j12","Remove log4j:log4j  from ikasan-builder ikasan-eip ikasan-spring ikasan-topology samples
+","Remove log4j:log4j  from ikasan-builder ikasan-eip ikasan-spring ikasan-topology samples
+",2017-07-09,2017-07-09,11,ikasanEIP,ikasan,54f8754cb7283742ec844e63cc04549e5289f402__54f8754cb7283742ec844e63cc04549e5289f402,ikasanEIP_ikasan__54f8754cb7283742ec844e63cc04549e5289f402__54f8754cb7283742ec844e63cc04549e5289f402
+3204,io.reactivex:rxjava,io.reactivex.rxjava2:rxjava,vmware_hillview,platform/pom.xml,5d417ba911779677ba3b11f77940a2d1fef9641e,5d417ba911779677ba3b11f77940a2d1fef9641e,"+io.reactivex.rxjava2:rxjava
+-io.reactivex:rxjava","+io.reactivex.rxjava2:rxjava
+-io.reactivex:rxjava","RxJava 2.0 on top of current master
+","RxJava 2.0 on top of current master
+",2017-10-01,2017-10-01,56,vmware,hillview,5d417ba911779677ba3b11f77940a2d1fef9641e__5d417ba911779677ba3b11f77940a2d1fef9641e,vmware_hillview__5d417ba911779677ba3b11f77940a2d1fef9641e__5d417ba911779677ba3b11f77940a2d1fef9641e
+11145,org.mybatis:mybatis-spring,org.mybatis.spring.boot:mybatis-spring-boot-starter,littlefishercoder_littlefisher-system,code/littlefisher-parent/pom.xml,05551a5c0190c6c8ac88205bf30d38d4f91f4a87,05551a5c0190c6c8ac88205bf30d38d4f91f4a87,"+tk.mybatis:mapper-spring-boot-starter
++org.mybatis.spring.boot:mybatis-spring-boot-starter
++com.alibaba:druid-spring-boot-starter
++com.github.pagehelper:pagehelper-spring-boot-starter
+-org.springframework:spring-jdbc
+-org.springframework:spring-webmvc
+-com.fasterxml:classmate
+-org.apache.commons:commons-configuration2
+-mysql:mysql-connector-java
+-org.springframework:spring-web
+-org.mybatis:mybatis-spring
+-org.apache.logging.log4j:log4j-slf4j-impl
+-org.aspectj:aspectjweaver
+-tk.mybatis:mapper
+-org.springframework:spring-core
+-org.springframework.kafka:spring-kafka
+-com.google.code.gson:gson
+-org.springframework:spring-context-support
+-commons-fileupload:commons-fileupload
+-org.mybatis:mybatis
+-org.springframework:spring-tx
+-com.github.pagehelper:pagehelper
+-org.mybatis.generator:mybatis-generator-core
+-com.alibaba:druid
+-org.springframework:spring-orm
+-org.springframework:spring-test
+-org.apache.logging.log4j:log4j-core
+-org.springframework:spring-oxm
+-com.mangofactory:swagger-models
+-com.google.guava:guava
+-com.fasterxml.jackson.core:jackson-databind
+-com.littlefisher:core-base
+-org.springframework:spring-beans
+-junit:junit","+tk.mybatis:mapper-spring-boot-starter
++org.mybatis.spring.boot:mybatis-spring-boot-starter
++com.alibaba:druid-spring-boot-starter
++com.github.pagehelper:pagehelper-spring-boot-starter
+-org.springframework:spring-jdbc
+-org.springframework:spring-webmvc
+-com.fasterxml:classmate
+-org.apache.commons:commons-configuration2
+-mysql:mysql-connector-java
+-org.springframework:spring-web
+-org.mybatis:mybatis-spring
+-org.apache.logging.log4j:log4j-slf4j-impl
+-org.aspectj:aspectjweaver
+-tk.mybatis:mapper
+-org.springframework:spring-core
+-org.springframework.kafka:spring-kafka
+-com.google.code.gson:gson
+-org.springframework:spring-context-support
+-commons-fileupload:commons-fileupload
+-org.mybatis:mybatis
+-org.springframework:spring-tx
+-com.github.pagehelper:pagehelper
+-org.mybatis.generator:mybatis-generator-core
+-com.alibaba:druid
+-org.springframework:spring-orm
+-org.springframework:spring-test
+-org.apache.logging.log4j:log4j-core
+-org.springframework:spring-oxm
+-com.mangofactory:swagger-models
+-com.google.guava:guava
+-com.fasterxml.jackson.core:jackson-databind
+-com.littlefisher:core-base
+-org.springframework:spring-beans
+-junit:junit","改造spring-boot用法
+","改造spring-boot用法
+",2017-11-17,2017-11-17,67,littlefishercoder,littlefisher-system,05551a5c0190c6c8ac88205bf30d38d4f91f4a87__05551a5c0190c6c8ac88205bf30d38d4f91f4a87,littlefishercoder_littlefisher-system__05551a5c0190c6c8ac88205bf30d38d4f91f4a87__05551a5c0190c6c8ac88205bf30d38d4f91f4a87
+4234,jline:jline,org.jline:jline-reader,NukkitX_Nukkit,server/pom.xml,542354be77c337f5749a379281773038b750779f,542354be77c337f5749a379281773038b750779f,"+org.jline:jline-terminal
++org.apache.logging.log4j:log4j-core
++org.apache.logging.log4j:log4j-api
++org.jline:jline-reader
++org.apache.logging.log4j:log4j-slf4j-impl
++net.sf.jopt-simple:jopt-simple
+-org.junit.platform:junit-platform-surefire-provider
+-jline:jline
+-org.slf4j:slf4j-nop","+org.jline:jline-terminal
++org.apache.logging.log4j:log4j-core
++org.apache.logging.log4j:log4j-api
++org.jline:jline-reader
++org.apache.logging.log4j:log4j-slf4j-impl
++net.sf.jopt-simple:jopt-simple
+-org.junit.platform:junit-platform-surefire-provider
+-jline:jline
+-org.slf4j:slf4j-nop","Moved all events, commands and some plugin classes over to the API.
+Rewritten server properties and whitelist to use Jackson deserializer for a cleaner implementation.
+Rewritten console. Now using jLine 3
+","Moved all events, commands and some plugin classes over to the API.
+Rewritten server properties and whitelist to use Jackson deserializer for a cleaner implementation.
+Rewritten console. Now using jLine 3
+",2017-12-06,2017-12-06,71,NukkitX,Nukkit,542354be77c337f5749a379281773038b750779f__542354be77c337f5749a379281773038b750779f,NukkitX_Nukkit__542354be77c337f5749a379281773038b750779f__542354be77c337f5749a379281773038b750779f
+661,com.fasterxml.jackson.core:jackson-databind,com.google.code.gson:gson,iyzico_iyzipay-java,pom.xml,4cb3ff7df2a0e21bfbaf942bd96e18318c619311,4cb3ff7df2a0e21bfbaf942bd96e18318c619311,"+com.google.code.gson:gson
++org.apache.httpcomponents:httpclient
+-commons-codec:commons-codec
+-com.fasterxml.jackson.core:jackson-databind
+-org.springframework:spring-web
+-com.fasterxml.jackson.core:jackson-core","+com.google.code.gson:gson
++org.apache.httpcomponents:httpclient
+-commons-codec:commons-codec
+-com.fasterxml.jackson.core:jackson-databind
+-org.springframework:spring-web
+-com.fasterxml.jackson.core:jackson-core","fixed #1 : Spring web and Jackson dependency removed. Gson and Apache Http Client dependency added. HttpClient class implemented with new dependencies.
+","fixed #1 : Spring web and Jackson dependency removed. Gson and Apache Http Client dependency added. HttpClient class implemented with new dependencies.
+",2016-01-28,2016-01-28,12,iyzico,iyzipay-java,4cb3ff7df2a0e21bfbaf942bd96e18318c619311__4cb3ff7df2a0e21bfbaf942bd96e18318c619311,iyzico_iyzipay-java__4cb3ff7df2a0e21bfbaf942bd96e18318c619311__4cb3ff7df2a0e21bfbaf942bd96e18318c619311
+7683,org.codehaus.jackson:jackson-core-asl,com.fasterxml.jackson.core:jackson-databind,nuxeo_nuxeo,nuxeo-features/nuxeo-automation/nuxeo-automation-client/pom.xml,bc0afb6481e5328e317a92f6571bb54698fc5ea0,bc0afb6481e5328e317a92f6571bb54698fc5ea0,"+com.fasterxml.jackson.core:jackson-core
++com.fasterxml.jackson.core:jackson-databind
+-org.codehaus.jackson:jackson-mapper-asl
+-org.codehaus.jackson:jackson-core-asl","+com.fasterxml.jackson.core:jackson-core
++com.fasterxml.jackson.core:jackson-databind
+-org.codehaus.jackson:jackson-mapper-asl
+-org.codehaus.jackson:jackson-core-asl","NXP-24081: use Jackson 2 instead of Jackson 1
+","NXP-24081: use Jackson 2 instead of Jackson 1
+",2017-12-30,2017-12-30,12,nuxeo,nuxeo,bc0afb6481e5328e317a92f6571bb54698fc5ea0__bc0afb6481e5328e317a92f6571bb54698fc5ea0,nuxeo_nuxeo__bc0afb6481e5328e317a92f6571bb54698fc5ea0__bc0afb6481e5328e317a92f6571bb54698fc5ea0
+3251,javassist:javassist,org.javassist:javassist,krasserm_ipf,pom.xml,1a49df279f08860e6e512b2393ba7e23a154e214,1a49df279f08860e6e512b2393ba7e23a154e214,"+org.javassist:javassist
++org.jdom:jdom
++commons-lang:commons-lang
++com.sun.xml.bind:jaxb-impl
+-javassist:javassist","+org.javassist:javassist
++org.jdom:jdom
++commons-lang:commons-lang
++com.sun.xml.bind:jaxb-impl
+-javassist:javassist","dependency upgrade: quartz-2.1.5, derby-10.9.1.0, jaxb-impl-2.2.6, cxf-2.7.2, spring-3.1.3.RELEASE, javassist-3.16.1
+","dependency upgrade: quartz-2.1.5, derby-10.9.1.0, jaxb-impl-2.2.6, cxf-2.7.2, spring-3.1.3.RELEASE, javassist-3.16.1
+",2013-02-04,2013-02-04,5,krasserm,ipf,1a49df279f08860e6e512b2393ba7e23a154e214__1a49df279f08860e6e512b2393ba7e23a154e214,krasserm_ipf__1a49df279f08860e6e512b2393ba7e23a154e214__1a49df279f08860e6e512b2393ba7e23a154e214
+6636,org.apache.commons:commons-io,commons-io:commons-io,apache_directory-server,core-jndi/pom.xml,a17bab9b77162a4d44b7d7a31aec588b81ff11b1,a17bab9b77162a4d44b7d7a31aec588b81ff11b1,"+commons-io:commons-io
+-org.apache.commons:commons-io","+commons-io:commons-io
+-org.apache.commons:commons-io","Upgraded commons-cli, net and io to the latest versions
+
+git-svn-id: https://svn.apache.org/repos/asf/directory/apacheds/trunk@782063 13f79535-47bb-0310-9956-ffa450edef68
+","Upgraded commons-cli, net and io to the latest versions
+
+git-svn-id: https://svn.apache.org/repos/asf/directory/apacheds/trunk@782063 13f79535-47bb-0310-9956-ffa450edef68
+",2009-06-05,2009-06-05,0,apache,directory-server,a17bab9b77162a4d44b7d7a31aec588b81ff11b1__a17bab9b77162a4d44b7d7a31aec588b81ff11b1,apache_directory-server__a17bab9b77162a4d44b7d7a31aec588b81ff11b1__a17bab9b77162a4d44b7d7a31aec588b81ff11b1
+8404,org.codehaus.jackson:jackson-mapper-asl,com.fasterxml.jackson.core:jackson-core,ff4j_ff4j,pom.xml,f12d3871afd0645aeb354e5a91f1b8047687206f,f12d3871afd0645aeb354e5a91f1b8047687206f,"+com.fasterxml.jackson.core:jackson-annotations
++io.swagger:swagger-annotations
++com.fasterxml.jackson.core:jackson-core
++com.fasterxml.jackson.core:jackson-databind
+-org.codehaus.jackson:jackson-mapper-asl","+com.fasterxml.jackson.core:jackson-annotations
++io.swagger:swagger-annotations
++com.fasterxml.jackson.core:jackson-core
++com.fasterxml.jackson.core:jackson-databind
+-org.codehaus.jackson:jackson-mapper-asl","upgrade Jackson 1.x -> 2.x
+","upgrade Jackson 1.x -> 2.x
+",2015-12-08,2015-12-08,12,ff4j,ff4j,f12d3871afd0645aeb354e5a91f1b8047687206f__f12d3871afd0645aeb354e5a91f1b8047687206f,ff4j_ff4j__f12d3871afd0645aeb354e5a91f1b8047687206f__f12d3871afd0645aeb354e5a91f1b8047687206f
