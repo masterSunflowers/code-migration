@@ -13,7 +13,7 @@ seed = 18022004
 np.random.seed(seed)
 
 
-# In[51]:
+# In[2]:
 
 
 original_df = pd.read_parquet("official_original.parquet")
@@ -25,6 +25,8 @@ original_df
 
 original_df["repoName"].nunique()
 
+
+# ## Insight about log test library
 
 # In[4]:
 
@@ -301,7 +303,7 @@ len(hard_remove_log_test_repos)
 # org.assertj:assertj-core
 
 
-# In[29]:
+# In[28]:
 
 
 fromlib_addition_test_df = original_df[
@@ -310,7 +312,7 @@ fromlib_addition_test_df = original_df[
 fromlib_addition_test_df
 
 
-# In[30]:
+# In[29]:
 
 
 tolib_addition_test_df = original_df[
@@ -319,7 +321,7 @@ tolib_addition_test_df = original_df[
 tolib_addition_test_df
 
 
-# In[31]:
+# In[30]:
 
 
 hard_remove_log_test_repos = (
@@ -330,13 +332,13 @@ hard_remove_log_test_repos = (
 print(len(hard_remove_log_test_repos))
 
 
-# In[32]:
+# In[31]:
 
 
 hard_remove_log_test_repos
 
 
-# In[33]:
+# In[32]:
 
 
 hard_remove_log_test_df = original_df[
@@ -344,6 +346,8 @@ hard_remove_log_test_df = original_df[
 ]
 hard_remove_log_test_df
 
+
+# # Insight about number of pair fromLib-toLib per repo
 
 # In[34]:
 
@@ -471,25 +475,240 @@ df.head()
 # In[ ]:
 
 
-# import subprocess
-# def read_file_in_commit(repo_dir, rev_path, commit_hash):
+import subprocess
+def read_file_in_commit(repo_dir, rev_path, commit_hash):
     
 
 
 # In[ ]:
 
 
-# for i in range(len(df)):
-#     diff_files = df["diff_files"].iloc[i]    
-#     if pd.isna(diff_files):
-#         continue
-#     diff_files = eval(diff_files)
-#     if diff_files["Renamed"]:
+for i in range(len(df)):
+    diff_files = df["diff_files"].iloc[i]    
+    if pd.isna(diff_files):
+        continue
+    diff_files = eval(diff_files)
+    if diff_files["Renamed"]:
         
+
+
+# In[1]:
+
+
+import pandas as pd
+
+df = pd.read_csv("data/sampled_50/tmp3.csv")
+df.info()
+
+
+# In[2]:
+
+
+df_simplified = df.drop(columns=["diff_files"])
+df_simplified.to_csv("methods_20_simplified.csv", index=False)
 
 
 # In[ ]:
 
 
 
+
+
+# # New check
+
+# In[2]:
+
+
+import pandas as pd
+
+df = pd.read_parquet("official_original.parquet")
+df
+
+
+# In[3]:
+
+
+df["repoName"].nunique()
+
+
+# In[4]:
+
+
+df["startCommit"].nunique()
+
+
+# In[5]:
+
+
+df["endCommit"].nunique()
+
+
+# In[6]:
+
+
+df["repo_start_end_commit"] = df.apply(lambda row: row["repoName"] + "__" + row["startCommit"] + "__" + row["endCommit"], axis=1)
+df
+
+
+# In[7]:
+
+
+df["repo_start_end_commit"].nunique()
+
+
+# In[8]:
+
+
+df.info()
+
+
+# In[9]:
+
+
+# for i in range(len(df) - 1):
+#     for j in range(i + 1, len(df)):
+#         if df.iloc[i, 16] == df.iloc[j, 16] and df.iloc[i, 17] != df.iloc[j, 17]:
+#             print(i, j)
+
+
+# In[10]:
+
+
+df.to_csv("official_added_id.csv", index=False)
+
+
+# In[11]:
+
+
+unique = df.groupby("repo_start_end_commit").apply(lambda x: x.sample(1, random_state=42))
+unique
+
+
+# In[12]:
+
+
+unique.info()
+
+
+# In[13]:
+
+
+unique.head()
+
+
+# In[15]:
+
+
+unique.reset_index(drop=True, inplace=True)
+unique
+
+
+# In[16]:
+
+
+new_data = pd.DataFrame({
+    "repo_start_end_commit": unique["repo_start_end_commit"],
+    "repo_name": unique["repoName"],
+    "start_commit": unique["startCommit"],
+    "end_commit": unique["endCommit"]
+})
+new_data
+
+
+# In[17]:
+
+
+new_data.to_csv("new_data_tmp.csv", index=False)
+
+
+# In[18]:
+
+
+df
+
+
+# In[35]:
+
+
+def get_info(repo_name: str, start_commit: str, end_commit: str, df: pd.DataFrame):
+    records = df[(df["repoName"] == repo_name) & (df["startCommit"] == start_commit) & (df["endCommit"] == end_commit)]
+    # print(records.info())
+    if records.empty:
+        raise Exception("No lib changes")
+    migration_info = {
+        "start_commit_changes": records.iloc[0]["startCommitChanges"],
+        "end_commit_changes": records.iloc[0]["endCommitChanges"],
+        "start_commit_message": records.iloc[0]["startCommitMessage"],
+        "end_commit_message": records.iloc[0]["endCommitMessage"],
+        "start_commit_time": records.iloc[0]["startCommitTime"],
+        "end_commit_time": records.iloc[0]["endCommitTime"],
+    }
+    lib_pairs = []
+    for _, record in records.iterrows():
+        lib_pairs.append({
+            "from_lib": record["fromLib"],
+            "to_lib": record["toLib"],
+            "pom_file": record["fileName"],
+            "category": record["Category"]
+        })
+    migration_info["lib_pairs"] = lib_pairs
+    return migration_info
+        
+
+
+# In[36]:
+
+
+new_data["migration_info"] = new_data.apply(lambda row: get_info(row["repo_name"], row["start_commit"], row["end_commit"], df), axis=1)
+new_data
+
+
+# In[37]:
+
+
+new_data.to_csv("new_data.csv", index=False)
+
+
+# In[38]:
+
+
+cnt = 0
+for _, row in new_data.iterrows():
+    cnt += len(row["migration_info"]["lib_pairs"])
+print(cnt)
+
+
+# In[39]:
+
+
+print(len(df))
+
+
+# In[40]:
+
+
+new_data.rename(columns={"repo_start_end_commit": "id"}, inplace=True)
+new_data
+
+
+# In[41]:
+
+
+new_data.to_csv("new_data.csv", index=False)
+
+
+# In[42]:
+
+
+sum(new_data["start_commit"] == new_data["end_commit"])
+
+
+# In[ ]:
+
+
+import os
+repo_storage = "/drive1/phatnt/zTrans/data/repos"
+for _, row in new_data.iterrows():
+    repo_dir = os.path.join(repo_storage, row["repo_name"])
+    cmd = f"cd {repo_dir}"
 
