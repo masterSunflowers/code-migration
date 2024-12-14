@@ -4,7 +4,7 @@ import pandas as pd
 import json
 import subprocess
 
-df = pd.read_csv("processed3.csv")
+df = pd.read_csv("data/sampled_50/tmp2.csv")
 repo_storage = "/drive1/phatnt/zTrans/data/repos"
 
 
@@ -38,7 +38,7 @@ lst_renamed_modified_previous = []
 lst_renamed_modified_current = []
 
 
-path_to_parsed = "/drive2/phatnt/zTrans/thieulvd/final_parsed_tmp"
+path_to_parsed = "/drive2/phatnt/zTrans/thieulvd/parsed-50"
 for _, row in df.iterrows():
     if pd.isna(row["diff_files"]):
         continue

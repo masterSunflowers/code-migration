@@ -5,6 +5,7 @@ import os
 
 repo_storage = "/drive1/phatnt/zTrans/data/repos"
 
+
 def read_file_in_commit(repo_dir, rev_path, commit_hash):
     cmd = (
         f"git config --global --add safe.directory {repo_dir} && "
@@ -19,7 +20,6 @@ def read_file_in_commit(repo_dir, rev_path, commit_hash):
 
 
 def get_info_from_git_diff(repo_dir, commit1, commit2, file1, file2):
-
     cmd = (
         f"git config --global --add safe.directory {repo_dir} && "
         f"cd {repo_dir} && "
@@ -40,52 +40,57 @@ def get_info_from_git_diff(repo_dir, commit1, commit2, file1, file2):
     except subprocess.CalledProcessError as e:
         raise e
 
-#==============================================================================
 
-df = pd.read_csv(".csv")
-num_repo_not_na = 0
-num_repo_has_java_diff_file = 0
-num_java_diff_files = 0
-num_java_modify_files = 0
-cnt = 0
+# ==============================================================================
+
+df = pd.read_csv("data/sampled_50/tmp2.csv")
+num_not_na = 0
+num_has_java_diff_file = 0
+num_has_modified_file = 0
+num_java_diff_file = 0
+num_java_file_added = 0
+num_java_file_deleted = 0
+num_java_file_modified = 0
+num_java_file_renamed_modified = 0
+num_java_file_renamed_unchanged = 0
 for _, row in df.iterrows():
     diff_files = row["diff_files"]
     if pd.isna(diff_files):
         continue
+    num_not_na += 1
     diff_files = eval(diff_files)
-    if diff_files["Renamed-Modified"]:
-        for old, new, similarity_index in diff_files["Renamed-Modified"]:
-            if similarity_index < 80:
-                with open("check.txt", "a") as f:
-                    f.write(str(similarity_index) + '\n')
-                    f.write(
-                        read_file_in_commit(
-                            os.path.join(repo_storage, row["repoName"]),
-                            old,
-                            row["prev_commit"],
-                        )
-                    )
-                    f.write("\n============================================\n")
-                    f.write(
-                        read_file_in_commit(
-                            os.path.join(repo_storage, row["repoName"]),
-                            new,
-                            row["endCommit"],
-                        )
-                    )
-                    f.write("\n============================================")
-                    f.write("\n============================================\n")
+    if (
+        diff_files["Added"]
+        or diff_files["Deleted"]
+        or diff_files["Modified"]
+        or diff_files["Renamed-Modified"]
+        or diff_files["Renamed-Unchanged"]
+    ):
+        num_has_java_diff_file += 1
+        if diff_files["Modified"] or diff_files["Renamed-Modified"]:
+            num_has_modified_file += 1
+
+    num_java_file_added += len(diff_files["Added"])
+    num_java_file_deleted += len(diff_files["Deleted"])
+    num_java_file_modified += len(diff_files["Modified"])
+    num_java_file_renamed_modified += len(diff_files["Renamed-Modified"])
+    num_java_file_renamed_unchanged += len(diff_files["Renamed-Unchanged"])
 
 
-#==============================================================================
+print("Number of Java files added: ", num_java_file_added)
+print("Number of Java files deleted: ", num_java_file_deleted)
+print("Number of Java files modified: ", num_java_file_modified)
+print("Number of Java files renamed and modified: ", num_java_file_renamed_modified)
+print("Number of Java files renamed and unchanged: ", num_java_file_renamed_unchanged)
 
-# repo_dir = "/drive1/phatnt/zTrans/data/repos/apache_dubbo-admin"
-# prev_commit = "80013ffc38b3d737bd891a2b574ef75a93450bd9"
-# cur_commit = "995e06b547cb7554c99deb3129fca19b2c35aa8b"
+print("Number of commits that have Java file changes: ", num_has_java_diff_file)
+print("Number of commits that have modified Java files: ", num_has_modified_file)
 
-# old_file_path = "dubbo-admin-backend/src/main/java/org/apache/dubbo/admin/service/impl/OverrideServiceImpl.java"
-# new_file_path = "dubbo-admin-backend/src/main/java/org/apache/dubbo/admin/service/impl/OverrideServiceImpl.java"
-
-# print(read_file_in_commit(repo_dir, old_file_path, prev_commit))
-# print("=" * 100)
-# print(read_file_in_commit(repo_dir, new_file_path, cur_commit))
+print(
+    "Num diff java files: ",
+    num_java_file_added
+    + num_java_file_deleted
+    + num_java_file_modified
+    + num_java_file_renamed_unchanged
+    + num_java_file_renamed_modified,
+)
