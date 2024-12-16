@@ -47,12 +47,12 @@ def get_code(repo_dir, commit_hash, rev_path):
     # print(cmd)
     try:
         code = subprocess.check_output(cmd, shell=True).strip().decode("utf-8")
-        return code
+        return code.replace("\r\n", "\n")
     except Exception as e:
         raise e
 
 
-def get_code_update(repo_dir, commit_hash, rev_path):
+def get_code_updated(repo_dir, commit_hash, rev_path):
     versions = list(filter(lambda dir: "ver" in dir, os.listdir(repo_dir)))
     if commit_hash in versions[0]:
         file_path = os.path.join(repo_dir, versions[0], rev_path)
@@ -60,36 +60,36 @@ def get_code_update(repo_dir, commit_hash, rev_path):
         file_path = os.path.join(repo_dir, versions[1], rev_path)
     with open(file_path, "r") as f:
         code = f.read()
-    return code
+    return code.replace("\r\n", "\n")
 
 
 def parse_java_files(repo_dir, row):
     for rev_path in eval(row["java_added"]):
-        ver2_code = get_code_update(repo_dir, row["end_commit"], rev_path)
+        ver2_code = get_code_updated(repo_dir, row["end_commit"], rev_path)
         tree = get_ast(ver2_code)
         yield 2, None, rev_path, "Added", tree
 
     for rev_path in eval(row["java_deleted"]):
-        ver1_code = get_code_update(repo_dir, row["prev_commit"], rev_path)
+        ver1_code = get_code_updated(repo_dir, row["prev_commit"], rev_path)
         tree = get_ast(ver1_code)
         yield 1, rev_path, None, "Deleted", tree
 
     for rev_path in eval(row["java_modified"]):
-        ver2_code = get_code_update(repo_dir, row["end_commit"], rev_path)
+        ver2_code = get_code_updated(repo_dir, row["end_commit"], rev_path)
         tree = get_ast(ver2_code)
         yield 2, rev_path, rev_path, "Modified", tree
 
-        ver1_code = get_code_update(repo_dir, row["prev_commit"], rev_path)
+        ver1_code = get_code_updated(repo_dir, row["prev_commit"], rev_path)
         tree = get_ast(ver1_code)
         yield 1, rev_path, rev_path, "Modified", tree
 
     for dic in eval(row["java_renamed_modified"]):
         ver1_rev_path, ver2_rev_path, _ = dic.values()
-        ver2_code = get_code_update(repo_dir, row["end_commit"], ver2_rev_path)
+        ver2_code = get_code_updated(repo_dir, row["end_commit"], ver2_rev_path)
         tree = get_ast(ver2_code)
         yield 2, ver1_rev_path, ver2_rev_path, "Renamed-Modified", tree
 
-        ver1_code = get_code_update(repo_dir, row["prev_commit"], ver1_rev_path)
+        ver1_code = get_code_updated(repo_dir, row["prev_commit"], ver1_rev_path)
         tree = get_ast(ver1_code)
         yield 1, ver1_rev_path, ver2_rev_path, "Renamed-Modified", tree
 

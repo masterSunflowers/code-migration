@@ -21,7 +21,7 @@ def main(args):
         os.makedirs(ver2_dir, exist_ok=True)
 
         copy_ver1_cmd = (
-            f"cd {repo_dir} && "
+            f"cd {repo_dir} && "    
             "git stash && "
             f"git checkout {row['prev_commit']} && "
             f"cp -r {repo_dir}/* {ver1_dir} && "
