@@ -6,7 +6,6 @@ import argparse
 import json
 import os
 import subprocess
-from typing import Dict, List
 
 import pandas as pd
 import tree_sitter
@@ -45,6 +44,7 @@ def get_ast(code):
 
 def get_code(repo_dir, commit_hash, rev_path):
     cmd = f"cd {repo_dir} && " f"git show {commit_hash}:{rev_path}"
+    # print(cmd)
     try:
         code = subprocess.check_output(cmd, shell=True).strip().decode("utf-8")
         return code
@@ -52,52 +52,50 @@ def get_code(repo_dir, commit_hash, rev_path):
         raise e
 
 
-def parse_java_files(
-    repo_dir: str, file_map: Dict[str, List[str]], prev_commit: str, cur_commit: str
-):
-    for file_mode in file_map:
-        if file_map[file_mode]:
-            match file_mode:
-                case "Added":
-                    # for rev_path in file_map[file_mode]:
-                    #     current_code = get_code(repo_dir, cur_commit, rev_path)
-                    #     tree = get_ast(current_code)
-                    #     yield rev_path, tree, file_mode, cur_commit, None
-                    pass
-                case "Modified":
-                    for rev_path in file_map[file_mode]:
-                        current_code = get_code(repo_dir, cur_commit, rev_path)
-                        tree = get_ast(current_code)
-                        yield rev_path, tree, file_mode, cur_commit, None
+def get_code_update(repo_dir, commit_hash, rev_path):
+    versions = os.listdir(repo_dir)
+    if commit_hash in versions[0]:
+        file_path = os.path.join(repo_dir, versions[0], rev_path)
+    else:
+        file_path = os.path.join(repo_dir, versions[1], rev_path)
+    with open(file_path, "r") as f:
+        code = f.read()
+    return code
 
-                        previous_code = get_code(repo_dir, prev_commit, rev_path)
-                        tree = get_ast(previous_code)
-                        yield rev_path, tree, file_mode, prev_commit, None
-                case "Deleted":
-                    # for rev_path in file_map[file_mode]:
-                    #     previous_code = get_code(repo_dir, prev_commit, rev_path)
-                    #     tree = get_ast(previous_code)
-                    #     yield rev_path, tree, file_mode, prev_commit, None
-                    pass
-                case "Renamed-Modified":
-                    for old_path, new_path, _ in file_map[file_mode]:
-                        current_code = get_code(repo_dir, cur_commit, new_path)
-                        tree = get_ast(current_code)
-                        yield new_path, tree, file_mode, cur_commit, old_path
 
-                        previous_code = get_code(repo_dir, prev_commit, old_path)
-                        tree = get_ast(previous_code)
-                        yield old_path, tree, file_mode, prev_commit, new_path
-                case "Renamed-Unchanged":
-                    pass
+def parse_java_files(repo_dir, row):
+    for rev_path in eval(row["java_added"]):
+        ver2_code = get_code(repo_dir, row["end_commit"], rev_path)
+        tree = get_ast(ver2_code)
+        yield 2, None, rev_path, "Added", tree
 
-                case _:
-                    print(f"Unknown file mode: {file_mode}")
-                    continue
+    for rev_path in eval(row["java_deleted"]):
+        ver1_code = get_code(repo_dir, row["prev_commit"], rev_path)
+        tree = get_ast(ver1_code)
+        yield 1, rev_path, None, "Deleted", tree
+
+    for rev_path in eval(row["java_modified"]):
+        ver2_code = get_code(repo_dir, row["end_commit"], rev_path)
+        tree = get_ast(ver2_code)
+        yield 2, rev_path, rev_path, "Modified", tree
+
+        ver1_code = get_code(repo_dir, row["prev_commit"], rev_path)
+        tree = get_ast(ver1_code)
+        yield 1, rev_path, rev_path, "Modified", tree
+
+    for dic in eval(row["java_renamed_modified"]):
+        ver1_rev_path, ver2_rev_path, _ = dic.values()
+        ver2_code = get_code(repo_dir, row["end_commit"], ver2_rev_path)
+        tree = get_ast(ver2_code)
+        yield 2, ver1_rev_path, ver2_rev_path, "Renamed-Modified", tree
+
+        ver1_code = get_code(repo_dir, row["prev_commit"], ver1_rev_path)
+        tree = get_ast(ver1_code)
+        yield 1, ver1_rev_path, ver2_rev_path, "Renamed-Modified", tree
 
 
 def get_definitions(
-    repo_name, rev_path: str, tree: tree_sitter.Tree, file_mode: str, commit: str, map_path: str = ""
+    version: int, ver1_path: str, ver2_path: str, file_mode: str, tree: tree_sitter.Tree
 ):
     root_node = tree.root_node
     lst_class_info = []
@@ -117,9 +115,9 @@ def get_definitions(
         node = stack.pop(0)
         tree_path = get_class_node_path(root_node, node)
         class_info = {
-            "repo_name": repo_name,
-            "commit": commit,
-            "rev_path": rev_path,
+            "version": version,
+            "ver1_path": ver1_path,
+            "ver2_path": ver2_path,
             "definition": normalize_code(node.text.decode("utf-8")),
             "package": package_name,
             "tree_path": tree_path,
@@ -137,7 +135,6 @@ def get_definitions(
                 "column": node.end_point.column,
             },
             "file_mode": file_mode,
-            "map_path": map_path,
             "methods": [],
         }
         class_body = None
@@ -248,60 +245,59 @@ def get_definitions(
 
 
 def main(args):
-    df = pd.read_csv(args.input)
+    df = pd.read_csv(args.data_file)
     for _, row in tqdm(df.iterrows(), total=len(df), desc="Parsing"):
-        if not pd.isna(row["diff_files"]):
-            repo_dir = os.path.join(args.repo_storage, row["repoName"])
-            file_map = eval(row["diff_files"])
-            # Parse the AST for files in previous commit version and current commit version
-            output_prev = os.path.join(
-                args.output_dir, row["repoName"] + "--" + row["prev_commit"]
+        repo_dir = os.path.join(args.repo_storage, row["repo_name"])
+        ver1_parsed_dir = os.path.join(
+            args.data_storage, row["id"], f"parsed1__{row['prev_commit']}"
+        )
+        ver2_parsed_dir = os.path.join(
+            args.data_storage, row["id"], f"parsed2__{row['end_commit']}"
+        )
+        os.makedirs(ver1_parsed_dir, exist_ok=True)
+        os.makedirs(ver2_parsed_dir, exist_ok=True)
+        for version, ver1_path, ver2_path, file_mode, tree in parse_java_files(
+            repo_dir,
+            row=row,
+        ):
+            lst_class_info = get_definitions(
+                version, ver1_path, ver2_path, file_mode, tree
             )
-            output_cur = os.path.join(
-                args.output_dir, row["repoName"] + "--" + row["endCommit"]
-            )
-            if not os.path.exists(output_prev):
-                os.makedirs(output_prev, exist_ok=True)
-            if not os.path.exists(output_cur):
-                os.makedirs(output_cur, exist_ok=True)
-
-            for rev_path, tree, file_mode, commit_hash, map_path in parse_java_files(
-                repo_dir,
-                file_map,
-                row["prev_commit"],
-                row["endCommit"],
-            ):
-                lst_class_info = get_definitions(row["repoName"], rev_path, tree, file_mode, commit_hash, map_path)
-                file_name = (
-                    "--".join(os.path.normpath(rev_path).split(os.sep)) + ".json"
+            file_name = (
+                "--".join(
+                    os.path.normpath(ver1_path if version == 1 else ver2_path).split(
+                        os.sep
+                    )
                 )
-                if commit_hash == row["prev_commit"]:
-                    with open(
-                        os.path.join(output_prev, file_name),
-                        "w",
-                    ) as f:
-                        json.dump(lst_class_info, f, indent=4)
-                else:
-                    with open(
-                        os.path.join(output_cur, file_name),
-                        "w",
-                    ) as f:
-                        json.dump(lst_class_info, f, indent=4)
+                + ".json"
+            )
+            if version == 1:
+                with open(
+                    os.path.join(ver1_parsed_dir, file_name),
+                    "w",
+                ) as f:
+                    json.dump(lst_class_info, f, indent=4)
+            else:
+                with open(
+                    os.path.join(ver2_parsed_dir, file_name),
+                    "w",
+                ) as f:
+                    json.dump(lst_class_info, f, indent=4)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input", dest="input", required=True, help="Input data file")
+    parser.add_argument("-d", "--data-file", dest="data_file", help="CSV data file")
     parser.add_argument(
+        "-r",
         "--repo-storage",
         dest="repo_storage",
-        required=True,
         help="Path to repos storage",
     )
     parser.add_argument(
-        "--output-dir",
-        dest="output_dir",
-        required=True,
+        "-s",
+        "--data-storage",
+        dest="data_storage",
         help="Where to store parse result",
     )
     args = parser.parse_args()

@@ -149,7 +149,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Class Mapper")
-    parser.add_argument("-i", "--input", dest="input", help="Input CSV file")
-    parser.add_argument("-p", "--parsed-class", dest="parsed_class")
+    parser.add_argument("-d", "--data-file", dest="data_file", help="CSV data file")
+    parser.add_argument("-s", "--data-storage", dest="data_storage")
     args = parser.parse_args()
     main(args)

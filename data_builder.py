@@ -12,10 +12,10 @@ def main(args):
     for _, row in tqdm(df.iterrows(), total=len(df), desc="Creating"):
         repo_dir = os.path.join(args.repo_storage, row["repo_name"])
         ver1_dir = os.path.join(
-            args.data_storage, row["repo_name"], f"ver1__{row['prev_commit']}"
+            args.data_storage, row["id"], f"ver1__{row['prev_commit']}"
         )
         ver2_dir = os.path.join(
-            args.data_storage, row["repo_name"], f"ver2__{row['end_commit']}"
+            args.data_storage, row["id"], f"ver2__{row['end_commit']}"
         )
         os.makedirs(ver1_dir, exist_ok=True)
         os.makedirs(ver2_dir, exist_ok=True)
