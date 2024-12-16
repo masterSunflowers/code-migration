@@ -31,102 +31,180 @@ def get_similarity_index(old: str, new: str) -> float:
     return similarity
 
 
+def create_method_signature(method: dict) -> str:
+    signature = method["name"]
+    for param in method["parameters"]:
+        signature += "__" + param["type"]
+    return signature
+
+
 def _annotate(lst_method_prev, lst_method_cur, threshold: float):
     for amethod in lst_method_prev:
+        amethod["ver1_signature"] = create_method_signature(amethod)
         mapped = False
         for bmethod in lst_method_cur:
-            if (
-                amethod["name"] == bmethod["name"]
-                and amethod["parameters"] == bmethod["parameters"]
-            ):
+            bmethod["ver2_signature"] = create_method_signature(bmethod)
+            if amethod["ver1_signature"] == bmethod["ver2_signature"]:
                 mapped = True
                 if amethod["definition"] == bmethod["definition"]:
                     amethod["method_mode"] = "Unchanged"
                     bmethod["method_mode"] = "Unchanged"
+                    amethod["ver2_signature"] = bmethod["ver2_signature"]
+                    bmethod["ver1_signature"] = amethod["ver1_signature"]
                 else:
                     amethod["method_mode"] = "Modified"
                     bmethod["method_mode"] = "Modified"
+                    amethod["ver2_signature"] = bmethod["ver2_signature"]
+                    bmethod["ver1_signature"] = amethod["ver1_signature"]
                 break
         if mapped:
             continue
-    
+
     for amethod in lst_method_prev:
         if "method_mode" in amethod:
             continue
-        
+
         max_similarity = 0
         best_match = None
         for bmethod in lst_method_cur:
             if "method_mode" in bmethod:
                 continue
-            similarity = get_similarity_index(amethod["definition"], bmethod["definition"])
+            similarity = get_similarity_index(
+                amethod["definition"], bmethod["definition"]
+            )
             if similarity > max_similarity:
                 max_similarity = similarity
                 best_match = bmethod
-        
+
         if max_similarity == 100:
             amethod["method_mode"] = "Renamed-Unchanged"
             best_match["method_mode"] = "Renamed-Unchanged"
+            amethod["ver1_signature"] = create_method_signature(amethod)
+            best_match["ver2_signature"] = create_method_signature(best_match)
+            amethod["ver2_signature"] = best_match["ver2_signature"]
+            best_match["ver1_signature"] = amethod["ver1_signature"]
             continue
         elif max_similarity > threshold:
             amethod["method_mode"] = "Renamed-Modified"
             best_match["method_mode"] = "Renamed-Modified"
-            amethod["map_method"] = (best_match["name"], best_match["parameters"])
-            best_match["map_method"] = (amethod["name"], amethod["parameters"]) 
+            amethod["ver1_signature"] = create_method_signature(amethod)
+            best_match["ver2_signature"] = create_method_signature(best_match)
+            amethod["ver2_signature"] = best_match["ver2_signature"]
+            best_match["ver1_signature"] = amethod["ver1_signature"]
             continue
+
     for amethod in lst_method_prev:
         if "method_mode" not in amethod:
             amethod["method_mode"] = "Deleted"
+            amethod["ver1_signature"] = create_method_signature(amethod)
+            amethod["ver2_signature"] = ""
+            continue
 
     for bmethod in lst_method_cur:
         if "method_mode" not in bmethod:
-            bmethod["method_mode"] = "Added"   
-    
-    return lst_method_prev, lst_method_cur    
-
-def annotate_method(
-    parsed_class, repo, prev_commit, cur_commit, file_path, mode, threshold: float = 50
-):
-    if mode == "Modified":
-        old = file_path
-        new = file_path
-    elif mode == "Renamed-Modified":
-        old, new, _ = file_path
-    else:
-        raise ValueError(f"Unknown mode: {mode}")
-
-    output_prev = os.path.join(parsed_class, repo + "--" + prev_commit)
-    output_cur = os.path.join(parsed_class, repo + "--" + cur_commit)
-    old_file_name = os.path.normpath(old).replace(os.sep, "--") + ".json"
-    new_file_name = os.path.normpath(new).replace(os.sep, "--") + ".json"
-    with open(os.path.join(output_prev, old_file_name), "r") as f:
-        old_data = json.load(f)
-    with open(os.path.join(output_cur, new_file_name), "r") as f:
-        new_data = json.load(f)
-
-    for aclass in old_data:
-        if aclass["class_mode"] == "Modified":
-            for bclass in new_data:
-                if aclass["tree_path"] == bclass["tree_path"]:
-                    aclass["methods"], bclass["methods"] = _annotate(
-                        aclass["methods"], bclass["methods"], threshold
-                    )
-                    break
-        elif aclass["class_mode"] == "Renamed-Modified":
-            for bclass in new_data:
-                if aclass["map_tree_path"] == bclass["tree_path"]:
-                    aclass["methods"], bclass["methods"] = _annotate(
-                        aclass["methods"], bclass["methods"], threshold
-                    )
-                    break
-
-        else:
+            bmethod["method_mode"] = "Added"
+            bmethod["ver2_signature"] = create_method_signature(bmethod)
+            bmethod["ver1_signature"] = ""
             continue
 
-    with open(os.path.join(output_prev, old_file_name), "w") as f:
-        json.dump(old_data, f, indent=4)
-    with open(os.path.join(output_cur, new_file_name), "w") as f:
-        json.dump(new_data, f, indent=4)
+    return lst_method_prev, lst_method_cur
+
+
+def annotate_method(
+    data_storage, id, prev_commit, end_commit, item, column, threshold: float = 50
+):
+    try:
+        if column == "java_added":
+            old = ""
+            new = item
+        elif column == "java_deleted":
+            old = item
+            new = ""
+        elif column == "java_modified":
+            old = item
+            new = item
+        else:
+            old = item["ver1_path"]
+            new = item["ver2_path"]
+
+        ver1_parsed_dir = os.path.join(data_storage, id, f"parsed1__{prev_commit}")
+        ver2_parsed_dir = os.path.join(data_storage, id, f"parsed2__{end_commit}")
+        old_file_name = os.path.normpath(old).replace(os.sep, "--") + ".json"
+        new_file_name = os.path.normpath(new).replace(os.sep, "--") + ".json"
+
+        if column == "java_added":
+            with open(os.path.join(ver2_parsed_dir, new_file_name), "r") as f:
+                new_data = json.load(f)
+            for bclass in new_data:
+                for bmethod in bclass["methods"]:
+                    bmethod["method_mode"] = "Added"
+                    bmethod["ver2_signature"] = create_method_signature(bmethod)
+                    bmethod["ver1_signature"] = ""
+            with open(os.path.join(ver2_parsed_dir, new_file_name), "w") as f:
+                json.dump(new_data, f, indent=4)
+            return
+        elif column == "java_deleted":
+            with open(os.path.join(ver1_parsed_dir, old_file_name), "r") as f:
+                old_data = json.load(f)
+            for aclass in old_data:
+                for amethod in aclass["methods"]:
+                    amethod["method_mode"] = "Deleted"
+                    amethod["ver1_signature"] = create_method_signature(amethod)
+                    amethod["ver2_signature"] = ""
+            with open(os.path.join(ver1_parsed_dir, old_file_name), "w") as f:
+                json.dump(old_data, f, indent=4)
+            return
+
+        with open(os.path.join(ver1_parsed_dir, old_file_name), "r") as f:
+            old_data = json.load(f)
+        with open(os.path.join(ver2_parsed_dir, new_file_name), "r") as f:
+            new_data = json.load(f)
+
+        for aclass in old_data:
+            if aclass["class_mode"] in ["Modified", "Renamed-Modified"]:
+                for bclass in new_data:
+                    if aclass["ver2_tree_path"] == bclass["ver2_tree_path"]:
+                        aclass["methods"], bclass["methods"] = _annotate(
+                            aclass["methods"], bclass["methods"], threshold
+                        )
+                        break
+            else:
+                continue
+
+        for aclass in old_data:
+            if aclass["class_mode"] in ["Unchanged", "Renamed-Unchanged"]:
+                for amethod in aclass["methods"]:
+                    amethod["method_mode"] = "Unchanged"
+                    signature = create_method_signature(amethod)
+                    amethod["ver1_signature"] = signature
+                    amethod["ver2_signature"] = signature
+            elif aclass["class_mode"] == "Deleted":
+                for amethod in aclass["methods"]:
+                    amethod["method_mode"] = "Deleted"
+                    amethod["ver1_signature"] = create_method_signature(amethod)
+                    amethod["ver2_signature"] = ""
+
+        for bclass in new_data:
+            if bclass["class_mode"] in ["Unchanged", "Renamed-Unchanged"]:
+                for bmethod in bclass["methods"]:
+                    bmethod["method_mode"] = "Unchanged"
+                    signature = create_method_signature(bmethod)
+                    bmethod["ver2_signature"] = signature
+                    bmethod["ver1_signature"] = signature
+            elif bclass["class_mode"] == "Added":
+                for bmethod in bclass["methods"]:
+                    bmethod["method_mode"] = "Added"
+                    bmethod["ver2_signature"] = create_method_signature(bmethod)
+                    bmethod["ver1_signature"] = ""
+
+        with open(os.path.join(ver1_parsed_dir, old_file_name), "w") as f:
+            json.dump(old_data, f, indent=4)
+        with open(os.path.join(ver2_parsed_dir, new_file_name), "w") as f:
+            json.dump(new_data, f, indent=4)
+
+    except Exception as e:
+        print(f"Error processing {id} {item}")
+        raise e
 
 
 def main(args):
@@ -148,7 +226,7 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Class Mapper")
+    parser = argparse.ArgumentParser(dewscription="Class Mapper")
     parser.add_argument("-d", "--data-file", dest="data_file", help="CSV data file")
     parser.add_argument("-s", "--data-storage", dest="data_storage")
     args = parser.parse_args()

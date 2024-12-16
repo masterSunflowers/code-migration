@@ -43,38 +43,30 @@ def get_info_from_git_diff(repo_dir, commit1, commit2, file1, file2):
 
 # ==============================================================================
 
-df = pd.read_csv("data/sampled_50/tmp2.csv")
-num_not_na = 0
+df = pd.read_csv("data/migrations_36_file.csv")
 num_has_java_diff_file = 0
 num_has_modified_file = 0
-num_java_diff_file = 0
 num_java_file_added = 0
 num_java_file_deleted = 0
 num_java_file_modified = 0
 num_java_file_renamed_modified = 0
 num_java_file_renamed_unchanged = 0
 for _, row in df.iterrows():
-    diff_files = row["diff_files"]
-    if pd.isna(diff_files):
-        continue
-    num_not_na += 1
-    diff_files = eval(diff_files)
-    if (
-        diff_files["Added"]
-        or diff_files["Deleted"]
-        or diff_files["Modified"]
-        or diff_files["Renamed-Modified"]
-        or diff_files["Renamed-Unchanged"]
-    ):
+    added = eval(row["java_added"])
+    deleted = eval(row["java_added"])
+    modified = eval(row["java_modified"])
+    renamed_modified = eval(row["java_renamed_modified"])
+    renamed_unchanged = eval(row["java_renamed_unchanged"])
+    if added or deleted or modified or renamed_modified or renamed_unchanged:
         num_has_java_diff_file += 1
-        if diff_files["Modified"] or diff_files["Renamed-Modified"]:
-            num_has_modified_file += 1
+    if modified or renamed_modified:
+        num_has_modified_file += 1
 
-    num_java_file_added += len(diff_files["Added"])
-    num_java_file_deleted += len(diff_files["Deleted"])
-    num_java_file_modified += len(diff_files["Modified"])
-    num_java_file_renamed_modified += len(diff_files["Renamed-Modified"])
-    num_java_file_renamed_unchanged += len(diff_files["Renamed-Unchanged"])
+    num_java_file_added += len(added)
+    num_java_file_deleted += len(deleted)
+    num_java_file_modified += len(modified)
+    num_java_file_renamed_modified += len(renamed_modified)
+    num_java_file_renamed_unchanged += len(renamed_unchanged)
 
 
 print("Number of Java files added: ", num_java_file_added)
