@@ -46,8 +46,7 @@ def annotate_class(
         else:
             old = item["ver1_path"]
             new = item["ver2_path"]
-            
-
+       
         ver1_parsed_dir = os.path.join(data_storage, id, f"parsed1__{prev_commit}")
         ver2_parsed_dir = os.path.join(data_storage, id, f"parsed2__{end_commit}")
         old_file_name = os.path.normpath(old).replace(os.sep, "--") + ".json"
@@ -63,6 +62,7 @@ def annotate_class(
             with open(os.path.join(ver2_parsed_dir, new_file_name), "w") as f:
                 json.dump(new_data, f, indent=4)
             return
+        
         elif column == "java_deleted":
             with open(os.path.join(ver1_parsed_dir, old_file_name), "r") as f:
                 old_data = json.load(f)
@@ -124,7 +124,6 @@ def annotate_class(
             elif max_similarity > threshold:
                 aclass["class_mode"] = "Renamed-Modified"
                 best_match["class_mode"] = "Renamed-Modified"
-
                 aclass["ver2_tree_path"] = best_match["tree_path"]
                 aclass["ver1_tree_path"] = aclass["tree_path"]
                 best_match["ver1_tree_path"] = aclass["tree_path"]
@@ -172,7 +171,7 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Class Mapper")
+    parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--data-file", dest="data_file", help="CSV data file")
     parser.add_argument("-s", "--data-storage", dest="data_storage")
     args = parser.parse_args()

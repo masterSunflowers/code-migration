@@ -5,6 +5,7 @@ import os
 import myers
 import pandas as pd
 from tqdm import tqdm
+from typing import Union, Dict
 
 
 def get_similarity_index(old: str, new: str) -> float:
@@ -41,11 +42,9 @@ def create_method_signature(method: dict) -> str:
 def _annotate(lst_method_prev, lst_method_cur, threshold: float):
     for amethod in lst_method_prev:
         amethod["ver1_signature"] = create_method_signature(amethod)
-        mapped = False
         for bmethod in lst_method_cur:
             bmethod["ver2_signature"] = create_method_signature(bmethod)
             if amethod["ver1_signature"] == bmethod["ver2_signature"]:
-                mapped = True
                 if amethod["definition"] == bmethod["definition"]:
                     amethod["method_mode"] = "Unchanged"
                     bmethod["method_mode"] = "Unchanged"
@@ -57,8 +56,6 @@ def _annotate(lst_method_prev, lst_method_cur, threshold: float):
                     amethod["ver2_signature"] = bmethod["ver2_signature"]
                     bmethod["ver1_signature"] = amethod["ver1_signature"]
                 break
-        if mapped:
-            continue
 
     for amethod in lst_method_prev:
         if "method_mode" in amethod:
@@ -111,7 +108,13 @@ def _annotate(lst_method_prev, lst_method_cur, threshold: float):
 
 
 def annotate_method(
-    data_storage, id, prev_commit, end_commit, item, column, threshold: float = 50
+    data_storage: str,
+    id: str,
+    prev_commit: str,
+    end_commit: str,
+    item: Union[str, Dict[str, str]],
+    column: str,
+    threshold: float = 50,
 ):
     try:
         if column == "java_added":
@@ -208,25 +211,27 @@ def annotate_method(
 
 
 def main(args):
-    df = pd.read_csv(args.input)
+    df = pd.read_csv(args.data_file)
     for _, row in tqdm(df.iterrows(), total=len(df), desc="Parsing"):
-        if not pd.isna(row["diff_files"]):
-            file_map = eval(row["diff_files"])
-            for mode in file_map:
-                if mode in ["Modified", "Renamed-Modified"]:
-                    for item in file_map[mode]:
-                        annotate_method(
-                            args.parsed_class,
-                            row["repoName"],
-                            row["prev_commit"],
-                            row["endCommit"],
-                            item,
-                            mode,
-                        )
+        for col in [
+            "java_added",
+            "java_deleted",
+            "java_modified",
+            "java_renamed_modified",
+        ]:
+            for item in eval(row[col]):
+                annotate_method(
+                    args.data_storage,
+                    row["id"],
+                    row["prev_commit"],
+                    row["end_commit"],
+                    item,
+                    col,
+                )
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(dewscription="Class Mapper")
+    parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--data-file", dest="data_file", help="CSV data file")
     parser.add_argument("-s", "--data-storage", dest="data_storage")
     args = parser.parse_args()
