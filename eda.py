@@ -516,199 +516,323 @@ df_simplified.to_csv("methods_20_simplified.csv", index=False)
 
 # # New check
 
-# In[2]:
+# In[3]:
 
 
 import pandas as pd
 
-df = pd.read_parquet("official_original.parquet")
-df
-
-
-# In[3]:
-
-
-df["repoName"].nunique()
-
-
-# In[4]:
-
-
-df["startCommit"].nunique()
-
-
-# In[5]:
-
-
-df["endCommit"].nunique()
-
-
-# In[6]:
-
-
-df["repo_start_end_commit"] = df.apply(lambda row: row["repoName"] + "__" + row["startCommit"] + "__" + row["endCommit"], axis=1)
-df
-
-
-# In[7]:
-
-
-df["repo_start_end_commit"].nunique()
-
-
-# In[8]:
-
-
-df.info()
-
-
-# In[9]:
-
-
-# for i in range(len(df) - 1):
-#     for j in range(i + 1, len(df)):
-#         if df.iloc[i, 16] == df.iloc[j, 16] and df.iloc[i, 17] != df.iloc[j, 17]:
-#             print(i, j)
-
-
-# In[10]:
-
-
-df.to_csv("official_added_id.csv", index=False)
-
-
-# In[11]:
-
-
-unique = df.groupby("repo_start_end_commit").apply(lambda x: x.sample(1, random_state=42))
-unique
-
-
-# In[12]:
-
-
-unique.info()
-
-
-# In[13]:
-
-
-unique.head()
-
-
-# In[15]:
-
-
-unique.reset_index(drop=True, inplace=True)
-unique
-
-
-# In[16]:
-
-
-new_data = pd.DataFrame({
-    "repo_start_end_commit": unique["repo_start_end_commit"],
-    "repo_name": unique["repoName"],
-    "start_commit": unique["startCommit"],
-    "end_commit": unique["endCommit"]
-})
-new_data
-
-
-# In[17]:
-
-
-new_data.to_csv("new_data_tmp.csv", index=False)
-
-
-# In[18]:
-
-
+df = pd.read_parquet("data/official_original.parquet")
 df
 
 
 # In[35]:
 
 
-def get_info(repo_name: str, start_commit: str, end_commit: str, df: pd.DataFrame):
-    records = df[(df["repoName"] == repo_name) & (df["startCommit"] == start_commit) & (df["endCommit"] == end_commit)]
-    # print(records.info())
-    if records.empty:
-        raise Exception("No lib changes")
-    migration_info = {
-        "start_commit_changes": records.iloc[0]["startCommitChanges"],
-        "end_commit_changes": records.iloc[0]["endCommitChanges"],
-        "start_commit_message": records.iloc[0]["startCommitMessage"],
-        "end_commit_message": records.iloc[0]["endCommitMessage"],
-        "start_commit_time": records.iloc[0]["startCommitTime"],
-        "end_commit_time": records.iloc[0]["endCommitTime"],
-    }
-    lib_pairs = []
-    for _, record in records.iterrows():
-        lib_pairs.append({
-            "from_lib": record["fromLib"],
-            "to_lib": record["toLib"],
-            "pom_file": record["fileName"],
-            "category": record["Category"]
-        })
-    migration_info["lib_pairs"] = lib_pairs
-    return migration_info
-        
+df["repoName"].nunique()
 
 
 # In[36]:
 
 
-new_data["migration_info"] = new_data.apply(lambda row: get_info(row["repo_name"], row["start_commit"], row["end_commit"], df), axis=1)
-new_data
+df["startCommit"].nunique()
 
 
 # In[37]:
 
 
-new_data.to_csv("new_data.csv", index=False)
-
-
-# In[38]:
-
-
-cnt = 0
-for _, row in new_data.iterrows():
-    cnt += len(row["migration_info"]["lib_pairs"])
-print(cnt)
-
-
-# In[39]:
-
-
-print(len(df))
-
-
-# In[40]:
-
-
-new_data.rename(columns={"repo_start_end_commit": "id"}, inplace=True)
-new_data
-
-
-# In[41]:
-
-
-new_data.to_csv("new_data.csv", index=False)
+df["endCommit"].nunique()
 
 
 # In[42]:
 
 
-sum(new_data["start_commit"] == new_data["end_commit"])
+df["repo_start_end_commit"] = df.apply(lambda row: row["repoName"] + "__" + row["startCommit"] + "__" + row["endCommit"], axis=1)
+df
+
+
+# In[43]:
+
+
+df["repo_start_end_commit"].nunique()
+
+
+# In[44]:
+
+
+df.info()
+
+
+# In[47]:
+
+
+for i in range(len(df) - 1):
+    for j in range(i + 1, len(df)):
+        if df.iloc[i, 16] == df.iloc[j, 16] and df.iloc[i, 17] != df.iloc[j, 17]:
+            print(i, j)
+
+
+# In[49]:
+
+
+df.to_csv("official_added_id.csv", index=False)
+
+
+# In[50]:
+
+
+unique = df.groupby("repo_start_end_commit").apply(lambda x: x.sample(1, random_state=42))
+unique
+
+
+# In[51]:
+
+
+unique.info()
+
+
+# In[52]:
+
+
+sampled = unique.sample(n=50, random_state=42)
+sampled
+
+
+# In[54]:
+
+
+sampled.to_csv("sampled_50.csv", index=False)
+
+
+# # EDA
+
+# In[2]:
+
+
+import pandas as pd
+df = pd.read_csv("data/migrations_36_file.csv")
+df.info()
+
+
+# In[8]:
+
+
+# How many files changed between two version
+lst_num_changed_files = []
+for i in range(len(df)):
+    num_changed_files = []
+    for col in ["java_added", "java_deleted", "java_modified", "java_renamed_unchanged", "java_renamed_modified"]:
+        num_changed_files.append(len(eval(df.loc[i, col])))
+    lst_num_changed_files.append(num_changed_files)
+lst_num_changed_files
+
+
+# In[36]:
+
+
+cnt = 0
+for num_changed_files in lst_num_changed_files:
+    for i in range(5):
+        if num_changed_files[i] != 0:
+            break
+    else:
+        cnt += 1
+print(cnt)
+
+
+# In[9]:
+
+
+total_file_changes = sum([sum(x) for x in lst_num_changed_files])
+total_file_changes
+
+
+# In[10]:
+
+
+average_file_changes = total_file_changes / len(df)
+average_file_changes
+
+
+# In[41]:
+
+
+import numpy as np
+added, deleted, modified, renamed_unchanged, renamed_modified = np.array(lst_num_changed_files).sum(axis=0)
+print("Num java file added:            \t", added,            "      ~\t", "{:.2f}%".format(added / total_file_changes * 100))
+print("Num java file deleted:          \t", deleted,          "     ~\t", "{:.2f}%".format(deleted/ total_file_changes * 100))
+print("Num java file modified:         \t", modified,         "    ~\t", "{:.2f}%".format(modified / total_file_changes * 100))
+print("Num java file renamed_unchanged:\t", renamed_unchanged,        "       ~\t", "{:.2f}%".format(renamed_unchanged / total_file_changes * 100))
+print("Num java file renamed_modified: \t", renamed_modified, "     ~\t", "{:.2f}%".format(renamed_modified / total_file_changes * 100))
+
+
+# In[26]:
+
+
+import os
+data_storage = "/drive1/thieulvd/code-migration"
+migrations = os.listdir(data_storage)
+
+
+# In[34]:
+
+
+import json
+statistic_parsed1 = []
+statistic_parsed2 = []
+for migration in migrations:
+    print(migration)
+    level1_parsed1_info = {}
+    level1_parsed2_info = {}
+    folder = os.path.join(data_storage, migration)
+    for x in os.listdir(folder):
+        if x.startswith("parsed1"):
+            parsed1 = os.path.join(folder, x)
+        elif x.startswith("parsed2"):
+            parsed2 = os.path.join(folder, x)
+        else:
+            continue
+    for file in os.listdir(parsed1):
+        with open(os.path.join(parsed1, file), "r") as f:
+            lst = json.load(f)
+        for item in lst:
+            level1_parsed1_info[item["node_type"]] = level1_parsed1_info.get(item["node_type"], 0) + 1
+    for file in os.listdir(parsed2):
+        with open(os.path.join(parsed2, file), "r") as f:
+            lst = json.load(f)
+        for item in lst:
+            level1_parsed2_info[item["node_type"]] = level1_parsed2_info.get(item["node_type"], 0) + 1
+    statistic_parsed1.append(level1_parsed1_info)
+    statistic_parsed2.append(level1_parsed2_info)
+    
+
+
+# In[33]:
+
+
+statistic_parsed1
+
+
+# In[37]:
+
+
+df_parsed1 = pd.DataFrame(statistic_parsed1, columns=["class_declaration", "interface_declaration", "enum_declaration", "record_declaration", "annotation_type_declaration"])
+df_parsed1
+
+
+# In[38]:
+
+
+df_parsed2 = pd.DataFrame(statistic_parsed2, columns=["class_declaration", "interface_declaration", "enum_declaration", "record_declaration", "annotation_type_declaration"])
+df_parsed2
+
+
+# In[39]:
+
+
+df_parsed1.describe()
+
+
+# In[51]:
+
+
+import json
+statistic_parsed1 = []
+statistic_parsed2 = []
+method_pairs = []
+for migration in migrations:
+    level1_parsed1_info = {}
+    level1_parsed2_info = {}
+    folder = os.path.join(data_storage, migration)
+    for x in os.listdir(folder):
+        if x.startswith("parsed1"):
+            parsed1 = os.path.join(folder, x)
+        elif x.startswith("parsed2"):
+            parsed2 = os.path.join(folder, x)
+        else:
+            continue
+    ver1_classes = []
+    for file in os.listdir(parsed1):
+        with open(os.path.join(parsed1, file), "r") as f:
+            lst = json.load(f)
+        for item in lst:
+            if (item["file_mode"] == "Modified" or item["file_mode"] == "Renamed-Modified") and (item["class_mode"] == "Modified" or item["class_mode"] == "Renamed-Modified"):
+                ver1_classes.append(item)
+    for cls in ver1_classes:
+        ver2_path = cls["ver2_path"]
+        with open(os.path.join(parsed2, ver2_path.replace("/", "--") + ".json"), "r") as f:
+            ver2_lst = json.load(f)
+        other = None
+        for item in ver2_lst:
+            if item["ver2_tree_path"] == cls["ver2_tree_path"]:
+                other = item
+                break
+        for ver1_method in cls["methods"]:
+            if ver1_method["method_mode"] in ["Modified", "Renamed-Modified"]:
+                ver2_method = None
+                for method in other["methods"]:
+                    if ver1_method["ver2_signature"] == method["ver2_signature"]:
+                        ver2_method = method
+                        break
+                method_pairs.append((ver1_method, ver2_method))
+print(len(method_pairs))
+
+
+# In[53]:
+
+
+code_only_method_pairs = []
+for method_pair in method_pairs:
+    code_only_method_pairs.append({
+        "ver1": method_pair[0]["definition"],
+        "ver2": method_pair[1]["definition"]
+    })
+x = pd.DataFrame(code_only_method_pairs)
+x.head()
+
+
+# In[54]:
+
+
+x.describe()
+
+
+# In[64]:
+
+
+x.to_csv("/drive2/phatnt/zTrans/thieulvd/methods.csv", index=False)
+
+
+# In[56]:
+
+
+from transformers import AutoTokenizer
+
+tokenizer = AutoTokenizer.from_pretrained("deepseek-ai/deepseek-coder-6.7b-base")
+tokenizer
+
+
+# In[65]:
+
+
+x["len_ver1"] = x["ver1"].apply(lambda code: len(tokenizer(code)["input_ids"]))
+x["len_ver2"] = x["ver2"].apply(lambda code: len(tokenizer(code)["input_ids"]))
+x
+
+
+# In[66]:
+
+
+x.describe()
+
+
+# In[69]:
+
+
+print(x[x["len_ver1"] == 51545]["ver1"].iloc[0])
 
 
 # In[ ]:
 
 
-import os
-repo_storage = "/drive1/phatnt/zTrans/data/repos"
-for _, row in new_data.iterrows():
-    repo_dir = os.path.join(repo_storage, row["repo_name"])
-    cmd = f"cd {repo_dir}"
+
 

@@ -14,7 +14,7 @@ from tqdm import tqdm
 
 JAVA = tree_sitter.Language(tsjava.language())
 PARSER = tree_sitter.Parser(JAVA)
-CLASS_LIKE = ["class_declaration", "enum_declaration", "record_declaration", "annotation_type_declaration"]
+CLASS_LIKE = ["class_declaration", "enum_declaration", "record_declaration", "annotation_type_declaration", "interface_declaration"]
 
 def normalize_code(code: str):
     lines_of_code = code.splitlines()
@@ -136,6 +136,7 @@ def get_definitions(
             },
             "file_mode": file_mode,
             "methods": [],
+            "node_type": node.type
         }
         class_body = None
         lst_method_info = []
