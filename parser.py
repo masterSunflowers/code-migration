@@ -14,7 +14,7 @@ from tqdm import tqdm
 
 JAVA = tree_sitter.Language(tsjava.language())
 PARSER = tree_sitter.Parser(JAVA)
-
+CLASS_LIKE = ["class_declaration", "enum_declaration", "record_declaration", "annotation_type_declaration"]
 
 def normalize_code(code: str):
     lines_of_code = code.splitlines()
@@ -109,7 +109,7 @@ def get_definitions(
     # Traverse root node children recursively to get class and method definitions
     stack = []
     for child in root_node.children:
-        if child.type == "class_declaration":
+        if child.type in CLASS_LIKE:
             stack.append(child)
     while stack:
         node = stack.pop(0)
@@ -147,7 +147,7 @@ def get_definitions(
             elif child.type == "superclass":
                 class_info["superclass"] = child.text.decode("utf-8")
             elif child.type == "super_interfaces":
-                class_info["super_interfaces"] = child.text.decode("utf-8")
+                class_info["super_interfaces"] = child.named_children[0].text.decode("utf-8")
             elif child.type == "class_body":
                 class_info["body"] = normalize_code(child.text.decode("utf-8"))
                 class_body = child
@@ -173,38 +173,39 @@ def get_definitions(
                     for c in child.named_children:
                         if c.type == "modifiers":
                             method_info["modifiers"] = c.text.decode("utf-8")
-                        elif c.type == "type_identifier":
-                            method_info["return_type"] = c.text.decode("utf-8")
-                        elif c.type == "identifier":
-                            method_info["name"] = c.text.decode("utf-8")
-                        elif c.type == "formal_parameters":
-                            for param in c.named_children:
-                                if param.type == "formal_parameter":
-                                    param_type = param.named_children[0].text.decode(
-                                        "utf-8"
-                                    )
-                                    param_name = param.named_children[1].text.decode(
-                                        "utf-8"
-                                    )
-                                    method_info["parameters"].append(
-                                        {
-                                            "type": param_type,
-                                            "name": param_name,
-                                        }
-                                    )
-                        elif c.type == "block":
-                            method_info["body"] = normalize_code(c.text.decode("utf-8"))
+                    c = child.child_by_field_name("type")
+                    method_info["return_type"] = c.text.decode("utf-8")
+                    c = child.child_by_field_name("name")
+                    method_info["name"] = c.text.decode("utf-8")
+                    c = child.child_by_field_name("parameters")
+                    for param in c.named_children:
+                        if param.type == "formal_parameter":
+                            param_type = param.named_children[0].text.decode(
+                                "utf-8"
+                            )
+                            param_name = param.named_children[1].text.decode(
+                                "utf-8"
+                            )
+                            method_info["parameters"].append(
+                                {
+                                    "type": param_type,
+                                    "name": param_name,
+                                }
+                            )
+                    c = child.child_by_field_name("body")
+                    if c:
+                        method_info["body"] = normalize_code(c.text.decode("utf-8"))
                     lst_method_info.append(method_info)
-                elif child.type == "class_declaration":
+                elif child.type in CLASS_LIKE:
                     stack.append(child)
                 elif child.type == "constructor_declaration":
                     constructor_info = {
                         "definition": normalize_code(child.text.decode("utf-8")),
                         "name": None,
                         "modifiers": None,
+                        "return_type": None,
                         "parameters": [],
                         "body": None,
-                        "constructor": True,
                         "start_point": {
                             "row": child.start_point.row,
                             "column": child.start_point.column,
@@ -217,27 +218,28 @@ def get_definitions(
                     for c in child.named_children:
                         if c.type == "modifiers":
                             constructor_info["modifiers"] = c.text.decode("utf-8")
-                        elif c.type == "identifier":
-                            constructor_info["name"] = c.text.decode("utf-8")
-                        elif c.type == "formal_parameters":
-                            for param in c.named_children:
-                                if param.type == "formal_parameter":
-                                    param_type = param.named_children[0].text.decode(
-                                        "utf-8"
-                                    )
-                                    param_name = param.named_children[1].text.decode(
-                                        "utf-8"
-                                    )
-                                    constructor_info["parameters"].append(
-                                        {
-                                            "type": param_type,
-                                            "name": param_name,
-                                        }
-                                    )
-                        elif c.type == "constructor_body":
-                            constructor_info["body"] = normalize_code(
-                                c.text.decode("utf-8")
+                    c = child.child_by_field_name("name")
+                    constructor_info["name"] = c.text.decode("utf-8")
+                    c = child.child_by_field_name("parameters")
+                    for param in c.named_children:
+                        if param.type == "formal_parameter":
+                            param_type = param.named_children[0].text.decode(
+                                "utf-8"
                             )
+                            param_name = param.named_children[1].text.decode(
+                                "utf-8"
+                            )
+                            constructor_info["parameters"].append(
+                                {
+                                    "type": param_type,
+                                    "name": param_name,
+                                }
+                            )
+                    c = child.child_by_field_name("body")
+                    if c:
+                        constructor_info["body"] = normalize_code(
+                            c.text.decode("utf-8")
+                        )
                     lst_method_info.append(constructor_info)
         class_info["methods"] = lst_method_info
         lst_class_info.append(class_info)
