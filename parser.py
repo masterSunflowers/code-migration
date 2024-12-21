@@ -14,7 +14,14 @@ from tqdm import tqdm
 
 JAVA = tree_sitter.Language(tsjava.language())
 PARSER = tree_sitter.Parser(JAVA)
-CLASS_LIKE = ["class_declaration", "enum_declaration", "record_declaration", "annotation_type_declaration", "interface_declaration"]
+CLASS_LIKE = [
+    "class_declaration",
+    "enum_declaration",
+    "record_declaration",
+    "annotation_type_declaration",
+    "interface_declaration",
+]
+
 
 def normalize_code(code: str):
     lines_of_code = code.splitlines()
@@ -136,112 +143,86 @@ def get_definitions(
             },
             "file_mode": file_mode,
             "methods": [],
-            "node_type": node.type
+            "node_type": node.type,
         }
-        class_body = None
         lst_method_info = []
         for child in node.named_children:
-            if child.type == "identifier":
-                class_info["name"] = child.text.decode("utf-8")
-            elif child.type == "modifiers":
+            if child.type == "modifiers":
                 class_info["modifiers"] = child.text.decode("utf-8")
             elif child.type == "superclass":
                 class_info["superclass"] = child.text.decode("utf-8")
             elif child.type == "super_interfaces":
-                class_info["super_interfaces"] = child.named_children[0].text.decode("utf-8")
-            elif child.type == "class_body":
-                class_info["body"] = normalize_code(child.text.decode("utf-8"))
-                class_body = child
-        if class_body:
-            for child in class_body.named_children:
-                if child.type == "method_declaration":
-                    method_info = {
-                        "definition": normalize_code(child.text.decode("utf-8")),
-                        "name": None,
-                        "modifiers": None,
-                        "return_type": None,
-                        "parameters": [],
-                        "body": None,
-                        "start_point": {
-                            "row": child.start_point.row,
-                            "column": child.start_point.column,
-                        },
-                        "end_point": {
-                            "row": child.end_point.row,
-                            "column": child.end_point.column,
-                        },
-                    }
-                    for c in child.named_children:
-                        if c.type == "modifiers":
-                            method_info["modifiers"] = c.text.decode("utf-8")
-                    c = child.child_by_field_name("type")
-                    method_info["return_type"] = c.text.decode("utf-8")
-                    c = child.child_by_field_name("name")
-                    method_info["name"] = c.text.decode("utf-8")
-                    c = child.child_by_field_name("parameters")
-                    for param in c.named_children:
-                        if param.type == "formal_parameter":
-                            param_type = param.named_children[0].text.decode(
-                                "utf-8"
-                            )
-                            param_name = param.named_children[1].text.decode(
-                                "utf-8"
-                            )
-                            method_info["parameters"].append(
-                                {
-                                    "type": param_type,
-                                    "name": param_name,
-                                }
-                            )
-                    c = child.child_by_field_name("body")
-                    if c:
-                        method_info["body"] = normalize_code(c.text.decode("utf-8"))
-                    lst_method_info.append(method_info)
-                elif child.type in CLASS_LIKE:
-                    stack.append(child)
-                elif child.type == "constructor_declaration":
-                    constructor_info = {
-                        "definition": normalize_code(child.text.decode("utf-8")),
-                        "name": None,
-                        "modifiers": None,
-                        "return_type": None,
-                        "parameters": [],
-                        "body": None,
-                        "start_point": {
-                            "row": child.start_point.row,
-                            "column": child.start_point.column,
-                        },
-                        "end_point": {
-                            "row": child.end_point.row,
-                            "column": child.end_point.column,
-                        },
-                    }
-                    for c in child.named_children:
-                        if c.type == "modifiers":
-                            constructor_info["modifiers"] = c.text.decode("utf-8")
-                    c = child.child_by_field_name("name")
-                    constructor_info["name"] = c.text.decode("utf-8")
-                    c = child.child_by_field_name("parameters")
-                    for param in c.named_children:
-                        if param.type == "formal_parameter":
-                            param_type = param.named_children[0].text.decode(
-                                "utf-8"
-                            )
-                            param_name = param.named_children[1].text.decode(
-                                "utf-8"
-                            )
-                            constructor_info["parameters"].append(
-                                {
-                                    "type": param_type,
-                                    "name": param_name,
-                                }
-                            )
-                    c = child.child_by_field_name("body")
-                    if c:
-                        constructor_info["body"] = normalize_code(
-                            c.text.decode("utf-8")
-                        )
-                    lst_method_info.append(constructor_info)
+                class_info["super_interfaces"] = child.text.decode(
+                    "utf-8"
+                )
+        class_name_node = node.child_by_field_name("name")
+        class_info["name"] = class_name_node.text.decode("utf-8")
+        body_node = node.child_by_field_name("body")
+        class_info["body"] = normalize_code(body_node.text.decode("utf-8"))
+
+        for child in body_node.named_children:
+            if child.type == "method_declaration":
+                method_info = {
+                    "definition": normalize_code(child.text.decode("utf-8")),
+                    "name": None,
+                    "modifiers": None,
+                    "return_type": None,
+                    "parameters": [],
+                    "body": None,
+                    "start_point": {
+                        "row": child.start_point.row,
+                        "column": child.start_point.column,
+                    },
+                    "end_point": {
+                        "row": child.end_point.row,
+                        "column": child.end_point.column,
+                    },
+                }
+                for c in child.named_children:
+                    if c.type == "modifiers":
+                        method_info["modifiers"] = c.text.decode("utf-8")
+                return_type_node = child.child_by_field_name("type")
+                method_info["return_type"] = return_type_node.text.decode("utf-8")
+                name_node = child.child_by_field_name("name")
+                method_info["name"] = name_node.text.decode("utf-8")
+                params_node = child.child_by_field_name("parameters")
+                method_info["parameters"] = params_node.text.decode("utf-8")
+                body_node = child.child_by_field_name("body")
+                if body_node:
+                    method_info["body"] = normalize_code(body_node.text.decode("utf-8"))
+                lst_method_info.append(method_info)
+            elif child.type in CLASS_LIKE:
+                stack.append(child)
+            elif child.type == "constructor_declaration":
+                constructor_info = {
+                    "definition": normalize_code(child.text.decode("utf-8")),
+                    "name": None,
+                    "modifiers": None,
+                    "return_type": None,
+                    "parameters": [],
+                    "body": None,
+                    "start_point": {
+                        "row": child.start_point.row,
+                        "column": child.start_point.column,
+                    },
+                    "end_point": {
+                        "row": child.end_point.row,
+                        "column": child.end_point.column,
+                    },
+                }
+                for c in child.named_children:
+                    if c.type == "modifiers":
+                        constructor_info["modifiers"] = c.text.decode("utf-8")
+                name_node = child.child_by_field_name("name")
+                constructor_info["name"] = name_node.text.decode("utf-8")
+                params_node = child.child_by_field_name("parameters")
+                constructor_info["parameters"] = params_node.text.decode("utf-8")
+                body_node = child.child_by_field_name("body")
+                if body_node:
+                    constructor_info["body"] = normalize_code(
+                        body_node.text.decode("utf-8")
+                    )
+                lst_method_info.append(constructor_info)
         class_info["methods"] = lst_method_info
         lst_class_info.append(class_info)
     return lst_class_info
