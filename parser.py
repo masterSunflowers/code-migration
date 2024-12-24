@@ -11,6 +11,7 @@ import pandas as pd
 import tree_sitter
 import tree_sitter_java as tsjava
 from tqdm import tqdm
+import logging
 
 JAVA = tree_sitter.Language(tsjava.language())
 PARSER = tree_sitter.Parser(JAVA)
@@ -21,6 +22,9 @@ CLASS_LIKE = [
     "annotation_type_declaration",
     "interface_declaration",
 ]
+MAPPER = {}
+logger = logging.Logger("parser_log", level=logging.INFO)
+logger.addHandler(logging.FileHandler("log/parse.log"))
 
 
 def normalize_code(code: str):
@@ -65,38 +69,38 @@ def get_code_updated(repo_dir, commit_hash, rev_path):
         file_path = os.path.join(repo_dir, versions[0], rev_path)
     else:
         file_path = os.path.join(repo_dir, versions[1], rev_path)
-    with open(file_path, "r") as f:
+    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
         code = f.read()
     return code.replace("\r\n", "\n")
 
 
 def parse_java_files(repo_dir, row):
     for rev_path in eval(row["java_added"]):
-        ver2_code = get_code(repo_dir, row["end_commit"], rev_path)
+        ver2_code = get_code_updated(repo_dir, row["end_commit"], rev_path)
         tree = get_ast(ver2_code)
         yield 2, None, rev_path, "Added", tree
 
     for rev_path in eval(row["java_deleted"]):
-        ver1_code = get_code(repo_dir, row["prev_commit"], rev_path)
+        ver1_code = get_code_updated(repo_dir, row["prev_commit"], rev_path)
         tree = get_ast(ver1_code)
         yield 1, rev_path, None, "Deleted", tree
 
     for rev_path in eval(row["java_modified"]):
-        ver2_code = get_code(repo_dir, row["end_commit"], rev_path)
+        ver2_code = get_code_updated(repo_dir, row["end_commit"], rev_path)
         tree = get_ast(ver2_code)
         yield 2, rev_path, rev_path, "Modified", tree
 
-        ver1_code = get_code(repo_dir, row["prev_commit"], rev_path)
+        ver1_code = get_code_updated(repo_dir, row["prev_commit"], rev_path)
         tree = get_ast(ver1_code)
         yield 1, rev_path, rev_path, "Modified", tree
 
     for dic in eval(row["java_renamed_modified"]):
         ver1_rev_path, ver2_rev_path, _ = dic.values()
-        ver2_code = get_code(repo_dir, row["end_commit"], ver2_rev_path)
+        ver2_code = get_code_updated(repo_dir, row["end_commit"], ver2_rev_path)
         tree = get_ast(ver2_code)
         yield 2, ver1_rev_path, ver2_rev_path, "Renamed-Modified", tree
 
-        ver1_code = get_code(repo_dir, row["prev_commit"], ver1_rev_path)
+        ver1_code = get_code_updated(repo_dir, row["prev_commit"], ver1_rev_path)
         tree = get_ast(ver1_code)
         yield 1, ver1_rev_path, ver2_rev_path, "Renamed-Modified", tree
 
@@ -152,9 +156,7 @@ def get_definitions(
             elif child.type == "superclass":
                 class_info["superclass"] = child.text.decode("utf-8")
             elif child.type == "super_interfaces":
-                class_info["super_interfaces"] = child.text.decode(
-                    "utf-8"
-                )
+                class_info["super_interfaces"] = child.text.decode("utf-8")
         class_name_node = node.child_by_field_name("name")
         class_info["name"] = class_name_node.text.decode("utf-8")
         body_node = node.child_by_field_name("body")
@@ -229,10 +231,9 @@ def get_definitions(
 
 
 def main(args):
-    df = pd.read_csv(args.data_file)
+    df = pd.read_csv(args.data_file)[596:]
     for _, row in tqdm(df.iterrows(), total=len(df), desc="Parsing"):
-        repo_dir = os.path.join(args.repo_storage, row["repo_name"])
-        # repo_dir = os.path.join(args.repo_storage, row["id"])
+        repo_dir = os.path.join(args.data_storage, row["id"])
         ver1_parsed_dir = os.path.join(
             args.data_storage, row["id"], f"parsed1__{row['prev_commit']}"
         )
@@ -257,17 +258,45 @@ def main(args):
                 + ".json"
             )
             if version == 1:
-                with open(
-                    os.path.join(ver1_parsed_dir, file_name),
-                    "w",
-                ) as f:
-                    json.dump(lst_class_info, f, indent=4)
+                try:
+                    with open(
+                        os.path.join(ver1_parsed_dir, file_name),
+                        "w",
+                    ) as f:
+                        json.dump(lst_class_info, f, indent=4)
+                except OSError as e:
+                    hashed_url = str(hash(os.path.join(ver1_parsed_dir, file_name))) + ".json"
+                    MAPPER[os.path.join(ver1_parsed_dir, file_name)] = os.path.join(
+                        ver1_parsed_dir, hashed_url
+                    )
+                    with open(
+                        MAPPER[os.path.join(ver1_parsed_dir, file_name)],
+                        "w",
+                    ) as f:
+                        json.dump(lst_class_info, f, indent=4)
+                    print(e)
+                    logger.error(f"Error at {os.path.join(ver1_parsed_dir, file_name)}")
             else:
-                with open(
-                    os.path.join(ver2_parsed_dir, file_name),
-                    "w",
-                ) as f:
-                    json.dump(lst_class_info, f, indent=4)
+                try:
+                    with open(
+                        os.path.join(ver2_parsed_dir, file_name),
+                        "w",
+                    ) as f:
+                        json.dump(lst_class_info, f, indent=4)
+                except OSError as e:
+                    hashed_url = str(hash(os.path.join(ver2_parsed_dir, file_name))) + ".json"
+                    MAPPER[os.path.join(ver2_parsed_dir, file_name)] = os.path.join(
+                        ver2_parsed_dir, hashed_url
+                    )
+                    with open(
+                        MAPPER[os.path.join(ver2_parsed_dir, file_name)],
+                        "w",
+                    ) as f:
+                        json.dump(lst_class_info, f, indent=4)
+                    print(e)
+                    logger.error(f"Error at {os.path.join(ver2_parsed_dir, file_name)}")
+    with open("too_long_file_name.json", "w") as f:
+        json.dump(MAPPER, f)
 
 
 if __name__ == "__main__":

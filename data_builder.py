@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 
 def main(args):
-    df = pd.read_csv(args.data_file)
+    df = pd.read_csv(args.data_file)[596:]
     for _, row in tqdm(df.iterrows(), total=len(df), desc="Creating"):
         repo_dir = os.path.join(args.repo_storage, row["repo_name"])
         ver1_dir = os.path.join(
@@ -40,16 +40,28 @@ def main(args):
         )
         if copy_ver1_cmd_proc.returncode != 0:
             raise RuntimeError(
-                f"Can not copy version 1 to new dir\t{row['repo_name']}\t{row['prev_commit']}"
-            )
+                (f"Can not copy version 1 to new dir\t"
+                 f"{row['repo_name']}\t"
+                 f"{row['prev_commit']}:\n"
+                 "STDOUT:\n"
+                 f"{copy_ver1_cmd_proc.stdout}\n\n"
+                 "STDERR:\n"
+                 f"{copy_ver1_cmd_proc.stderr}"
+            ))
 
         copy_ver2_cmd_proc = subprocess.run(
             copy_ver2_cmd, capture_output=True, shell=True, text=True
         )
         if copy_ver2_cmd_proc.returncode != 0:
             raise RuntimeError(
-                f"Can not copy version 2 to new dir\t{row['repo_name']}\t{row['end_commit']}"
-            )
+                (f"Can not copy version 2 to new dir\t"
+                 f"{row['repo_name']}\t"
+                 f"{row['prev_commit']}:\n"
+                 "STDOUT:\n"
+                 f"{copy_ver2_cmd_proc.stdout}\n\n"
+                 "STDERR:\n"
+                 f"{copy_ver2_cmd_proc.stderr}"
+            ))
 
 
 if __name__ == "__main__":

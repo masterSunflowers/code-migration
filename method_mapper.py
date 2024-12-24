@@ -6,7 +6,6 @@ import myers
 import pandas as pd
 from tqdm import tqdm
 from typing import Union, Dict
-from pprint import pprint
 
 
 def get_similarity_index(old: str, new: str) -> float:
