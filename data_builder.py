@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 
 def main(args):
-    df = pd.read_csv(args.data_file)[596:]
+    df = pd.read_csv(args.data_file)
     for _, row in tqdm(df.iterrows(), total=len(df), desc="Creating"):
         repo_dir = os.path.join(args.repo_storage, row["repo_name"])
         ver1_dir = os.path.join(
@@ -21,9 +21,8 @@ def main(args):
         os.makedirs(ver2_dir, exist_ok=True)
 
         copy_ver1_cmd = (
-            f"cd {repo_dir} && "    
-            "git stash && "
-            f"git checkout {row['prev_commit']} && "
+            f"cd {repo_dir} && "
+            f"git checkout -f {row['prev_commit']} && "
             f"cp -r {repo_dir}/* {ver1_dir} && "
             f"rm -rf {ver1_dir}/.git"
         )
@@ -39,6 +38,7 @@ def main(args):
             copy_ver1_cmd, shell=True, capture_output=True, text=True
         )
         if copy_ver1_cmd_proc.returncode != 0:
+            print(copy_ver1_cmd)
             raise RuntimeError(
                 (f"Can not copy version 1 to new dir\t"
                  f"{row['repo_name']}\t"
@@ -53,6 +53,7 @@ def main(args):
             copy_ver2_cmd, capture_output=True, shell=True, text=True
         )
         if copy_ver2_cmd_proc.returncode != 0:
+            print(copy_ver2_cmd)
             raise RuntimeError(
                 (f"Can not copy version 2 to new dir\t"
                  f"{row['repo_name']}\t"

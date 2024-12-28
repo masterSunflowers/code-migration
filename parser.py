@@ -231,7 +231,7 @@ def get_definitions(
 
 
 def main(args):
-    df = pd.read_csv(args.data_file)[596:]
+    df = pd.read_csv(args.data_file)
     for _, row in tqdm(df.iterrows(), total=len(df), desc="Parsing"):
         repo_dir = os.path.join(args.data_storage, row["id"])
         ver1_parsed_dir = os.path.join(
